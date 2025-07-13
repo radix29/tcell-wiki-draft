@@ -38,6 +38,7 @@ Here's a gallery of applications and libraries that were built using tcell:
 - [go-tetris](https://github.com/aaronriekenberg/go-tetris) - simple tetris game for native terminal and WASM using github actions+pages
 - [oddshub](https://github.com/dos-2/oddshub) - A TUI designed for analyzing sports betting odds
 - [go-tetris](https://github.com/MichaelS11/go-tetris) - Go Tetris with AI option
+- [tiles](https://github.com/16point7/tiles) - a lightweight implementation of 2048
 
 ## Productivity & Utilities
 
