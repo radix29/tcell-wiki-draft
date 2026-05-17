@@ -61,7 +61,7 @@ Here's a gallery of applications and libraries that were built using tcell:
 - [fzf](https://github.com/junegunn/fzf) - command-line fuzzy finder
 - [termshark](https://termshark.io) - interface for _tshark_, inspired by Wireshark, built on _gowid_
 - [keydex](https://github.com/shikaan/keydex) - Terminal-based password manager for KeePass databases
-- [tiki])https://github.com/boolean-maybe/tiki) - Markdown workspace for tasks, docs, prompts, and notes stored in your git repo
+- [tiki](https://github.com/boolean-maybe/tiki) - Markdown workspace for tasks, docs, prompts, and notes stored in your git repo
 
 ## Miscellaneous
 
