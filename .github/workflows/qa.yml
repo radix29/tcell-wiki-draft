@@ -1,0 +1,93 @@
+name: qa
+
+# The one thing the official wiki can never have (PLAN.md C6/Q-0c): CI over the page bodies.
+# Every S8 tool runs here on every push, against a fresh clone of the library, so "it builds on my
+# machine" is not the standard. The draft wiki itself has no workflow file - GitHub wikis ignore
+# .github - which is exactly why pages are authored in this repo and mirrored by tools/mirror-wiki.sh.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    env:
+      TCELL_DIR: ${{ github.workspace }}/.tcell-src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The wiki repo and ../tcell are siblings locally (that is the default the tools guess), but
+          # a workflow cannot check out outside the workspace, so everything here is driven by
+          # TCELL_DIR - which every tool in tools/ honours.
+          path: wiki
+
+      - uses: actions/checkout@v4
+        with:
+          repository: gdamore/tcell
+          path: .tcell-src
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: wiki/samples/go.mod
+          cache-dependency-path: wiki/samples/go.sum
+
+      - name: style - pages (PLAN.md 7 house style)
+        working-directory: wiki
+        run: tools/check-style.py
+
+      - name: style - tracked docs outside the page set
+        working-directory: wiki
+        run: tools/check-style.py --all
+
+      - name: links - internal slugs and external URLs (S8.2)
+        working-directory: wiki
+        run: tools/check-links.py --report /tmp/links.txt
+
+      - name: gallery - migration is lossless against baseline/ (S8.4)
+        working-directory: wiki
+        run: tools/check-gallery.py
+
+      - name: demos - the linked library demos exist and build (S8.2b)
+        run: |
+          cd wiki
+          tools/check-demos.py --build
+
+      - name: snippets - every page fence compiles, headless where marked (S8.1 + S8.6)
+        working-directory: wiki
+        run: tools/make-samples.py
+
+      - name: symbols - API surface and TCELL_* env audit (S8.3; no coverage gate yet, PLAN.md 6.5)
+        working-directory: wiki
+        run: tools/symbol-coverage.py --report /tmp/symbols.txt
+
+      - name: apiface - the surface dumper still builds
+        working-directory: wiki/tools/apiface
+        run: gofmt -l . && go vet ./... && go run . > /dev/null
+
+      - name: checklist - per-page review questions (S8.7)
+        working-directory: wiki
+        run: tools/review-checklist.py --offline
+
+      - name: mirror - the manifest still resolves (informational; never pushes from CI)
+        working-directory: wiki
+        continue-on-error: true
+        env:
+          MIRROR: ${{ runner.temp }}/wiki-preview
+        run: tools/mirror-wiki.sh --dry-run
+
+      - name: summary - the two tables a reviewer reads first
+        if: always()
+        run: |
+          for f in /tmp/links.txt /tmp/symbols.txt; do
+            if [ -f "$f" ]; then echo "== ${f##*/}"; tail -40 "$f"; fi
+          done
