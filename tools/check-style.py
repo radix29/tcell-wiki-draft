@@ -25,6 +25,10 @@ H_RE = re.compile(r"^(?P<hashes>#{1,6})\s")
 BULLET_RE = re.compile(r"^(?P<indent> *)[-*+]\s")
 HTML_RE = re.compile(r"<[A-Za-z/!?][^>\n]*>")
 EMU_RE = re.compile(r"(?<![\w*`])\*(?!\s)[^*\n]*?\*(?![\w*`])")
+# PLAN.md 7 / Q-9: prose writes _Tcell_; bare Tcell belongs to headings, file names and paths, and the
+# package name stays lowercase in code. A leading _ is the italic marker, so requiring a non-word lookbehind
+# is what keeps "_Tcell_" and "_Tcell_'s" clean while "Tcell's" is not.
+NAME_RE = re.compile(r"(?<![\w`/\\.\-])Tcell(?![\w`])")
 IMAGE_EXT = re.compile(r"\.(png|jpe?g|gif|webp|bmp|svg)$", re.I)
 LOCAL_PAGE_LINK = re.compile(r"\.md$")
 
@@ -166,6 +170,14 @@ def lint(path: pathlib.Path, page: bool, out: Findings) -> None:
                 break
         if EMU_RE.search(prose):
             out.add(path, n, "emphasis", "*emphasis* found; this wiki uses _emphasis_", line=line, page=page)
+        if NAME_RE.search(prose) and not H_RE.match(line):
+            out.add(path, n, "name", "bare 'Tcell' in prose; write _Tcell_ (PLAN.md 7, Q-9) - bare Tcell is "
+                    "for headings, file names and paths, and `tcell` is the package name inside code",
+                    line=line, page=page)
+        if H_RE.match(line) and line.strip().endswith("."):
+            out.add(path, n, "heading-period", "heading ends with a period; PLAN.md 7 wants Title Case with "
+                    "no terminal period (the rendered page title gets no punctuation from us either)",
+                    line=line, page=page)
         if HTML_RE.search(prose):
             out.add(path, n, "html", "HTML tag; GitHub wikis render markdown only here (PLAN.md 7)", line=line, page=page)
         # blank line around headings and lists
