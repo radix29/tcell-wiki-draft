@@ -1,0 +1,6 @@
+# Build noise only - route C (setup.md 3). Page bodies, PLAN.md, AGENTS.md, setup.md and README.md
+# are tracked on purpose: what becomes a wiki page is decided by tools/pages.txt, never by this file.
+# So never add a .md pattern here; if a page ever needs hiding, delete it from the manifest instead.
+/samples/*/bin
+__pycache__/
+*.orig
