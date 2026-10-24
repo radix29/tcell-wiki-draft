@@ -7,3 +7,7 @@ Getting-Started.md
 Architecture.md
 Function-Reference.md
 Terminal-Setup.md
+# D-1's droppable prototype (PLAN.md 5.5, T1.1): a GitHub wiki renders this as the sidebar of every
+# page, which is exactly why it is a maintainer's call upstream and a preview here. No page links to
+# it and nothing in it is load-bearing, so deleting this line and the file changes no page text.
+_Sidebar.md
