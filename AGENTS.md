@@ -61,13 +61,20 @@ Pushing `origin/master` changes **only the draft** — that is the point of rout
 What used to be true of this clone is now true of the mirror and of upstream's web editor: **copying a
 page into a wiki repo and pushing it changes a rendered wiki instantly**, with no review gate, and the
 commit history becomes the visible page revision history. So page bodies still get the discipline below,
-and everything in `PLAN.md` 4 that is "an upstream call" (D-1, D-2, D-6 wording, D-7, D-8, F-1) stays a
-proposal, not an edit - `PLAN.md` Q-2 parks it: no contact with `gdamore/tcell` until the draft owner
+and the two things `PLAN.md` 4 still leaves upstream (D-1's site-wide `_Sidebar.md` and every F-1 change
+to the library repo) stay proposals, not an edit - `PLAN.md` Q-2 parks it: no contact with `gdamore/tcell` until the draft owner
 says so.
 
 - Never `git push` (or `git commit`) unless explicitly asked to. Ask instead. When asked: `origin`
   takes ordinary commits, the `render` wiki is only ever written by the mirror script, and `upstream`
   cannot be pushed at all.
+- **A push is not finished until the preview shows it (Q-14, standing rule from the draft owner).**
+  Run `tools/publish.sh`, which mirrors and then pushes and then re-reads the live wiki to prove it;
+  pushing with bare `git push` leaves `radix29/tcell-wiki-draft/wiki` rendering an older commit, and
+  CI's `preview` step fails on exactly that. Mirror-then-push is deliberate: CI starts on the push, so
+  pushing first makes the gate race the mirror and a flaky gate gets ignored.
+  `tools/mirror-wiki.sh` also refuses to publish pages with uncommitted edits (the render tree is a
+  build output of *committed* text); `FORCE=1` exists for an emergency, not as habit.
 - Never force-push, rebase, amend, or revert anything **published**: the official wiki (unreachable by
   design) and the `render` wiki carry permanent, reader-visible revision history, and rewriting them
   desyncs this clone from GitHub's wiki HEAD and from other clones - every correction is a new forward
@@ -185,12 +192,15 @@ tools/make-samples.py       S8.1  every go fence compiles; headless=yes also run
 tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit
 tools/apiface/          S8.3  the surface dumper (go/parser, no downloads) - run from its own dir
 tools/wikilib.py              shared stdlib helpers: manifest, fences, links, ASCII
-tools/mirror-wiki.sh            publish the manifest to the render wiki; --dry-run first
+tools/gallery-additions.txt     approved entries the baseline lacks (Q-13): name, URL, evidence
+tools/publish.sh                THE publish path: mirror the preview, then push, then verify (Q-14)
+tools/mirror-wiki.sh            render-wiki mirror only; --dry-run to inspect, --check as a gate
 ```
 
 Allow-lists carry only legacy exceptions with a written reason: `tools/style-allow.txt` (2 upstream
- defects), `tools/link-status-allow.txt` (unreachable hosts, URLs kept because deleting a reader's link
- is worse), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
+ defects), `tools/link-status-allow.txt` (statuses we investigated and deliberately keep - after Q-11
+ nothing unreachable is left on a page, and allow-listing a dead URL to quiet CI is now explicitly
+ against policy), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
 you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only).
 
 Still useful one-liners that no tool covers:
