@@ -27,7 +27,7 @@ page and a normal `.gitignore`; the **draft's own wiki** gives byte-accurate wik
 behaviour, slug rules, link-without-`.md`, Mermaid) so decisions D-1, D-3, D-5, D-9 and constraint C9
 are settled by looking at a screen instead of guessing.
 
-## 1. Create the draft repo (nothing exists yet - I did not run this)
+## 1. Create the draft repo (done 2026-10-24 - kept as the recipe in case the repo is ever deleted)
 
 ```bash
 cd ~/go/tcell.wiki
@@ -64,6 +64,8 @@ Expected: `git remote -v` lists 3 fetch URLs, and `git push upstream ...` fails 
 fetchable; nothing you do can publish to the official wiki by accident. Keep the branch named
 `master` - GitHub wikis are historically `master`-based and matching avoids surprises in step 4.
 
+**Executed 2026-10-24:** 3 remotes + `origin/master` pushed, `master` kept.
+
 ## 3. Let the plain repo carry the tooling
 
 In the **draft** repo the "untracked forever" rule of `AGENTS.md` no longer applies (it protects the
@@ -90,6 +92,12 @@ Home.md
 Gallery.md
 ```
 
+**Executed 2026-10-24:** the manifest above and `.gitignore` (build noise only: `/samples/*/bin`,
+`__pycache__/`, `*.orig`) are committed, and `PLAN.md` / `AGENTS.md` / `setup.md` stay tracked while
+deliberately absent from the manifest - which is what makes them safe to commit here. Two
+consequences to keep in mind: `master` now differs from `upstream/master` **by design** (see 8), and a
+page becomes a page exactly when its file name is added to `tools/pages.txt`.
+
 ## 4. Mirror script (render preview = push the manifest to the draft wiki)
 
 `tools/mirror-wiki.sh`:
@@ -115,6 +123,11 @@ git -C "$MIRROR" push
 `chmod +x tools/mirror-wiki.sh`, then preview at
 `https://github.com/radix29/tcell-wiki-draft/wiki/Home`. This is also where T5.1's Mermaid probe and
 any `_Sidebar.md` experiment happen - **never** on the official wiki (that was `PLAN.md` C1/C9 risk).
+
+Heads-up from `git ls-remote --symref render HEAD` (2026-10-24): the render target is `master` and
+already carries GitHub's own `Initial Home page` commit (`2ebcbf8`, a one-line placeholder `Home.md`).
+The first mirror push overwrites that placeholder; a non-fast-forward push later means the wiki was
+edited through the web UI, so pull the mirror rather than forcing.
 
 ## 5. CI in the draft repo (the one thing the official wiki can never have)
 
@@ -160,6 +173,10 @@ git log --oneline -1 upstream/master   # live wiki HEAD recorded
 grep -c '^- ' Gallery.md          # 49 = the migration contract, must stay 49 until Phase 3 decides
 ```
 
-Rollback is cheap and matters because this is someone else's project: delete `origin`/`render` remotes
-and the GitHub repos; this clone's `master` is still identical to `upstream/master` at every step, and
-`git reset --hard upstream/master` restores the two published pages in one command.
+Rollback is cheap and matters because this is someone else's project: delete the `origin`/`render`
+remotes and the two GitHub repos and this clone is an ordinary wiki clone again. Since step 3, though,
+`master` is `upstream/master` **plus** draft commits (that divergence is the point of route C), so
+`git reset --hard upstream/master` - while it still restores the two published *page bodies* in one
+command - also throws away every tooling, plan and README commit. Prefer
+`git checkout upstream/master -- Home.md Gallery.md` to roll a page back, and keep tooling only in
+`origin`.

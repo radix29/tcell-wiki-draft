@@ -12,7 +12,8 @@ Out of scope (this pass): any change to the `../tcell` library repo, its `README
 > in a repo the author owns, then propose them upstream. Not a fork - GitHub offers no Fork for `.wiki` repos
 > and a fork of the code repo carries no wiki content at all.
 > Chosen vehicle (Q-0c): author in **`radix29/tcell-wiki-draft`** with that repo's own wiki enabled as a
-> render preview. Step-by-step setup is in **`setup.md`** (untracked); Phase 0 T0.0 now means "run it".
+> render preview. Step-by-step setup is in **`setup.md`**; Phase 0 T0.0 now means "run it" - steps 1-3 are
+> executed (2026-10-24): remotes rewired, `origin`/`render` pushed, `tools/pages.txt` + `.gitignore` committed.
 
 ---
 
@@ -34,10 +35,13 @@ from 11-14 h to 6-8 h when the topic pages were deferred to a second milestone.
 
 Two things make this repo unusual and they drive most of the plan:
 
-- **There is no review gate.** A push to `origin/master` changes the public wiki instantly, and
-  commit history is the visible page history.
-- **Wiki repos cannot run CI.** GitHub Actions do not run for `.wiki` repos, so all verification is
-  local tooling plus manual review (section 8, plus the per-phase review gates in section 9).
+- **There is no review gate** *at upstream*. A push to a wiki repo changes a rendered page instantly
+  and the commit history is the visible page history. Route C moves that moment away from us: we push to
+  our own draft repo, and only a manifest-driven mirror to `render` - or a paste into the upstream web
+  editor - publishes anything.
+- **Wiki repos cannot run CI** (C6): true of `upstream` and of the `render` wiki, not of the draft plain
+  repo, which is where `tools/` + Actions live. Verification is those scripts plus manual review
+  (section 8, plus the per-phase review gates in section 9).
 
 ---
 
@@ -87,7 +91,7 @@ Rules that must be designed around (each is marked with how it is settled):
 | # | Constraint | Consequence |
 |---|---|---|
 | C1 | Publish-on-push, no PRs, anyone with the link can also edit in the web UI | every phase ends with a local review gate; publish only on explicit approval. **Revised by Q-0b: we cannot push at all, so "publish" now means a web-UI edit accepted upstream, or handing content to a maintainer; the review gate moves from "before we push" to "before we propose".** |
-| C2 | GitHub wikis expose **any** `.md` file as a public page | `PLAN.md` and `AGENTS.md` must stay uncommitted (use `.git/info/exclude`), or be deleted before publishing |
+| C2 | GitHub wikis expose **any** `.md` file as a public page | **Settled by Q-0c + setup.md 3: it only bites where a push renders.** Pages reach a wiki solely through `tools/pages.txt`, so `PLAN.md`/`AGENTS.md`/`setup.md` are committed in the draft and never mirrored; `upstream` stays fetch-only |
 | C3 | Slugs come from file names: `Getting-Started.md` -> `/wiki/Getting-Started`; spaces become `_` | prefer hyphenated, <= 3 word ASCII file names; internal links omit `.md` |
 | C4 | Nested/subdirectories are not reliably rendered as sub-pages | assume a **flat** page set; hierarchy via `_Sidebar.md` and Home nav only |
 | C5 | `_Sidebar.md` / `_Footer.md` apply to every page | **Settled by Q-3/Q-0b: we build it as a droppable prototype in our own draft wiki only (5.5) and never propose it unsolicited - a site-wide sidebar is an upstream call (D-1).** Pages never depend on it |
@@ -372,8 +376,9 @@ Nothing in the 6-page build may link to them (`setup.md` 3: a page must be self-
 
 ## 8. Verification & QA tooling (no CI available)
 
-Small local scripts, kept **outside** the wiki working tree (e.g. `~/notes/tcell-wiki-tools/`) or in
-an untracked `tools/` dir, so nothing extra publishes:
+Small scripts, **committed under `tools/` and `samples/`** in the draft repo (setup.md 3), so they run
+both locally and as Actions CI there - the one thing a real wiki repo can never have. Nothing in
+`tools/` can publish: the mirror copies only what `tools/pages.txt` lists:
 
 | ID | Tool | What it proves |
 |---|---|---|
@@ -404,12 +409,15 @@ sum of that phase's tasks. Recomputed after Q-3: **39-51 h** (Phase 0 3-4, 1 2-3
 - T0.1 Get answers to D-1, D-2, D-3 (blocking), plus D-4..D-9 preferences. **Per Q-0b, D-1, D-2, D-7 and
   D-8 are maintainers' calls - "answered" for us means "we know what to propose", not "decided".**
   *(0.5 h)*
-- T0.2 Add `PLAN.md`, `AGENTS.md`, `tools/`, `images-draft/` to `.git/info/exclude` (local only). *(0.5 h)*
-- T0.3 `git pull --ff-only`; record `git rev-parse HEAD` and a full copy of current `Home.md` /
-  `Gallery.md` into an untracked `baseline/` dir (recovery point + S8.4 input). *(0.5 h)*
+- T0.2 **Superseded by setup.md 3 (Q-0c): exclude nothing.** `PLAN.md`, `AGENTS.md`, `setup.md`,
+  `tools/` and `.gitignore` are **committed** in the draft repo, because C2's "every `.md` becomes a
+  page" hazard exists only where a push renders - and that is the manifest, now. *(done 2026-10-24)*
+- T0.3 Fetch `upstream`; record `git rev-parse upstream/master` and copy the current `Home.md` /
+  `Gallery.md` into `baseline/`, **committed in the draft** (recovery point + the copy CI's S8.4 diff
+  reads), not an untracked dir. *(0.5 h)*
 - T0.4 Build the QA scripts S8.1-S8.5, S8.7 (S8.6 parked as a stretch spike, 1 h, time-boxed). *(2 h)*
-- Exit: decisions recorded in section 4 of this file (untracked), scripts green against the
-  *current* 2-page wiki, baseline saved.
+- Exit: decisions recorded in section 4 of this file, scripts green against the *current* 2-page wiki,
+  baseline saved and committed.
 
 ### Phase 1 - Skeleton and nav (2-3 h)
 - T1.1 Draft `_Sidebar.md` for the 6-page tree of 5.1 as the **droppable prototype** (5.5): mirrored to
@@ -483,8 +491,9 @@ sum of that phase's tasks. Recomputed after Q-3: **39-51 h** (Phase 0 3-4, 1 2-3
 - T7.1 Full-set passes: S8.2 links, S8.5 style, S8.3 coverage, S8.7 per-page checklist. *(1.5 h)*
 - T7.2 Nav/sidebar completeness; "See also" graph has no orphans; mobile/terminal rendering spot
   check of tables (wide tables are the usual casualty). *(1 h)*
-- T7.3 Maintenance note for the maintainer (untracked): how to add a gallery entry, how to add a
-  page, which scripts to run, what "publish-on-push" implies. *(0.5 h)*
+- T7.3 Maintenance note for the maintainer: a committed file in the draft (not a page, so it is not in
+  `tools/pages.txt`), proposed as upstream content only if asked: how to add a gallery entry, how to add
+  a page, which scripts to run, what "publish-on-push" implies. *(0.5 h)*
 - T7.4 Follow-up list for `../tcell` (F-1: README/TUTORIAL pointers to the wiki, fix the legacy
   `wikis/Gallery` URL, document the 3 undocumented env vars, note the stale `mouse demo` claim);
   file as issues/PRs **only if asked**. **Q-2: parked - prepare this package, do not send it.** *(0.5 h)*
