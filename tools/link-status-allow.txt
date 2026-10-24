@@ -11,10 +11,14 @@
 #   - rocketnine.space (parent) still resolves to 194.182.162.37; its Caddy returns 308 -> the same
 #     https URL, and https to that IP fails the TLS handshake, so the subdomain's own record is gone
 #     or broken. This is global, not a sandbox artifact: public resolvers fail it too.
-#   - The two projects are fine and maintained: github.com/tslocum/cview and /cbind both answer 200,
-#     and pkg.go.dev/code.rocketnine.space/tslocum/cview answers 200 (module path unchanged).
-# So the Gallery's entries are correct in substance; only the host is unreachable right now. Do not
-# "fix" this by silently swapping URLs (route C: the upstream text is the maintainers' to edit);
-# re-probe at T3.1 and put "host unreachable, GitHub mirror exists" in the proposal package (T7.4).
-code.rocketnine.space/tslocum/cview	000,DNS,SERVFAIL	host unreachable (SERVFAIL at 1.1.1.1 and 8.8.8.8 on 2026-10-24); upstream entry kept per PLAN.md 6.2; re-probe at T3.1
-code.rocketnine.space/tslocum/cbind	000,DNS,SERVFAIL	host unreachable (SERVFAIL at 1.1.1.1 and 8.8.8.8 on 2026-10-24); upstream entry kept per PLAN.md 6.2; re-probe at T3.1
+#   - The two projects are alive and maintained, just not there any more. github.com/tslocum/cview and
+#     /cbind answer 200 but say so themselves: the API descriptions read "THIS IS A MIRROR - SEE LINK
+#     BELOW" with homepage codeberg.org/tslocum/<repo>, and each go.mod now declares
+#     `module codeberg.org/tslocum/<repo>`. (An earlier note here claimed "module path unchanged" -
+#     wrong, checked against the go.mod on Codeberg.)
+# RESOLVED by Q-11 (2026-10-24): the entries were moved to the projects' real home under
+# tools/gallery-moves.txt, so nothing here is unreachable and nothing is allow-listed any more. This
+# file is back to what it is for - statuses we investigate and *keep*, not URLs we gave up on.
+# A future dead host with a live home gets the same treatment: record the evidence, move the URL, do
+# not allow-list a reader's way to reach the project off. The DNS evidence above stays because it is
+# why the move happened, and a move record without evidence is not a move, it is a guess.

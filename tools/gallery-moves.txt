@@ -1,0 +1,23 @@
+# Recorded Gallery URL moves - tools/check-gallery.py accepts these as the *same* entry, so a URL
+# correction never reads as a lost entry in the lossless-migration contract (PLAN.md 6.2, R2).
+# Format (tab separated, one move per line):
+#   <old-url>	<new-url>	<evidence and decision, one line>
+#
+# A move is a *content edit*, so each one needs evidence a reviewer can re-check, not a preference:
+# what the dead host did, and what the new host says about itself. A move with no matching baseline
+# entry, or whose new URL is not on the page, is reported as a stale record (same policy as
+# tools/style-allow.txt and tools/link-status-allow.txt: recorded exceptions may not go stale silently).
+#
+# 2026-10-24, Q-11 ("point at the project's real home"). Evidence gathered from this machine:
+#   - code.rocketnine.space does not resolve: DNS Status 2 (SERVFAIL, no answer) via DoH at both
+#     1.1.1.1 and 8.8.8.8; `curl -I https://code.rocketnine.space/tslocum/cbind` gives 000.
+#   - github.com/tslocum/cview and /cbind answer 200 but are NOT the home: the GitHub API reports
+#     description "Terminal-based user interface toolkit - THIS IS A MIRROR - SEE LINK BELOW" (and the
+#     cbind equivalent) with homepage codeberg.org/tslocum/<repo>. Linking GitHub would have made the
+#     wiki link a self-declared mirror, which AGENTS.md's "prefer the project's real home" forbids.
+#   - codeberg.org/tslocum/cview and /cbind answer 200, serve the same tag SHAs as GitHub (v1.6.3 ->
+#     ab82916, v1.6.4 -> 17a5fa5), and their go.mod declares `module codeberg.org/tslocum/<repo>`, so
+#     even the import path moved. The old URL is therefore not a vanity alias we are honouring; it is
+#     a dead host that no longer serves the project's own build.
+https://code.rocketnine.space/tslocum/cview	https://codeberg.org/tslocum/cview	Q-11 on 2026-10-24: host SERVFAILs globally, GitHub self-declares as a mirror, Codeberg is the homepage and the module path; description text untouched
+https://code.rocketnine.space/tslocum/cbind	https://codeberg.org/tslocum/cbind	Q-11 on 2026-10-24: same evidence as cview (SERVFAIL + GitHub "THIS IS A MIRROR" + codeberg module path); description text untouched

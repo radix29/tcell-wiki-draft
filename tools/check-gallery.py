@@ -14,7 +14,12 @@ Compares Gallery.md against baseline/Gallery.md (the live wiki as fetched, see b
   shape      every bullet matches the frozen entry format of PLAN.md 6.2 / AGENTS.md
              ("- [name](url) - lowercase description", ASCII ' - ', no trailing period, no star
              counts, dates or "(new)" markers);
-  counts     total bullets per Appendix B: 49, or 49 + N additions, which are always listed.
+  counts     total bullets per Appendix B: 49, or 49 + N additions, which are always listed;
+             a URL corrected in tools/gallery-moves.txt (dead host -> the project's real home, with
+             evidence) counts as the same entry, and is reported so the reviewer sees it;
+  moves      every move record must point at a baseline entry that exists and a URL that is now on
+             the page - a stale move is an error, because a silent URL drift is exactly what the
+             lossless contract exists to catch.
 
 Exit 0 = migration is provably lossless, 1 = something a reviewer has to explain, 2 = usage error.
 """
@@ -38,6 +43,25 @@ BAD_MARKER_RE = re.compile(r"(\(\s*new\s*\)|\bstars?\b|\u2605|\bnew!\b|,\s*\d{4}
 # Only a literal full stop counts: "written for sr.ht" or "a .go CLI" must not fire.
 TRAILING_PERIOD_RE = re.compile(r"\.$")
 CATEGORY_ORDER_NOTE = "PLAN.md 6.2 keeps the 6 baseline categories and their order"
+MOVES = W.ROOT / "tools" / "gallery-moves.txt"
+
+
+def load_moves(path: pathlib.Path = MOVES):
+    """tools/gallery-moves.txt: '<old-url>\t<new-url>\t<evidence>' -> {old: (new, evidence)}."""
+    moves = {}
+    if not path.exists():
+        return moves
+    for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = [f.strip() for f in raw.split("\t")]
+        if len(parts) < 2 or not parts[0].startswith("http") or not parts[1].startswith("http"):
+            print(f"tools/gallery-moves.txt:{n}: expected '<old-url>\t<new-url>\t[evidence]', got: {raw}",
+                  file=sys.stderr)
+            continue
+        moves[parts[0]] = (parts[1], parts[2] if len(parts) > 2 else "(no evidence recorded)")
+    return moves
 
 
 class Entry:
@@ -131,7 +155,10 @@ def main() -> int:
                     metavar="SECTION", help="approve one new category name (PLAN.md 6.2 allows exactly one)")
     ap.add_argument("--max-additions", type=int, default=0, metavar="N",
                     help="allow at most N entries that are not in the baseline (default 0 = pure migration)")
-    ap.add_argument("--verbose", "-v", action="store_true", help="print every category and addition")
+    ap.add_argument("--moves", default=str(MOVES),
+                    help="recorded URL-move file (default tools/gallery-moves.txt)")
+    ap.add_argument("--verbose", "-v", action="store_true",
+                    help="print every category, addition and move record")
     args = ap.parse_args()
 
     gallery = pathlib.Path(args.gallery)
@@ -141,6 +168,21 @@ def main() -> int:
 
     errors = []
     notes = []
+
+    # A URL the page still points at, that a move record claims to have moved, means the move was
+    # reverted but the record survived (or the record names a project that no longer exists).
+    moves = load_moves(pathlib.Path(args.moves))
+    page_urls = {e.url for e in entries}
+    for old, (new, _why) in moves.items():
+        if old in page_urls:
+            errors.append(f"tools/gallery-moves.txt claims {old} moved to {new}, but the page still links "
+                          "the old URL - either apply the move or delete the record")
+        elif old not in {b.url for b in base_entries}:
+            errors.append(f"tools/gallery-moves.txt has a record for {old}, which no baseline entry uses "
+                          "- stale move records are as misleading as stale allow-list entries")
+        elif new not in page_urls:
+            errors.append(f"tools/gallery-moves.txt claims {old} -> {new}, but nothing on the page links "
+                          f"{new} - the entry's URL was changed to something else, or not at all")
 
     # --- structure -------------------------------------------------------------
     kept = [c for c in base_cats if c in cats]
@@ -169,6 +211,11 @@ def main() -> int:
         now = by_cat_now.get(cat, [])
         now_keys = [e.key for e in now]
         for b in b_list:
+            rec = moves.get(b.url)
+            if rec and any(e.name == b.name and e.url == rec[0] and e.category == b.category for e in now):
+                # A recorded URL correction (dead host -> real home): same entry, same place.
+                notes.append(f"recorded URL move: '{b.name}' {b.url} -> {rec[0]} ({rec[1]})")
+                continue
             if b.key not in now_keys:
                 # Same URL elsewhere? Then it moved; same name elsewhere? Renamed.
                 elsewhere = [e for e in entries if e.key == b.key]
@@ -195,8 +242,12 @@ def main() -> int:
             errors.append(f"entries inside category '{cat}' were reordered; keep baseline order and "
                           "append (AGENTS.md: add entries to the end of the matching section)")
 
+    def recorded_move(e):
+        """An entry whose URL a tools/gallery-moves.txt record moved to exactly this one."""
+        return any(b.name == e.name and b.url in moves and moves[b.url][0] == e.url for b in base_entries)
+
     new_entries = [e for e in entries
-                   if e.key not in {b.key for b in base_entries}]
+                   if e.key not in {b.key for b in base_entries} and not recorded_move(e)]
     moved_in = [e for e in entries if e.key in {b.key for b in base_entries}
                 and any(b.key == e.key and b.category != e.category for b in base_entries)]
     if new_entries and args.verbose:
