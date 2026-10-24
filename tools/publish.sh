@@ -19,7 +19,8 @@
 #   FORCE=1 tools/publish.sh         only for mirror-wiki.sh's uncommitted-page guard; see that file
 set -euo pipefail
 
-ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+TOOLS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+ROOT=$(cd -- "$TOOLS/.." && pwd)
 BRANCH=${1:-master}
 PUSH_REMOTE=${PUSH_REMOTE:-origin}
 
@@ -35,10 +36,10 @@ git -C "$ROOT" rev-parse --verify "$BRANCH" >/dev/null || {
   exit 2
 }
 
-"$ROOT/mirror-wiki.sh"
+"$TOOLS/mirror-wiki.sh"
 
 echo "== push $PUSH_REMOTE $BRANCH =="
 git -C "$ROOT" push "$PUSH_REMOTE" "$BRANCH"
 
 echo "== verify the preview matches what just landed =="
-"$ROOT/mirror-wiki.sh" --check
+"$TOOLS/mirror-wiki.sh" --check

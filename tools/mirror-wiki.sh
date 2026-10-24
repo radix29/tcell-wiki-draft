@@ -114,10 +114,19 @@ if git -C "$MIRROR" rev-parse -q --verify HEAD >/dev/null 2>&1; then
 else
   echo "note: remote wiki has no commits yet; this push creates the first one"
 fi
-[ -z "$(git -C "$MIRROR" status --porcelain)" ] || {
-  echo "mirror clone $MIRROR is dirty; commit or clean it first" >&2
-  exit 2
-}
+# Worktree dirt in the render clone can only come from an interrupted run of this script (a --check
+# killed by a pager or `head` after the copy+add but before its restore step). A wiki web-UI edit is
+# different: it arrives by the pull above and is reported there. The clone is a build output, nobody
+# edits it by hand and everything in it is reproducible from this repo, so reset it and say so instead
+# of asking a human to clean a directory that is never the source of truth.
+dirt=$(git -C "$MIRROR" status --porcelain)
+if [ -n "$dirt" ]; then
+  { echo "note: the render clone had leftover state; resetting it (nothing there is unrecoverable -"       "the wiki is the output, this repo is the source):"
+    printf '%s\n' "$dirt" | sed 's|^|  |'
+  } >&2
+  git -C "$MIRROR" reset -q --hard HEAD
+  git -C "$MIRROR" clean -qfd -- "${pages[@]}" 2>/dev/null || true
+fi
 
 # --- copy the manifest and nothing else ----------------------------------------------------------
 for page in "${pages[@]}"; do
