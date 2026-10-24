@@ -14,17 +14,22 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   `tools/pages.txt`.** `PLAN.md`, `AGENTS.md`, `README.md`, `tools/`, `samples/` are tracked on purpose
   and never render as pages; the upstream artefact is the text of one page `.md`, pasted one page at a
   time into someone else's wiki.
-- Page bodies sit at the repo root as plain `.md` - today `Home.md` and `Gallery.md`. `tools/` (QA
-  scripts), `samples/` (snippet compile harness) and `.github/workflows/qa.yml` (CI) exist; see
-  Tooling below.
+- Page bodies sit at the repo root as plain `.md` - the 6 pages of Q-3: `Home.md`, `Gallery.md` and,
+  since Phase 1, `Getting-Started.md`, `Architecture.md`, `Function-Reference.md`, `Terminal-Setup.md`,
+  the last four being honest stubs (purpose sentence, planned scope, a pointer to what to read today, and
+  no API claimed in backticks, which Q-6 reserves for the page that owns the symbol). `_Sidebar.md` sits
+  beside them as D-1's droppable prototype: it is in the manifest, it is not a content page, and no page
+  links it. `tools/` (QA scripts), `samples/` (snippet compile harness) and `.github/workflows/qa.yml`
+  (CI) exist; see Tooling below.
 - This wiki repo shares no history with the library repo — never cherry-pick, merge, or branch
   across the two. All three remotes are HTTPS, so a push may need credentials (`gh auth setup-git`)
   even when `../tcell` pushes fine.
 - The Tcell library itself lives in a sibling checkout (`../tcell`). Its `README.md` points
   readers at this wiki's Gallery, so the Gallery is the canonical list of Tcell-based projects.
 - Page file names decide the slug (`PLAN.md` C3): ASCII, hyphenated, at most three words, no spaces and
-  no underscores - `Home.md`, `Gallery.md`, and per Q-3 `Getting-Started.md`, `Function-Reference.md`,
-  `Terminal-Setup.md`.
+  no underscores - `Home.md`, `Gallery.md`, and per Q-3 `Getting-Started.md`, `Architecture.md`,
+  `Function-Reference.md`, `Terminal-Setup.md`. All four Q-3 slugs exist from Phase 1 and are mirrored,
+  so a typo in one of them is now a permanent wrong URL, not a rename.
 
 # Runbook (setup executed 2026-10-24)
 
@@ -36,9 +41,9 @@ origin    https://github.com/radix29/tcell-wiki-draft.git      this repo; draft 
 render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via tools/mirror-wiki.sh
 ```
 
-Done: draft repo + wikis enabled (render branch is `master`; HEAD is `32022f9`, the first real preview
-that `tools/mirror-wiki.sh` published on 2026-10-24, replacing GitHub's `Initial Home page` placeholder
-`2ebcbf8`), `origin/master` is pushed and CI is green on it (`.github/workflows/qa.yml`, run
+Done: draft repo + wikis enabled (render branch is `master`; HEAD is `39e5378`, the second preview push
+of 2026-10-24, whose predecessor `32022f9` was the first real page preview and `2ebcbf8` GitHub's
+`Initial Home page` placeholder), `origin/master` is pushed and CI is green on it (`.github/workflows/qa.yml`, run
 `40112709147`, 15/15 steps), remotes rewired, `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
 bullets). `master` deliberately diverges from `upstream/master` - that divergence is route C - so
@@ -50,8 +55,9 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 
 ```bash
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
-git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 2
-                                                            # lines (the Q-11 URL move), Home 0
+git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 3
+                                                            # lines (2 URL moves Q-11, 1 addition Q-13),
+                                                            # Home 0; the 4 stubs are additions, not diffs
 git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
 ```
 
@@ -160,10 +166,13 @@ Entry format — exactly this shape, one line each:
   `.textile` also render on GitHub wikis but none is used here). **A page may not reference anything
   outside itself:** no repo-hosted `images/`, no `tools/` links, no relative `docs/`
   paths, because upstream receives only the text of one `.md` file - diagrams are Mermaid or ASCII in
-  fenced blocks (D-5). `_Sidebar.md`/`_Footer.md` apply to *every* page of whichever wiki renders them:
-  in the draft a sidebar is a droppable Phase 1 prototype mirrored only to `render`, and it is never in
-  an upstream proposal (D-1). Non-page directories (`tools/`, `samples/`) are fine - the manifest keeps
-  them out of the render.
+  fenced blocks (D-5). Heads-up before drawing one: `tools/review-checklist.py` currently FAILs any page
+  whose text contains the word `mermaid` anywhere, fenced blocks included, so a Mermaid diagram cannot
+  pass S8.7 until that CHECK is taught to skip fences (`PLAN.md` Phase 1's "Found" row, fix it in T5.1);
+  `text` fences work today. `_Sidebar.md`/`_Footer.md` apply to *every* page of whichever wiki renders
+  them: in the draft `_Sidebar.md` is the droppable Phase 1 prototype, listed in `tools/pages.txt`, and
+  it is never in an upstream proposal (D-1). Non-page directories (`tools/`, `samples/`) are fine - the
+  manifest keeps them out of the render.
 - Code fences on a page carry markers, and `tools/check-style.py` rejects invented ones: a bare `go`
   tag is a complete program, `snippet=name` merges fences with the same name, `mode=lib` type-checks a
   fragment, `mode=skip` is not Go (transcripts, v2 comparisons), and `headless=yes` also *runs* the

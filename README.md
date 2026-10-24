@@ -19,9 +19,12 @@ radix29/tcell-wiki-draft.git  (origin)    this repo; source of truth for the dra
 ...-draft.wiki.git            (render)    pages only, written by tools/mirror-wiki.sh
 ```
 
-`Home.md` and `Gallery.md` here are byte-identical to upstream, so the diff of any future page edit is
-one logical change instead of a rewrite. Pages are gated by `tools/pages.txt`: a file becomes a wiki
-page exactly when its name is on that list. `PLAN.md`, `AGENTS.md`, this README, `tools/` and
+`Home.md` is byte-identical to upstream and `Gallery.md` differs from it by three lines, each one a
+recorded decision (Q-11's two URL moves, Q-13's one addition), so a page edit stays one logical change
+rather than a rewrite. The four Q-3 pages (`Getting-Started`, `Architecture`, `Function-Reference`,
+`Terminal-Setup`) are published as stubs, and `_Sidebar.md` is D-1's droppable navigation prototype.
+Pages are gated by `tools/pages.txt`: a file becomes a wiki page exactly when its name is on that list.
+`PLAN.md`, `AGENTS.md`, this README, `tools/` and
 `samples/` are tracked but never mirrored, which is what makes it safe to keep tooling in a repo whose
 push target renders pages.
 
