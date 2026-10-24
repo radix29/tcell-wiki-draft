@@ -18,12 +18,12 @@ Here's a gallery of applications and libraries that were built using tcell:
 ## UI Frameworks 
 
 - [tview](https://github.com/rivo/tview/) - rich interactive widgets
-- [cview](https://code.rocketnine.space/tslocum/cview) - user interface toolkit (fork of _tview_)
+- [cview](https://codeberg.org/tslocum/cview) - user interface toolkit (fork of _tview_)
 - [awesome gocui](https://github.com/awesome-gocui/gocui) - Go Console User Interface
 - [gowid](https://github.com/gcla/gowid) - compositional widgets for terminal UIs, inspired by _urwid_
 - [gruid-tcell](https://github.com/anaseto/gruid-tcell) - driver for the grid based UI and game framework
 - [lil](https://github.com/andrievsky/lil) - A simple and flexible interface for any service by implementing only list and get operations
-- [cbind](https://code.rocketnine.space/tslocum/cbind) - key event encoding, decoding and handling
+- [cbind](https://codeberg.org/tslocum/cbind) - key event encoding, decoding and handling
 
 ## Games
 
