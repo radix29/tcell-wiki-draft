@@ -519,10 +519,16 @@ pages that promise scope and assert no API), and `tools/mirror-wiki.sh --dry-run
 seven files - five added, `Home`/`Gallery` unchanged - against the live render wiki at `39e5378`, and
 publishes nothing. Two of the three exit criteria are therefore still open, and they are one
 act: nothing has been pushed, so `radix29/tcell-wiki-draft/wiki` still renders the two Phase 0 pages.
+`tools/mirror-wiki.sh --check` said exactly that (exit 1, "preview is BEHIND the draft", 5 files and 44
+insertions pending), which is also the answer to "just `git push` then": CI's `preview` step runs that
+same check, so pushing `origin` without mirroring first turns the run red on purpose (Q-14). The
+remaining act is `tools/publish.sh`, and it is one command: mirror, push, re-read the live wiki.
 `AGENTS.md` makes an unprompted push the one thing this repo never does, and Q-14 settled *how* a push
-publishes (`tools/publish.sh`: mirror, then push, then re-read the live wiki), not when one is allowed -
-so the draft owner's ask is the missing input and everything after it is mechanical. Landed inside the
-2-3 h estimate; none of it was research.
+publishes, not when one is allowed - so the draft owner's ask is the missing input.
+Landed inside the 2-3 h estimate; none of it was research. Phase 2 is unblocked for authoring, but note
+what the mirror does to a deferred publish: it publishes the whole manifest, not one file, so T2.3 would
+ship these seven files whether or not anyone wanted them shipped yet - waiting makes the next publish
+larger, not safer.
 
 - T1.1 **Done.** `_Sidebar.md` is D-1 made concrete: three groups using 5.2's own nav words (Start here /
   Reference / Showcase), all six pages, no sixth invention, plus two lines saying this wiki is an
