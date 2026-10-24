@@ -3,20 +3,20 @@
 This is the **Tcell wiki draft** — `radix29/tcell-wiki-draft`, an unofficial rewrite of
 `https://github.com/gdamore/tcell/wiki`. The clone started from the published wiki
 (`.../gdamore/tcell.wiki.git`, remote `upstream`) and kept its 10 commits as provenance, so `master` is
-the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan, `setup.md` the runbook.
+the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this file is the runbook.
 
 - Three remotes, three trust levels: `upstream` is the official wiki and is **fetch-only** (its push
   URL is deliberately `NO-PUSH-official-wiki-is-read-only`, so nothing here can publish there by
-  accident); `origin` is the draft plain repo, where tooling/issues/CI live; `render` is the draft's own
-  wiki, written **only** by `tools/mirror-wiki.sh` (`setup.md` 4 - not written yet), which copies exactly
+  accident); `origin` is the draft plain repo, where tooling/issues/CI live (no `LICENSE` file: the upstream wiki ships none, so the draft implies none); `render` is the draft's own
+  wiki, written **only** by `tools/mirror-wiki.sh`, which copies exactly
   the files listed in `tools/pages.txt`.
 - That topology is the whole safety model: **a file is safe to commit the moment it is absent from
-  `tools/pages.txt`.** `PLAN.md`, `AGENTS.md`, `setup.md`, `README.md`, `tools/`, `samples/` are tracked
-  on purpose and never render as pages; the upstream artefact is the text of one page `.md`, pasted one
-  page at a time into someone else's wiki.
-- Page bodies sit at the repo root as plain `.md` — today `Home.md` and `Gallery.md`. `tools/` (QA
-  scripts), `samples/` (snippet compile harness) and `.github/workflows/` land per `PLAN.md` 8; until
-  they exist there is nothing here to compile, test or lint.
+  `tools/pages.txt`.** `PLAN.md`, `AGENTS.md`, `README.md`, `tools/`, `samples/` are tracked on purpose
+  and never render as pages; the upstream artefact is the text of one page `.md`, pasted one page at a
+  time into someone else's wiki.
+- Page bodies sit at the repo root as plain `.md` - today `Home.md` and `Gallery.md`. `tools/` (QA
+  scripts), `samples/` (snippet compile harness) and `.github/workflows/qa.yml` (CI) exist; see
+  Tooling below.
 - This wiki repo shares no history with the library repo — never cherry-pick, merge, or branch
   across the two. All three remotes are HTTPS, so a push may need credentials (`gh auth setup-git`)
   even when `../tcell` pushes fine.
@@ -26,6 +26,32 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan, `set
   no underscores - `Home.md`, `Gallery.md`, and per Q-3 `Getting-Started.md`, `Function-Reference.md`,
   `Terminal-Setup.md`.
 
+# Runbook (setup executed 2026-10-24)
+
+Remotes and what they are for:
+
+```text
+upstream  https://github.com/gdamore/tcell.wiki.git            fetch only; push URL is a dead string
+origin    https://github.com/radix29/tcell-wiki-draft.git      this repo; draft source of truth
+render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via tools/mirror-wiki.sh
+```
+
+Done: draft repo + wikis enabled (render branch is `master`, HEAD was GitHub's `Initial Home page`
+placeholder `2ebcbf8`), remotes rewired, `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
+`.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
+bullets). `master` deliberately diverges from `upstream/master` - that divergence is route C - so
+rolling a page back is `git checkout upstream/master -- Home.md Gallery.md`, never
+`git reset --hard upstream/master` (that would also drop tooling commits). Rollback of the whole
+experiment: delete the `origin`/`render` remotes and the two GitHub repos.
+
+Verify a session against this repo (all seven must pass; CI runs the same set):
+
+```bash
+tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
+git diff --stat upstream/master HEAD -- Home.md Gallery.md   # empty until a page is edited
+git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
+```
+
 # Publishing Model (Read Before Pushing)
 
 Pushing `origin/master` changes **only the draft** — that is the point of route C, and it is harmless.
@@ -33,7 +59,7 @@ What used to be true of this clone is now true of the mirror and of upstream's w
 page into a wiki repo and pushing it changes a rendered wiki instantly**, with no review gate, and the
 commit history becomes the visible page revision history. So page bodies still get the discipline below,
 and everything in `PLAN.md` 4 that is "an upstream call" (D-1, D-2, D-6 wording, D-7, D-8, F-1) stays a
-proposal, not an edit — `setup.md` 7 is parked: no contact with `gdamore/tcell` until the draft owner
+proposal, not an edit - `PLAN.md` Q-2 parks it: no contact with `gdamore/tcell` until the draft owner
 says so.
 
 - Never `git push` (or `git commit`) unless explicitly asked to. Ask instead. When asked: `origin`
@@ -104,50 +130,74 @@ Entry format — exactly this shape, one line each:
   published page-diff history.
 - All page content here is `.md`; don't introduce another wiki markup format (`.org`, `.rst`,
   `.textile` also render on GitHub wikis but none is used here). **A page may not reference anything
-  outside itself** (`setup.md` 3): no repo-hosted `images/`, no `tools/` links, no relative `docs/`
-  paths, because upstream receives only the text of one `.md` file — diagrams are Mermaid or ASCII in
+  outside itself:** no repo-hosted `images/`, no `tools/` links, no relative `docs/`
+  paths, because upstream receives only the text of one `.md` file - diagrams are Mermaid or ASCII in
   fenced blocks (D-5). `_Sidebar.md`/`_Footer.md` apply to *every* page of whichever wiki renders them:
   in the draft a sidebar is a droppable Phase 1 prototype mirrored only to `render`, and it is never in
-  an upstream proposal (D-1). Non-page directories (`tools/`, `samples/`) are fine — the manifest keeps
+  an upstream proposal (D-1). Non-page directories (`tools/`, `samples/`) are fine - the manifest keeps
   them out of the render.
+- Code fences on a page carry markers, and `tools/check-style.py` rejects invented ones: a bare `go`
+  tag is a complete program, `snippet=name` merges fences with the same name, `mode=lib` type-checks a
+  fragment, `mode=skip` is not Go (transcripts, v2 comparisons), and `headless=yes` also *runs* the
+  program on the vt emulator, which requires an ESC arm. See `samples/README.md`.
+- **The library's own programs are the examples.** Pages link `demos/` and `TUTORIAL.md` in
+  `gdamore/tcell`; they do not re-author sample code, because a wiki fence rots on the next API change
+  while `demos/` ships with a rendering test per program. `tools/check-demos.py` verifies the names,
+  URLs, `go run` commands and `_demos/` claims against the checkout, and prints the paste-able
+  `## Demos in the Repository` block with `TODO(desc)` where a demo has no doc sentence - never an
+  invented description.
 
-# Useful Commands (tested, run from this directory)
+# Tooling (verified, run from this directory)
 
-There is no build, test suite, or linter yet — these are the whole verification story until `tools/`
-lands (`PLAN.md` 8, `setup.md` 5).
+Every tool exits 0 clean / 1 a page needs fixing / 2 environment, prints one summary line, and takes
+optional page arguments plus `--verbose`. CI (`.github/workflows/qa.yml`) runs all of them against a
+fresh `gdamore/tcell` clone via `TCELL_DIR`; locally they default to the sibling `../tcell`.
+
+```text
+tools/review-checklist.py   S8.7  all gates below + per-page review questions (start here)
+tools/check-style.py        S8.5  house style (PLAN.md 7); --all includes non-page docs
+tools/check-links.py        S8.2  internal slugs/anchors, then external URLs via curl; --offline
+tools/check-gallery.py      S8.4  Gallery migration is lossless vs baseline/ (49 bullets, append-only)
+tools/check-demos.py        S8.2b the demos/TUTORIAL links a page makes resolve; --markdown, --build
+tools/make-samples.py       S8.1  every go fence compiles; headless=yes also runs it (S8.6)
+tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit
+tools/apiface/          S8.3  the surface dumper (go/parser, no downloads) - run from its own dir
+tools/wikilib.py              shared stdlib helpers: manifest, fences, links, ASCII
+tools/mirror-wiki.sh            publish the manifest to the render wiki; --dry-run first
+```
+
+Allow-lists carry only legacy exceptions with a written reason: `tools/style-allow.txt` (2 upstream
+ defects), `tools/link-status-allow.txt` (unreachable hosts, URLs kept because deleting a reader's link
+ is worse), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
+you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only).
+
+Still useful one-liners that no tool covers:
 
 ```bash
 # Appended-to sections: shows the current last entry of each category.
 awk '/^## /{s=$0} /^- \[/{last[s]=$0} END{for (k in last) print k" -> "last[k]}' Gallery.md
 
-# Malformed markdown links, e.g. `[tiki])url)` — the shape that needed a follow-up wiki fix commit.
-# Prints nothing when clean. Scope it to the wiki pages; AGENTS.md prose contains brackets.
-grep -nP '\[[^\]]*\](?!\()' Gallery.md Home.md
-
-# Does a candidate project URL resolve? Needs network; prints an HTTP status.
-curl -sS -o /dev/null -m 8 -w '%{http_code}\n' -I <url>
-
-# Total gallery entries, and the raw diff you are about to publish.
-grep -c '^- \[' Gallery.md && git diff
+# The raw page diff you are about to publish.
+git diff -- Home.md Gallery.md
 ```
 
-If the `curl` check fails because of sandbox/network restrictions, say so in your reply instead of
-adding the URL on assumption, and never invent a URL from a project name.
+If the `curl` check inside `check-links.py` fails because of sandbox/network restrictions it says so in
+its report instead of guessing, and never invent a URL from a project name.
 
 # Workflow Checklist
 
-1. `git status` shows a clean tree, then `git pull --ff-only` — the wiki is edited by many people
-   through the web UI and this clone goes stale.
+1. `git status` shows a clean tree, then `git fetch upstream && git log --oneline master..upstream/master`
+   - the wiki is edited by many people through the web UI and this clone goes stale.
 2. Make the smallest possible edit; grep for the project name/URL before touching `Gallery.md`.
-3. Re-read the raw file, not a rendered guess: confirm the entry sits in the right section, run the
-   link-syntax `grep` and `curl` checks above, and confirm `git diff --stat` shows the expected
-   single-line change.
+3. Re-read the raw file, not a rendered guess: confirm the entry sits in the right section, then run
+   `tools/review-checklist.py --offline` and confirm `git diff --stat` shows the expected single-line
+   change.
 4. Commit in the wiki's message style (page commits) or plain imperative (tooling), and only push when
    asked.
 
 # Note About This File
 
-This file **is** committed, per route C (`setup.md` 3) — and it must never be added to
+This file **is** committed, per route C - and it must never be added to
 `tools/pages.txt`, which is the only list the mirror script and therefore any rendered wiki ever sees.
 That manifest, not a `.gitignore`, is the single source of truth for what becomes a page; it is why a
 `README.md` / `PLAN.md` / `AGENTS.md` commit here is safe while the same commit in a real wiki repo would

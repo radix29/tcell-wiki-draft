@@ -12,7 +12,7 @@ Out of scope (this pass): any change to the `../tcell` library repo, its `README
 > in a repo the author owns, then propose them upstream. Not a fork - GitHub offers no Fork for `.wiki` repos
 > and a fork of the code repo carries no wiki content at all.
 > Chosen vehicle (Q-0c): author in **`radix29/tcell-wiki-draft`** with that repo's own wiki enabled as a
-> render preview. Step-by-step setup is in **`setup.md`**; Phase 0 T0.0 now means "run it" - steps 1-3 are
+> render preview. Step-by-step setup is in **`AGENTS.md`** ("Runbook"); Phase 0 T0.0 now means "follow it" - steps 1-3 are
 > executed (2026-10-24): remotes rewired, `origin`/`render` pushed, `tools/pages.txt` + `.gitignore` committed.
 
 ---
@@ -91,7 +91,7 @@ Rules that must be designed around (each is marked with how it is settled):
 | # | Constraint | Consequence |
 |---|---|---|
 | C1 | Publish-on-push, no PRs, anyone with the link can also edit in the web UI | every phase ends with a local review gate; publish only on explicit approval. **Revised by Q-0b: we cannot push at all, so "publish" now means a web-UI edit accepted upstream, or handing content to a maintainer; the review gate moves from "before we push" to "before we propose".** |
-| C2 | GitHub wikis expose **any** `.md` file as a public page | **Settled by Q-0c + setup.md 3: it only bites where a push renders.** Pages reach a wiki solely through `tools/pages.txt`, so `PLAN.md`/`AGENTS.md`/`setup.md` are committed in the draft and never mirrored; `upstream` stays fetch-only |
+| C2 | GitHub wikis expose **any** `.md` file as a public page | **Settled by Q-0c + `AGENTS.md` Runbook: it only bites where a push renders.** Pages reach a wiki solely through `tools/pages.txt`, so `PLAN.md`/`AGENTS.md`/`README.md` are committed in the draft and never mirrored; `upstream` stays fetch-only |
 | C3 | Slugs come from file names: `Getting-Started.md` -> `/wiki/Getting-Started`; spaces become `_` | prefer hyphenated, <= 3 word ASCII file names; internal links omit `.md` |
 | C4 | Nested/subdirectories are not reliably rendered as sub-pages | assume a **flat** page set; hierarchy via `_Sidebar.md` and Home nav only |
 | C5 | `_Sidebar.md` / `_Footer.md` apply to every page | **Settled by Q-3/Q-0b: we build it as a droppable prototype in our own draft wiki only (5.5) and never propose it unsolicited - a site-wide sidebar is an upstream call (D-1).** Pages never depend on it |
@@ -133,8 +133,9 @@ motivation = Q-0c / Q-1, upstream timing = Q-2, scope = Q-3.
 |---|---|---|---|
 | Q-0 (requirements) | **§10 is the complete requirements contract** - no deadline, tone/audience, gallery-restructure restriction, or size cap beyond what is already written here | 2026-10-24 | Section 10 upgraded from "traceability of the request" to the authoritative contract; no provenance gap remains |
 | Q-3 (scope) | **(b) 6 pages: `Home`, `Gallery`, `Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`** | 2026-10-24 | Re-estimates the plan at 39-51 h (page bodies 31-40 h). The other 6 topic pages of 5.1 become a **deferred second milestone** (5.1, 6.6, 12), which has three consequences bigger than the hour count: (1) `Function-Reference` absorbs their audience and grows to 1,000-1,400 words, (2) the 100%-symbol-coverage gate now concentrates the whole API into one page - the `pkg.go.dev` mirror tension is now live - open coverage-gate question, see 6.5 - and (3) no built page may link a deferred page (route-C self-containment rule). Also decides nav: `Home` is the hub and `_Sidebar.md` is built as a **droppable prototype mirrored only to our own wiki**, because a site-wide sidebar is an upstream call (D-1) and this keeps it reversible. D-4 (migration page) becomes moot - breaking changes are linked to repo `CHANGESv3.md` instead. |
-| Q-2 (upstream timing) | **"Ignore the talk for now, we build it first"** - no issue in `gdamore/tcell`, no upstream contact, until the draft says otherwise | 2026-10-24 | `setup.md` 7 marked PARKED (draft stays public so the eventual pitch is just a URL). Plan effects: Phase 7 T7.4 becomes "prepare the proposal package, do not send"; the D-list items that needed upstream (D-2 canonical home, D-1 site-wide sidebar, D-6 wording of a live line, D-7 whose support links) are now **decided as draft-owner questions by us** and separately flagged as "must be asked before it could ever land upstream"; new risk row added. Consequence to hold onto: everything we write must still be paste-able one page at a time, because "build first" must not quietly turn into "a different project with different constraints". |
-| Q-0c (vehicle) | **Route C**: author in `radix29/tcell-wiki-draft` (plain repo = source of truth; its own wiki = render preview), propose upstream page by page, GitHub Pages only if upstream declines. Motivation confirmed as "Tcell's docs should be better", not "a project I own end-to-end" | 2026-10-24 | `setup.md` written and referenced from Phase 0 (T0.0). Consequences: the official wiki becomes a fetch-only remote `upstream` plus a `--push` URL guard; tooling moves from "forever untracked" to committed in the draft repo (`tools/`, `samples/`, `AGENTS.md`, `PLAN.md`), because the C2 "every .md becomes a page" hazard now only exists in the *mirror*, which is driven by `tools/pages.txt`; CI becomes possible in the draft, so C6 reads "no CI **upstream**" and the draft's Actions is our gate while the upstream artefact stays untestable; T5.1's Mermaid probe and any `_Sidebar.md` experiment move to our own wiki, deleting the "push a scratch page to the live official wiki" step; new route-C rule: **a page body may not reference anything outside itself** (no repo-hosted `images/`, no `tools/` links), which pre-answers D-5 as "hotlinks + Mermaid/ASCII only". |
+| Q-2 (upstream timing) | **"Ignore the talk for now, we build it first"** - no issue in `gdamore/tcell`, no upstream contact, until the draft says otherwise | 2026-10-24 | `PLAN.md` Phase 7 marked PARKED (draft stays public so the eventual pitch is just a URL). Plan effects: Phase 7 T7.4 becomes "prepare the proposal package, do not send"; the D-list items that needed upstream (D-2 canonical home, D-1 site-wide sidebar, D-6 wording of a live line, D-7 whose support links) are now **decided as draft-owner questions by us** and separately flagged as "must be asked before it could ever land upstream"; new risk row added. Consequence to hold onto: everything we write must still be paste-able one page at a time, because "build first" must not quietly turn into "a different project with different constraints". |
+| Q-0c (vehicle) | **Route C**: author in `radix29/tcell-wiki-draft` (plain repo = source of truth; its own wiki = render preview), propose upstream page by page, GitHub Pages only if upstream declines. Motivation confirmed as "Tcell's docs should be better", not "a project I own end-to-end" | 2026-10-24 | `setup.md` written and referenced from Phase 0 (T0.0); merged into `AGENTS.md` the same day. Consequences: the official wiki becomes a fetch-only remote `upstream` plus a `--push` URL guard; tooling moves from "forever untracked" to committed in the draft repo (`tools/`, `samples/`, `AGENTS.md`, `PLAN.md`), because the C2 "every .md becomes a page" hazard now only exists in the *mirror*, which is driven by `tools/pages.txt`; CI becomes possible in the draft, so C6 reads "no CI **upstream**" and the draft's Actions is our gate while the upstream artefact stays untestable; T5.1's Mermaid probe and any `_Sidebar.md` experiment move to our own wiki, deleting the "push a scratch page to the live official wiki" step; new route-C rule: **a page body may not reference anything outside itself** (no repo-hosted `images/`, no `tools/` links), which pre-answers D-5 as "hotlinks + Mermaid/ASCII only". |
+| Q-Ex (examples) | **The wiki links the library's own examples instead of authoring them.** Pages cite `demos/` (8 programs, each with a rendering test) and `TUTORIAL.md` in `gdamore/tcell`; a page fence carries only the fragment under discussion | 2026-10-24 | `samples/smoke/` deleted as an authored example. `tools/check-demos.py` checks the names, URLs, `go run` commands and `_demos/` claims against the checkout and prints the paste-able `## Demos in the Repository` block with `TODO(desc)` where a demo has no doc sentence (6 of 8) rather than inventing prose. Cuts Phase 4 authoring (snippets become small `mode=lib` fragments, still S8.1-compiled and S8.6-run) and turns the Gallery's new section into generated text. Library-side ask for the F-1 package: doc comments on the demos so descriptions come from the library itself. |
 | Q-0b (premise) | **We are not a maintainer of `tcell` or `tcell.wiki`.** Work happens in a repo the author owns, not in a fork of `tcell`; upstream contribution is by proposal, not by push | 2026-10-24 | Biggest single edit this plan has had. Affects: C1 + C9 (above), the D-list split into ours vs upstream's (above), D-7 dropped from our draft, Phase 0 (add: create draft repo + point `origin` at it, keep the official wiki as read-only `upstream`), Phase 7 (T7.5 "publish" becomes "propose + hand over per-page markdown"), T5.1 (probe on our own wiki), and §12 (GitHub Pages becomes a real fallback if upstream declines). Draft README must state *unofficial / not affiliated / official wiki at ...*; the wiki repo carries no `LICENSE` file, so attribution and Gallery URLs are preserved and no license is implied. |
 
 (Answers are recorded one row at a time as the plan is walked through; `Q1..Q16` map to the
@@ -209,7 +210,7 @@ is added; ~10 min of extra work per new page and a standing risk of stale nav.
   evaluated (C5) without being load-bearing. It is not part of the upstream proposal (D-1 is a site-wide
   change and the maintainers' call) and deleting it must never require editing a page - which is true
   today because no page links to it or depends on it.
-- **A page must be paste-able alone** (`setup.md` 3): no links to the 6 deferred pages, no `Prev/Next`,
+- **A page must be paste-able alone** (`AGENTS.md` Runbook): no links to the 6 deferred pages, no `Prev/Next`,
   no `images/` from our repo, no `tools/` paths, no relative paths. Internal links point only at the
   other 5 built pages; everything else is an absolute URL to `../tcell` docs, `pkg.go.dev`, or a demo.
 
@@ -335,7 +336,7 @@ no `Prev/Up/Next` footers, no links to deferred pages).
 Deferred to a second milestone: `Screen-and-Rendering`, `Styles-and-Color`, `Events-and-Input`,
 `Unicode-and-Encodings`, `Platforms`, `Migration-v2-to-v3`. They stay specced below as the backlog, and
 their audience is served in the meantime by `Function-Reference` tables + `Getting-Started` sections.
-Nothing in the 6-page build may link to them (`setup.md` 3: a page must be self-contained).
+Nothing in the 6-page build may link to them (`AGENTS.md`: a page must be self-contained).
 
 `Terminal-Setup` (built, one of the 6) and every deferred page follow this shape:
 
@@ -369,14 +370,14 @@ Nothing in the 6-page build may link to them (`setup.md` 3: a page must be self-
   someone else's wiki on its own (5.5). Third-party screenshots stay hotlinked where they already exist.
 - Code: `gofmt`-clean, `go` fence tag, tested (S8.1), no license headers in snippets, imports shown.
 - Never edit a published page by rewriting history; corrections are new commits.
-- `PLAN.md` / `AGENTS.md` / `setup.md` are tracked in the **draft** repo but never mirrored into the
+- `PLAN.md` / `AGENTS.md` / `README.md` are tracked in the **draft** repo but never mirrored into the
   render tree and never proposed upstream (C2 applies to the mirror, `tools/pages.txt` is the gate).
 
 ---
 
 ## 8. Verification & QA tooling (no CI available)
 
-Small scripts, **committed under `tools/` and `samples/`** in the draft repo (setup.md 3), so they run
+Small scripts, **committed under `tools/` and `samples/`** in the draft repo (`AGENTS.md` Runbook), so they run
 both locally and as Actions CI there - the one thing a real wiki repo can never have. Nothing in
 `tools/` can publish: the mirror copies only what `tools/pages.txt` lists:
 
@@ -387,8 +388,14 @@ both locally and as Actions CI there - the one thing a real wiki repo can never 
 | S8.3 | symbol coverage auditor: `go doc -all` symbol list vs symbols mentioned in wiki text | the 100% reference coverage gate (S6.5) |
 | S8.4 | gallery diff/counter: per-category bullet counts + set-of-URLs diff between old and new `Gallery.md` | migration is provably lossless (S2) |
 | S8.5 | style linter (small script): non-ASCII in prose, trailing whitespace, `*emph*`, `*.md)` internal links, missing fence tags, wrapped bullets | house style (S7) enforced mechanically |
-| S8.6 | (stretch) headless smoke test: `vt.MockTerm` implements `tty.Tty`, so a tutorial program may run via `tcell.NewTerminfoScreenFromTty(vt.NewMockTerm(...))` with no real terminal | snippets do more than compile | time-boxed 1 h spike in T0.4; if `Screen.Init` cannot run against the mock, drop S8.6 and keep S8.1 as the only gate |
-| S8.7 | review checklist runner: prints per-page "did you check resize handling? env precedence? v2 API leakage? link to owning page?" | consistent manual review |
+| S8.6 | **PASSED and built (2026-10-24).** The spike ran `Screen.Init` against `vt.MockTerm` + `tcell.NewTerminfoScreenFromTty` + `tcell.ShimScreen` (the recipe from `demos/hello/hello_test.go`) and a program drew and quit headlessly in 0.3 s, so snippets can be *run*, not just compiled | snippets do more than compile | implemented as opt-in `headless=yes` inside S8.1 (a fence that asks for it is executed on the emulator and must exit on ESC); `mode=lib` + `headless` is a label error |
+**Status (2026-10-24): S8.1-S8.5, S8.7 and a demo checker (S8.2b, `tools/check-demos.py`) are
+implemented under `tools/` and run on every push in `.github/workflows/qa.yml`.**
+
+| S8.7 | **Built (2026-10-24):** `tools/review-checklist.py` runs every other tool as a GATE, adds the mechanical CHECKs (v2 leakage vs the real surface, resize prose naming `EventResize`, orphan pages, duplicated `##` topics, non-self-contained diagrams) and prints the ASK lines a human must answer | consistent manual review | verified both ways: clean pages exit 0; a page with `PollEvent`/`StyleNormal`/unnamed-resize exits 1 with three named findings |
+
+**Status (2026-10-24): S8.1-S8.5, S8.7 and a demo checker (S8.2b, `tools/check-demos.py`) are
+implemented under `tools/` and run on every push in `.github/workflows/qa.yml.**
 
 Review gates: each phase ends with (a) scripts green, (b) second read of raw markdown, (c) explicit
 maintainer approval, then a single publish commit per page.
@@ -402,22 +409,27 @@ sum of that phase's tasks. Recomputed after Q-3: **39-51 h** (Phase 0 3-4, 1 2-3
 4 9-12, 5 8-10, 6 6-8, 7 4-5). The 44-57 h figure in section 1 predates the Q-3 scope cut.
 
 ### Phase 0 - Decisions and safety rails (3-4 h) - *blocks everything*
-- T0.0 Execute `setup.md`: create `radix29/tcell-wiki-draft` (`gh` is installed and authenticated as
-  `radix29`, verified 2026-10-24; the repo does not exist yet), enable its wiki, rewire remotes so the
-  official wiki is fetch-only `upstream`, add `tools/pages.txt` + `tools/mirror-wiki.sh`, write the draft
-  `README.md` unofficial disclaimer, land one clean `git push -u origin master`. *(0.5 h)*
+- T0.0 **Executed 2026-10-24** (runbook now in `AGENTS.md`): created public `radix29/tcell-wiki-draft` and
+  enabled its wiki (render branch `master`), rewired remotes so the official wiki is fetch-only
+  `upstream` with a dead push URL, committed `tools/pages.txt`, `tools/mirror-wiki.sh`, the `README.md`
+  unofficial disclaimer and `.github/workflows/qa.yml`, and landed `git push -u origin master`. *(0.5 h)*
 - T0.1 Get answers to D-1, D-2, D-3 (blocking), plus D-4..D-9 preferences. **Per Q-0b, D-1, D-2, D-7 and
   D-8 are maintainers' calls - "answered" for us means "we know what to propose", not "decided".**
   *(0.5 h)*
-- T0.2 **Superseded by setup.md 3 (Q-0c): exclude nothing.** `PLAN.md`, `AGENTS.md`, `setup.md`,
+- T0.2 **Superseded by Q-0c (exclude nothing): committed, not ignored.** `PLAN.md`, `AGENTS.md`, `README.md`,
   `tools/` and `.gitignore` are **committed** in the draft repo, because C2's "every `.md` becomes a
   page" hazard exists only where a push renders - and that is the manifest, now. *(done 2026-10-24)*
 - T0.3 Fetch `upstream`; record `git rev-parse upstream/master` and copy the current `Home.md` /
   `Gallery.md` into `baseline/`, **committed in the draft** (recovery point + the copy CI's S8.4 diff
-  reads), not an untracked dir. *(0.5 h)*
-- T0.4 Build the QA scripts S8.1-S8.5, S8.7 (S8.6 parked as a stretch spike, 1 h, time-boxed). *(2 h)*
-- Exit: decisions recorded in section 4 of this file, scripts green against the *current* 2-page wiki,
-  baseline saved and committed.
+  reads), not an untracked dir. **Executed 2026-10-24:** `baseline/Home.md` + `baseline/Gallery.md` are
+  byte-identical to `upstream/master` (`8e83ce1`), with `baseline/RECORD.txt` holding the SHAs,
+  checksums and the 49-bullet count. Commit them with the next tooling commit. *(0.5 h)*
+- T0.4 **Executed 2026-10-24:** S8.1-S8.5 + S8.7 built (see 8's status line), plus `tools/check-demos.py`
+  for the linked-examples rule (Q-Ex). The S8.6 spike ran and passed, so it shipped as opt-in
+  `headless=yes` inside S8.1 rather than being parked. *(2 h)*
+- Exit: decisions recorded in section 4 of this file (**D-1, D-2, D-3 remain open and gate Phase 1**),
+  scripts green against the *current* 2-page wiki (done: `tools/review-checklist.py` exits 0), baseline
+  saved (done; committing it is the one loose end in Phase 0).
 
 ### Phase 1 - Skeleton and nav (2-3 h)
 - T1.1 Draft `_Sidebar.md` for the 6-page tree of 5.1 as the **droppable prototype** (5.5): mirrored to
@@ -536,7 +548,7 @@ applies beyond the page budgets in S5.1.
 | Undocumented env var semantics guessed wrong | wrong user advice | read the handling in source and cite the file; if ambiguous, ask before documenting |
 | Wiki is publicly editable (spam/vandalism) | defaced pages | D-8 setting check; keep baseline + periodic `git pull --ff-only` + S8.4-style content diffs |
 | Scope creep into rewriting library code/README | plan never finishes | those are F-1 follow-ups, explicitly out of scope |
-| **No external signal until the draft is finished** (Q-2 defers all upstream contact): 6 pages of docs nobody asked for, built against guessed answers to D-1/D-2/D-6 | rework, or a public draft that diverges from what the project would accept | every page stays self-contained and paste-able (route-C rule, `setup.md` 3, 5.5); keep 3 decisions separable and reversible in the draft - one file for `_Sidebar.md` (D-1) so it can be dropped without touching pages, `Home`/`Gallery` never renamed, support links (D-7) never written by us; the draft README states the project is a proposal; re-read this row before starting Phase 5 |
+| **No external signal until the draft is finished** (Q-2 defers all upstream contact): 6 pages of docs nobody asked for, built against guessed answers to D-1/D-2/D-6 | rework, or a public draft that diverges from what the project would accept | every page stays self-contained and paste-able (route-C rule, `AGENTS.md`, 5.5); keep 3 decisions separable and reversible in the draft - one file for `_Sidebar.md` (D-1) so it can be dropped without touching pages, `Home`/`Gallery` never renamed, support links (D-7) never written by us; the draft README states the project is a proposal; re-read this row before starting Phase 5 |
 | 6 built pages + 6 deferred ones become a maintenance burden | rot returns in a year | page budgets (S5.1), one-owner-per-topic rule, tables one-line-per-row, maintenance note (T7.3), and the deferred set stays unwritten until the built set survives a month of API churn |
 
 ---
@@ -572,7 +584,7 @@ applies beyond the page budgets in S5.1.
 - [ ] All 8 `TCELL_*` env vars and all 9 `Opt*` options documented, with precedence stated.
 - [ ] S8.2/S8.3/S8.4/S8.5 all green immediately before each publish commit.
 - [ ] The mirrored render tree contains exactly the 6 pages + the droppable `_Sidebar.md` prototype;
-      `PLAN.md`, `AGENTS.md`, `setup.md`, `tools/` are never mirrored (`tools/pages.txt` is the gate).
+      `PLAN.md`, `AGENTS.md`, `README.md`, `tools/` are never mirrored (`tools/pages.txt` is the gate).
 - [ ] Every page reviewed in raw markdown **and** as rendered in our draft wiki at
       `https://github.com/radix29/tcell-wiki-draft/wiki/<slug>` (Q-0b: the official wiki is read-only,
       so "reviewed where it is published" means the mirror until upstream accepts something).
