@@ -6,3 +6,4 @@ Gallery.md
 Getting-Started.md
 Architecture.md
 Function-Reference.md
+Terminal-Setup.md
