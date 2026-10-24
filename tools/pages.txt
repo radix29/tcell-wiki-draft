@@ -1,2 +1,6 @@
+# The pages this draft publishes. tools/mirror-wiki.sh copies this list and nothing else, so a file
+# that is absent here can never become a wiki page no matter how it was committed (PLAN.md C2, Q-0c).
+# Keep one flat file name per line: no path, no spaces, ASCII, hyphenated, at most three words.
 Home.md
 Gallery.md
+Getting-Started.md
