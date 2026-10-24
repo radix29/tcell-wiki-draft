@@ -115,6 +115,12 @@ Entry format — exactly this shape, one line each:
   mirrors; Codeberg is the home and the `go.mod` module path), so check description, homepage,
   `go.mod` and tag SHAs before relinking. Never keep a dead link by allow-listing it, and never
   delete the entry — the allow-list file is for statuses we *keep*, and it says so.
+- Adding an entry that upstream does not have (Q-13) needs a record in `tools/gallery-additions.txt`
+  first: display name, URL, and the evidence - URL resolves, project is real, it genuinely depends on
+  Tcell, and whether the request came from the author. `tools/check-gallery.py` reads that file, so
+  `--max-additions` stays 0 and an unrecorded bullet still fails; do not raise the flag in CI to wave
+  one through, and do not add a new project without checking it imports `tcell` (this is the Tcell
+  gallery). Verified entry for reference: `goSSMS` -> `github.com/radix29/gossms`.
 - Duplicate display names are tolerated when the URLs differ (`go-tetris` appears twice for two
   different repos). Search for the project name and URL before adding; prefer extending or
   consolidating an existing entry over adding a near-duplicate.
