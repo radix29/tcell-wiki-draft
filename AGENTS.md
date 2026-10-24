@@ -36,8 +36,10 @@ origin    https://github.com/radix29/tcell-wiki-draft.git      this repo; draft 
 render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via tools/mirror-wiki.sh
 ```
 
-Done: draft repo + wikis enabled (render branch is `master`, HEAD was GitHub's `Initial Home page`
-placeholder `2ebcbf8`), remotes rewired, `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
+Done: draft repo + wikis enabled (render branch is `master`; HEAD is `32022f9`, the first real preview
+that `tools/mirror-wiki.sh` published on 2026-10-24, replacing GitHub's `Initial Home page` placeholder
+`2ebcbf8`), `origin/master` is pushed and CI is green on it (`.github/workflows/qa.yml`, run
+`40112709147`, 15/15 steps), remotes rewired, `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
 bullets). `master` deliberately diverges from `upstream/master` - that divergence is route C - so
 rolling a page back is `git checkout upstream/master -- Home.md Gallery.md`, never
@@ -48,7 +50,8 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 
 ```bash
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
-git diff --stat upstream/master HEAD -- Home.md Gallery.md   # empty until a page is edited
+git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 2
+                                                            # lines (the Q-11 URL move), Home 0
 git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
 ```
 
