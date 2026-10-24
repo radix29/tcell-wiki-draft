@@ -531,7 +531,7 @@ ship these seven files whether or not anyone wanted them shipped yet - waiting m
 larger, not safer.
 
 - T1.1 **Done.** `_Sidebar.md` is D-1 made concrete: three groups using 5.2's own nav words (Start here /
-  Reference / Showcase), all six pages, no sixth invention, plus two lines saying this wiki is an
+  Reference / Showcase), all six pages, no sixth invention, plus one line saying this wiki is an
   unofficial draft rewrite and pointing at `gdamore/tcell/wiki` and the library - a public preview that
   reads as official is the exact failure Q-0b worried about. It is in the manifest, so the mirror is
   what publishes it, and it is linked by no page, so dropping it would edit no page text (5.5's

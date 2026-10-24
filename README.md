@@ -22,10 +22,10 @@ radix29/tcell-wiki-draft.git  (origin)    this repo; source of truth for the dra
 `Home.md` is byte-identical to upstream and `Gallery.md` differs from it by three lines, each one a
 recorded decision (Q-11's two URL moves, Q-13's one addition), so a page edit stays one logical change
 rather than a rewrite. The four Q-3 pages (`Getting-Started`, `Architecture`, `Function-Reference`,
-`Terminal-Setup`) are published as stubs, and `_Sidebar.md` is D-1's droppable navigation prototype.
-Pages are gated by `tools/pages.txt`: a file becomes a wiki page exactly when its name is on that list.
-`PLAN.md`, `AGENTS.md`, this README, `tools/` and
-`samples/` are tracked but never mirrored, which is what makes it safe to keep tooling in a repo whose
+`Terminal-Setup`) are written as honest stubs and `_Sidebar.md` is D-1's droppable navigation prototype;
+both reach the preview at the next publish. Pages are gated by `tools/pages.txt`: a file becomes a wiki
+page exactly when its name is on that list. `PLAN.md`, `AGENTS.md`, this README, `tools/` and `samples/`
+are tracked but never mirrored, which is what makes it safe to keep tooling in a repo whose
 push target renders pages.
 
 The draft wiki at [`radix29/tcell-wiki-draft/wiki`](https://github.com/radix29/tcell-wiki-draft/wiki)

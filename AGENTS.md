@@ -28,8 +28,8 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   readers at this wiki's Gallery, so the Gallery is the canonical list of Tcell-based projects.
 - Page file names decide the slug (`PLAN.md` C3): ASCII, hyphenated, at most three words, no spaces and
   no underscores - `Home.md`, `Gallery.md`, and per Q-3 `Getting-Started.md`, `Architecture.md`,
-  `Function-Reference.md`, `Terminal-Setup.md`. All four Q-3 slugs exist from Phase 1 and are mirrored,
-  so a typo in one of them is now a permanent wrong URL, not a rename.
+  `Function-Reference.md`, `Terminal-Setup.md`. All four Q-3 slugs exist from Phase 1 and are in the
+  manifest, so from the next publish a typo in one of them is a permanent wrong URL, not a rename.
 
 # Runbook (setup executed 2026-10-24)
 
@@ -43,8 +43,9 @@ render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via t
 
 Done: draft repo + wikis enabled (render branch is `master`; HEAD is `39e5378`, the second preview push
 of 2026-10-24, whose predecessor `32022f9` was the first real page preview and `2ebcbf8` GitHub's
-`Initial Home page` placeholder), `origin/master` is pushed and CI is green on it (`.github/workflows/qa.yml`, run
-`40112709147`, 15/15 steps), remotes rewired, `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
+`Initial Home page` placeholder), `origin/master` is pushed and CI is green on it
+(`.github/workflows/qa.yml`, run `40112709147`, 15/15 steps), remotes rewired,
+`tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
 bullets). `master` deliberately diverges from `upstream/master` - that divergence is route C - so
 rolling a page back is `git checkout upstream/master -- Home.md Gallery.md`, never
