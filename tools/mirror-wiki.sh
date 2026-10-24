@@ -8,6 +8,8 @@
 # Usage:
 #   tools/mirror-wiki.sh                  copy manifest pages, commit, push to the render remote
 #   tools/mirror-wiki.sh --dry-run        show exactly what would be published; commit/push nothing
+#   tools/mirror-wiki.sh --check          CI's drift gate: exit 1 if the live render wiki does NOT
+#                                         render these pages exactly (never writes; Q-14)
 #   MSG='Updated Home (markdown)' tools/mirror-wiki.sh
 #                                         one-page-per-push history that reads like the real wiki
 #   MIRROR=/tmp/x.git-replica REMOTE=/tmp/x.git tools/mirror-wiki.sh
@@ -19,17 +21,23 @@ MIRROR=${MIRROR:-/tmp/tcell-wiki-draft.wiki}
 REMOTE=${REMOTE:-https://github.com/radix29/tcell-wiki-draft.wiki.git}
 MANIFEST=${MANIFEST:-$ROOT/tools/pages.txt}
 MSG=${MSG:-Preview draft pages}
+# The render tree is a build output of the repo, so it must be built from committed content: an
+# uncommitted page edit published "because the mirror runs after every push" would put text on a
+# public wiki that no commit and no review ever saw (Q-14). FORCE=1 overrides for emergencies.
+FORCE=${FORCE:-0}
 # BRANCH defaults to whatever the render clone is on, which after a clone is the wiki's own default
 # branch. `git ls-remote --symref render HEAD` says it is `master` for the draft wiki; override only if that
 # ever changes out from under us.
 BRANCH=${BRANCH:-}
 
 DRY=0
+CHECK=0
 case "${1:-}" in
   -n | --dry-run) DRY=1 ;;
+  -c | --check) CHECK=1 ;;
   '') ;;
   *)
-    echo "usage: ${0##*/} [--dry-run]" >&2
+    echo "usage: ${0##*/} [--dry-run | --check]" >&2
     exit 2
     ;;
 esac
@@ -67,6 +75,17 @@ done <"$MANIFEST"
   echo "manifest lists no pages; refusing to mirror an empty wiki" >&2
   exit 2
 }
+
+# --- refuse to publish text that is not committed (see FORCE above) ------------------------------
+dirty_pages=$(git -C "$ROOT" status --porcelain -- "${pages[@]}" || true)
+if [ -n "$dirty_pages" ] && [ "$FORCE" != 1 ]; then
+  { echo "refusing to publish: these manifest pages have uncommitted changes"
+    printf '%s\n' "$dirty_pages" | sed 's|^|  |'
+    echo "  the render wiki is a build output of committed content; commit first (Q-14), or"
+    echo "  FORCE=1 if you really mean to publish text that no commit contains."
+  } >&2
+  exit 2
+fi
 
 # --- clone / update the render clone -------------------------------------------------------------
 [ -d "$MIRROR/.git" ] || git clone "$REMOTE" "$MIRROR"
@@ -129,17 +148,9 @@ if [ -z "$BRANCH" ]; then
 fi
 echo "== $REMOTE ($BRANCH) =="
 git -C "$MIRROR" status --porcelain
-if [ -z "$(git -C "$MIRROR" status --porcelain)" ]; then
-  echo "nothing to mirror: the render tree already matches the manifest"
-  exit 0
-fi
-git -C "$MIRROR" diff
-git -C "$MIRROR" diff --cached --stat
-
-if [ $DRY -eq 1 ]; then
-  echo "--dry-run: stopped before commit/push (message would have been: $MSG)"
-  # Restore the mirror tree: a --dry-run that leaves files copied or staged would make the next
-  # (real) run abort with "mirror clone is dirty", which reads like a repository problem.
+restore_mirror() {
+  # A check/dry-run that leaves files copied or staged would make the next real run abort with
+  # "mirror clone is dirty", which reads like a repository problem instead of a tool problem.
   for page in "${pages[@]}"; do
     git -C "$MIRROR" reset -q -- "$page" 2>/dev/null || true
     if git -C "$MIRROR" ls-files --error-unmatch "$page" >/dev/null 2>&1; then
@@ -148,6 +159,35 @@ if [ $DRY -eq 1 ]; then
       rm -f "$MIRROR/$page"
     fi
   done
+}
+
+if [ -z "$(git -C "$MIRROR" status --porcelain)" ]; then
+  if [ $CHECK -eq 1 ]; then
+    echo "preview is current: $REMOTE renders exactly the ${#pages[@]} page(s) in $MANIFEST"
+    echo "  render HEAD $(git -C "$MIRROR" rev-parse --short HEAD)"
+    exit 0
+  fi
+  echo "nothing to mirror: the render tree already matches the manifest"
+  exit 0
+fi
+git -C "$MIRROR" diff
+git -C "$MIRROR" diff --cached --stat
+
+if [ $CHECK -eq 1 ]; then
+  restore_mirror
+  { echo "preview is BEHIND the draft: the live wiki does not render the pages at $(git -C "$ROOT" rev-parse --short HEAD)"
+    echo "  render HEAD is $(git -C "$MIRROR" rev-parse --short HEAD); the diff above is what publishing would change"
+    echo "  the standing rule (Q-14) is that every push to the draft is published with it; run tools/publish.sh,"
+    echo "  or tools/mirror-wiki.sh on its own, then re-run this check."
+    echo "  If the diff above is a page someone edited in the wiki web UI, decide first whether that edit"
+    echo "  belongs in the repo - the wiki is the output, the repo is the source."
+  } >&2
+  exit 1
+fi
+
+if [ $DRY -eq 1 ]; then
+  echo "--dry-run: stopped before commit/push (message would have been: $MSG)"
+  restore_mirror
   echo "--dry-run: $MIRROR restored to $(git -C "$MIRROR" rev-parse --short HEAD)"
   exit 0
 fi

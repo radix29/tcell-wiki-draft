@@ -78,12 +78,15 @@ jobs:
         working-directory: wiki
         run: tools/review-checklist.py --offline
 
-      - name: mirror - the manifest still resolves (informational; never pushes from CI)
+      # Q-14: the standing rule is that every push to this repo is published with it, so a preview
+      # that lags the pushed commit is a real defect and not a note. CI itself never pushes - it has
+      # no credentials for the render remote by design - so the response to a failure here is
+      # tools/publish.sh locally, which mirrors and then pushes.
+      - name: preview - the render wiki renders this commit's pages (Q-14)
         working-directory: wiki
-        continue-on-error: true
         env:
           MIRROR: ${{ runner.temp }}/wiki-preview
-        run: tools/mirror-wiki.sh --dry-run
+        run: tools/mirror-wiki.sh --check
 
       - name: summary - the two tables a reviewer reads first
         if: always()
