@@ -1,0 +1,28 @@
+# S8.3 allow list - backticked names a page may use that are NOT exported API of the tcell root
+# package (tools/symbol-coverage.py). One name per line; text after '#' is the reason.
+#
+# Two kinds of entry:
+#   pkg:<prefix>   accepts the package part of a `pkg.Symbol` reference we cannot resolve from the
+#                  root package (stdlib or third-party). tcell's own subpackages (vt, tty, v/tscreen,
+#                  subdirs of the checkout) are discovered automatically, so they do NOT belong here.
+#   <Name>         accepts a bare backticked word that is not API: a Go keyword/builtin is already
+#                  built in, so an entry here should be a real prose decision, with a reason.
+#
+# Rule: an entry here is how an invented API slips past the gate, so never add one to silence a
+# finding you do not understand, and never add `<Name>` for a symbol that merely got renamed - fix
+# the page. Re-check this list at every phase boundary; each entry should shrink over time.
+pkg:fmt  # stdlib used in snippets and prose
+pkg:os  # stdlib: os.Stdout / os.Getenv in terminal-setup prose
+pkg:context  # stdlib: event-loop examples take a context
+pkg:strings  # stdlib
+pkg:errors  # stdlib
+pkg:bytes  # stdlib
+pkg:strconv  # stdlib
+pkg:image  # stdlib: FromImageColor talks about image.Image
+pkg:time  # stdlib: TimeHandler / EventTime prose
+pkg:unicode  # stdlib: encoding-width prose
+pkg:go  # the go command line, e.g. `go install`, `go vet`
+pkg:github  # repository URLs cited in prose (not Go API)
+pkg:golang  # golang.org/x/... import paths cited in prose
+pkg:kitty  # kitty keyboard-protocol prose; the API is KittyFlags*, not a package
+pkg:terminfo  # terminfo(5) prose, not a Go package

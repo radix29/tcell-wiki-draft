@@ -1,0 +1,20 @@
+# S8.2 accepted URL statuses - tools/check-links.py fails on anything not listed here.
+# Format (tab separated): <url-needle><TAB><accepted statuses, comma separated><TAB><reason>
+#
+# Rule: this file is for statuses we have *investigated and recorded*, never for making CI quiet.
+# PLAN.md 6.2 forbids deleting a Gallery entry because its URL 404s, so an unreachable URL has to be
+# written down somewhere reviewable - here, plus the Phase 3 URL status table (T3.x).
+#
+# 2026-10-24, measured from this machine and cross-checked over DNS-over-HTTPS:
+#   - https://1.1.1.1/dns-query?name=code.rocketnine.space  -> Status 2 (SERVFAIL), no answer
+#   - https://8.8.8.8/resolve?name=code.rocketnine.space    -> Status 2 (SERVFAIL), no answer
+#   - rocketnine.space (parent) still resolves to 194.182.162.37; its Caddy returns 308 -> the same
+#     https URL, and https to that IP fails the TLS handshake, so the subdomain's own record is gone
+#     or broken. This is global, not a sandbox artifact: public resolvers fail it too.
+#   - The two projects are fine and maintained: github.com/tslocum/cview and /cbind both answer 200,
+#     and pkg.go.dev/code.rocketnine.space/tslocum/cview answers 200 (module path unchanged).
+# So the Gallery's entries are correct in substance; only the host is unreachable right now. Do not
+# "fix" this by silently swapping URLs (route C: the upstream text is the maintainers' to edit);
+# re-probe at T3.1 and put "host unreachable, GitHub mirror exists" in the proposal package (T7.4).
+code.rocketnine.space/tslocum/cview	000,DNS,SERVFAIL	host unreachable (SERVFAIL at 1.1.1.1 and 8.8.8.8 on 2026-10-24); upstream entry kept per PLAN.md 6.2; re-probe at T3.1
+code.rocketnine.space/tslocum/cbind	000,DNS,SERVFAIL	host unreachable (SERVFAIL at 1.1.1.1 and 8.8.8.8 on 2026-10-24); upstream entry kept per PLAN.md 6.2; re-probe at T3.1
