@@ -4,3 +4,4 @@
 Home.md
 Gallery.md
 Getting-Started.md
+Architecture.md
