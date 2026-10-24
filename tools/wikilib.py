@@ -148,5 +148,27 @@ def slug_of(target: str) -> str:
     return target
 
 
+def github_slug(text: str) -> str:
+    """GitHub's heading-anchor rule: strip markdown links, lowercase, drop punctuation, spaces to '-'.
+    Shared by check-links.py (internal anchors) and check-demos.py (library-doc anchors), because two
+    copies of a renderer's quirk-free version of an anchor rule is how false passes happen."""
+    s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text).strip().lower()
+    s = re.sub(r"[^\w\- ]", "", s, flags=re.UNICODE)
+    return s.replace(" ", "-")
+
+
+def anchors_in(text: str) -> set:
+    """Every heading anchor a reader could link to in this markdown, fences excluded."""
+    out = set()
+    spans = fence_ranges(text)
+    for n, line in enumerate(text.splitlines(), 1):
+        if in_fence(n, spans):
+            continue
+        m = re.match(r"^#{1,6}\s+(.*)$", strip_inline_code(line))
+        if m:
+            out.add(github_slug(m.group(1)))
+    return out
+
+
 def is_external(target: str) -> bool:
     return bool(SCHEME_RE.match(target)) or target.startswith("//")

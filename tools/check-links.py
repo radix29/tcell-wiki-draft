@@ -70,23 +70,6 @@ def probe(url: str) -> str:
     return code
 
 
-def github_slug(text: str) -> str:
-    """GitHub's heading-anchor rule: strip markdown links, lowercase, drop punctuation, spaces to '-'."""
-    s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text).strip().lower()
-    s = re.sub(r"[^\w\- ]", "", s, flags=re.UNICODE)
-    return s.replace(" ", "-")
-
-
-def anchors_in(text: str) -> set:
-    out = set()
-    spans = W.fence_ranges(text)
-    for n, line in enumerate(text.splitlines(), 1):
-        if W.in_fence(n, spans):
-            continue
-        m = re.match(r"^#{1,6}\s+(.*)$", W.strip_inline_code(line))
-        if m:
-            out.add(github_slug(m.group(1)))
-    return out
 
 
 def load_allow():
@@ -137,7 +120,7 @@ def main() -> int:
     slugs = {name[:-3] for name in W.manifest_pages() if name.endswith(".md")}
     rules = load_allow()
     text_of = {rel_of(p): W.read(p) for p in paths}
-    anchors = {name: anchors_in(text) for name, text in text_of.items()}
+    anchors = {name: W.anchors_in(text) for name, text in text_of.items()}
 
     internal_bad = []
     external = collections.OrderedDict()

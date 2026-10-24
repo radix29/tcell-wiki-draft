@@ -45,6 +45,10 @@ DOC_SENTENCE = re.compile(r"^//[ \t]*(This (?:program|demo|tool)[^.]*\.)", re.M)
 # Two citation forms: a URL into the library repo (which carries a branch name we can verify), and a
 # bare path like `demos/hello` or `_demos/mouse.go`. Inline code counts on purpose - a path in
 # backticks is exactly the assertion worth checking, unlike the prose rules in check-style.py.
+# A URL into a library file (`blob`/`raw` + branch + path + optional #anchor). Q-4 makes these
+# load-bearing, so they are checked against the checkout rather than trusted.
+DOC_URL_RE = re.compile(r"github\.com/gdamore/tcell/(?:blob|raw)/(?P<branch>[^/\s]+)/"
+                        r"(?P<path>[^#\s?)]+)(?:#(?P<frag>[^\s)]*))?")
 DEMOS_URL_RE = re.compile(r"github\.com/gdamore/tcell/(?:tree|blob)/(?P<branch>[^/\s]+)/"
                           r"(?P<dir>_?demos)/(?P<name>[\w.-]+)")
 DEMOS_BARE_RE = re.compile(r"(?<![\w./-])(?P<full>_?demos/[\w.-]+)")
@@ -88,10 +92,12 @@ def discover(tcell: pathlib.Path, branch: str):
 
 
 def citations(pages):
-    """Every demo citation on the pages: {page, line, name, under, branch, raw}.
+    """Every citation a page makes into the library repo.
 
-    `under` marks a citation into _demos/ (the not-shipped pile), `branch` is the branch a URL links
-    (so a link to tree/master/... is visible even though the repo default is main).
+    Three kinds, all with {page, line, branch, raw}: demos (kind=demo), the not-shipped `_demos` pile
+    (kind=under), and library docs (kind=doc: a `blob/<branch>/<path>` URL plus optional `#frag`).
+    Q-4 makes the doc kind load-bearing - `Getting-Started` teaches by linking `TUTORIAL.md` headings it
+    does not own - so an upstream rename must fail a check here instead of breaking a reader.
     """
     out = []
     for path in pages:
@@ -105,9 +111,19 @@ def citations(pages):
             if W.in_fence(n, spans):
                 continue
             claimed = []
-            for m in DEMOS_URL_RE.finditer(line):
+            for m in DOC_URL_RE.finditer(line):
+                if m.group("path").startswith(("demos/", "_demos/")):
+                    continue  # the demo regexes below know what a demo URL is
                 claimed.append((m.start(), m.end()))
-                out.append({"page": rel, "line": n, "name": m.group("name").removesuffix(".go"),
+                out.append({"kind": "doc", "page": rel, "line": n, "path": m.group("path"),
+                            "frag": (m.group("frag") or "").split("?")[0], "under": False, "name": "",
+                            "branch": m.group("branch"), "raw": m.group(0)})
+            for m in DEMOS_URL_RE.finditer(line):
+                if any(a <= m.start() < b for a, b in claimed):
+                    continue
+                claimed.append((m.start(), m.end()))
+                out.append({"kind": "under" if m.group("dir") == "_demos" else "demo", "page": rel,
+                            "line": n, "name": m.group("name").removesuffix(".go"),
                             "under": m.group("dir") == "_demos", "branch": m.group("branch"),
                             "raw": m.group(0)})
             for m in DEMOS_BARE_RE.finditer(line):
@@ -115,9 +131,32 @@ def citations(pages):
                     continue
                 raw = m.group("full")
                 name = raw.split("/", 1)[1]
-                out.append({"page": rel, "line": n, "name": name.removesuffix(".go"),
-                            "under": raw.startswith("_"), "branch": "", "raw": raw})
+                out.append({"kind": "under" if raw.startswith("_") else "demo", "page": rel, "line": n,
+                            "name": name.removesuffix(".go"), "under": raw.startswith("_"),
+                            "branch": "", "raw": raw})
     return out
+
+
+def check_doc(cit, tcell, seen):
+    """Does the library file a page links exist, and does the heading it names still exist there?"""
+    where = f"{cit['page']}:{cit['line']}"
+    target = tcell / cit["path"]
+    try:
+        target.resolve().relative_to(tcell.resolve())
+    except ValueError:
+        return [f"{where}: {cit['raw']!r} points outside the library repo"]
+    if target.is_dir():
+        return []
+    if not target.is_file():
+        return [f"{where}: the library has no {cit['path']} at this commit - under Q-4 a page name *is* "
+                "the tutorial, so a renamed file must be caught here, not by a reader"]
+    frag = cit["frag"]
+    if not frag or target.suffix != ".md":
+        return []
+    if frag not in seen.setdefault(str(target), W.anchors_in(W.read(target))):
+        return [f"{where}: #{frag} matches no heading in {cit['path']} (it has: "
+                f"{', '.join(sorted(seen[str(target)])) or 'none'}) - name a heading the library owns"]
+    return []
 
 
 def main() -> int:
@@ -164,12 +203,19 @@ def main() -> int:
         return 2
 
     cited = citations(pages)
-    demo_cited = {c["name"] for c in cited if not c["under"]}
+    demo_cited = {c["name"] for c in cited if c["kind"] == "demo"}
+    docs = [c for c in cited if c["kind"] == "doc"]
+    seen = {}
+    print(f"citations {len(docs)} library file link(s) (Q-4), {len([d for d in docs if d['frag']])} "
+          f"with a heading anchor, verified against {tcell}")
     for c in cited:
         if c.get("branch") and c["branch"] != branch:
             problems.append(f"{c['page']}:{c['line']}: links branch '{c['branch']}' "
                             f"(the library default is '{branch}'); PLAN.md 2 already records one stale "
                             "wiki URL of exactly this kind - use the default branch or a tag")
+        if c["kind"] == "doc":
+            problems += check_doc(c, tcell, seen)
+            continue
         if c["under"]:
             stem = c["name"] if c["name"].endswith(".go") else c["name"] + ".go"
             if stem not in under:
