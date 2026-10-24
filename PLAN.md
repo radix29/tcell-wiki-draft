@@ -1,6 +1,7 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-7 not started
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phase 1 built and
+green locally, publish pending the draft owner's ask; Phases 2-7 not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -396,6 +397,14 @@ Nothing in the 6-page build may link to them (`AGENTS.md`: a page must be self-c
 
 ## 7. Cross-cutting editorial standards
 
+**Frozen as the style guide (T1.3, 2026-10-24).** This section *is* the style guide: `tools/check-style.py`
+and the two `tools/*allow*.txt` files are its mechanical half, so a new rule moves the tool in the same
+commit and a legacy exception is recorded with a reason instead of being argued in a review. It was
+frozen here rather than copied out into a `STYLE.md` because a second copy of the rules can only disagree
+with the linter, because the rendered content set is 6 pages by Q-3/Q-5 and a 7th content page would be
+a page a reader has to be told about, and because a page may not link a file that is not itself (5.5)
+- so the guide a writer reads has to be the doc that already carries the decisions behind the rules.
+
 - Voice: present tense, second person sparingly, no marketing adjectives, v3-only by default.
 - Naming (Q-9): **`_Tcell_` in prose everywhere** - the library docs use it 34 times against 1 bare
   mention, and the two pages agree with it, so this is one convention across both repos rather than a
@@ -462,8 +471,9 @@ sum of that phase's tasks. Recomputed after Q-3: **39-51 h** (Phase 0 3-4, 1 2-3
 the render preview published (`39e5378`), and the page diff vs upstream treated as the deliverable instead
 of a violation: 1 file changed, 3 insertions, 2 deletions (Q-11's two URL moves plus Q-13's one addition).
 Spend landed under the 3-4 h estimate because most of Phase 0 was the draft owner answering questions in
-one sitting rather than research. **Phase 1 is unblocked:** T1.1's sidebar prototype and T1.2's five stubs
-need nothing from upstream, and D-1 is the only `D`-item whose final answer is still somebody else's.
+one sitting rather than research. **Phase 1 is unblocked:** T1.1's sidebar prototype and T1.2's four stubs
+(the count in T1.2 said five, which it was not - see the Phase 1 record) need nothing from upstream, and
+D-1 is the only `D`-item whose final answer is still somebody else's.
 
 - T0.0 **Executed 2026-10-24** (runbook now in `AGENTS.md`): created public `radix29/tcell-wiki-draft` and
   enabled its wiki (render branch `master`), rewired remotes so the official wiki is fetch-only
@@ -499,15 +509,68 @@ need nothing from upstream, and D-1 is the only `D`-item whose final answer is s
   F-1 library-repo change, and all upstream contact (Q-2).
 
 ### Phase 1 - Skeleton and nav (2-3 h)
-- T1.1 Draft `_Sidebar.md` for the 6-page tree of 5.1 as the **droppable prototype** (5.5): mirrored to
-  our draft wiki, never linked to from a page, never in the upstream proposal. *(0.5 h)*
-- T1.2 Create stubs for the **5 not-yet-written built pages only** (H1 + purpose sentence + "planned"
-  note) so `Home`'s links resolve from the first mirror push. No stubs for deferred pages - nothing may
-  link to them anyway (5.5). Keep stubs honest - no empty-looking pages in the render tree. *(1 h)*
-- T1.3 Freeze the style guide file (from S7) and run S8.5 over the stubs; add all 6 pages +
-  `_Sidebar.md` to `tools/pages.txt` so the mirror is exercised from day one. *(0.5 h)*
-- Exit: `Home` nav + prototype sidebar both render sensibly in the draft wiki; zero broken internal
-  links; commit set pushed to `origin` (the draft), never to `upstream`.
+
+**Status: built and green locally on 2026-10-24 - not published, and that is the only thing left.** The
+four new page files plus `_Sidebar.md` exist, `tools/pages.txt` lists all seven names in Appendix D's
+order, every S8 gate passes over them (`tools/review-checklist.py --offline` exits 0 with only ASK lines
+left; `tools/check-links.py` with network: 60 external URLs all 200, 7 internal links resolving, 0
+broken; `symbol-coverage.py` reports "0 page-cited symbol(s) checked", which is the right answer for
+pages that promise scope and assert no API), and `tools/mirror-wiki.sh --dry-run` stages exactly those
+seven files - five added, `Home`/`Gallery` unchanged - against the live render wiki at `39e5378`, and
+publishes nothing. Two of the three exit criteria are therefore still open, and they are one
+act: nothing has been pushed, so `radix29/tcell-wiki-draft/wiki` still renders the two Phase 0 pages.
+`AGENTS.md` makes an unprompted push the one thing this repo never does, and Q-14 settled *how* a push
+publishes (`tools/publish.sh`: mirror, then push, then re-read the live wiki), not when one is allowed -
+so the draft owner's ask is the missing input and everything after it is mechanical. Landed inside the
+2-3 h estimate; none of it was research.
+
+- T1.1 **Done.** `_Sidebar.md` is D-1 made concrete: three groups using 5.2's own nav words (Start here /
+  Reference / Showcase), all six pages, no sixth invention, plus two lines saying this wiki is an
+  unofficial draft rewrite and pointing at `gdamore/tcell/wiki` and the library - a public preview that
+  reads as official is the exact failure Q-0b worried about. It is in the manifest, so the mirror is
+  what publishes it, and it is linked by no page, so dropping it would edit no page text (5.5's
+  reversibility test). `review-checklist.py` reports `_Sidebar` as a page "nothing links to"; that ASK
+  is the design talking, and the wrong fix is to link it from a page, which T1.1 forbids.
+- T1.2 **Done, with the count in this task corrected: four stubs, not five.** 5.1 builds 6 pages and
+  `Home` + `Gallery` already exist, so there was never a fifth stub to write; the missing four are
+  `Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`. Each one is a single H1
+  (following `Gallery.md`'s one-H1 precedent, PLAN 7), a purpose sentence written in 5.3's reader-intent
+  voice, the planned scope taken from 6.3-6.6 rather than invented, and one pointer to what a reader can
+  actually read today - the library `TUTORIAL.md`, `CHANGESv3.md`, `README-windows.md`, or `pkg.go.dev`
+  - because "honest" and "not a dead end" are the same property here. The stub notice is draft
+  scaffolding on purpose: it is what keeps a preview honest, and T7.4's proposal package sends a page
+  that has content or sends it not at all, so no stub sentence is quietly on its way upstream (Q-2 parks
+  that day anyway). What is deliberately absent:
+  backticked API, the eight demo names, and every `TCELL_*` variable. A stub that names `Screen` or
+  `EventResize` in backticks claims ownership of it under Q-6 and pre-empts the page that is supposed to
+  own it, and `check-demos.py`/`symbol-coverage.py` would then be grading four pages on promises they
+  never meant to make. The stubs stay out of the deferred list too: no page links a deferred topic, so
+  nothing here names `Screen-and-Rendering` or `Migration-v2-to-v3` even as a forward reference.
+- T1.3 **Done.** The manifest is now the 6 content pages plus the droppable `_Sidebar.md`, with a comment
+  at the top saying the manifest is the only thing the mirror copies and a comment over the sidebar line
+  saying why it can be deleted without touching a page; `check-style.py` and `check-style.py --all` are
+  both clean (still exactly the 2 legacy suppressions, no new debt). "Freeze the style guide file" was
+  read as *freeze S7*, which is where the rules already live: a status line was added under its heading
+  and no `STYLE.md` was created - see the note at S7 for the three reasons. One changelog wart to own:
+  the sidebar file and its manifest line landed in two commits, because a scripted manifest rewrite
+  dropped the line the file-adding commit should have carried; nothing was pushed or mirrored in between,
+  and the choice was to add the line forward rather than amend a commit that is one publish away from
+  being reader-visible history.
+- Found, and it belongs to T5.1: `tools/review-checklist.py` fails any page containing the word
+  `mermaid` anywhere in its text, fences included. Verified with a throwaway page holding a legal
+  ` ```mermaid ` fence, which is exactly what T5.4 is scheduled to write into `Architecture`, and that
+  CHECK would then be a FAIL on the plan's own diagram rule (PLAN 6.4, PLAN 7, D-5). The CHECK was
+  written for `images/foo.png` references, so before T5.4 draws anything the CHECK has to ignore fenced
+  blocks and fence lines, and be tested both ways like every other CHECK. Stub text works around it for
+  now by not naming the diagram format at all, which is why no stub mentions diagrams in prose.
+- Exit **partly met (2026-10-24):** zero broken internal links is met - 7 internal links, every one
+  pointing at a manifest slug, checked by `check-links.py` and by `check-style.py`'s `link-md` /
+  `self-contained` rules. "`Home` nav + prototype sidebar both render sensibly in the draft wiki" and
+  "commit set pushed to `origin`" are both still open and both are `tools/publish.sh`. `Home.md` was
+  deliberately not touched: its nav is T2.1's rewrite, and touching it here would spend Phase 2's work
+  twice and grow the one diff upstream is actually being offered - which after this phase is still
+  `Gallery.md`, 3 lines, Q-11 plus Q-13, because four new pages are additions to a draft and not a
+  change to the official wiki. Nothing was pushed to `upstream`, which cannot be pushed at all.
 
 ### Phase 2 - Home rewrite (3-4 h)
 - T2.1 Draft `Home.md` per S6.1 (<= 400 words) including the required Gallery and "How to use"
