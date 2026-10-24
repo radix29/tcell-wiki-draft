@@ -19,7 +19,11 @@ Compares Gallery.md against baseline/Gallery.md (the live wiki as fetched, see b
              evidence) counts as the same entry, and is reported so the reviewer sees it;
   moves      every move record must point at a baseline entry that exists and a URL that is now on
              the page - a stale move is an error, because a silent URL drift is exactly what the
-             lossless contract exists to catch.
+             lossless contract exists to catch;
+  additions  an entry the baseline does not have (a new project in the Gallery) is legal only while
+             tools/gallery-additions.txt carries its name, its URL and the evidence for adding it -
+             --max-additions is then the budget for anything *beyond* those records, so raising it in
+             CI is never how an unrecorded entry gets through.
 
 Exit 0 = migration is provably lossless, 1 = something a reviewer has to explain, 2 = usage error.
 """
@@ -44,24 +48,41 @@ BAD_MARKER_RE = re.compile(r"(\(\s*new\s*\)|\bstars?\b|\u2605|\bnew!\b|,\s*\d{4}
 TRAILING_PERIOD_RE = re.compile(r"\.$")
 CATEGORY_ORDER_NOTE = "PLAN.md 6.2 keeps the 6 baseline categories and their order"
 MOVES = W.ROOT / "tools" / "gallery-moves.txt"
+ADDITIONS = W.ROOT / "tools" / "gallery-additions.txt"
 
 
-def load_moves(path: pathlib.Path = MOVES):
-    """tools/gallery-moves.txt: '<old-url>\t<new-url>\t<evidence>' -> {old: (new, evidence)}."""
-    moves = {}
+def load_records(path: pathlib.Path, shape: str, key_ok):
+    """Shared parser for the two decision files that let the migration contract bend.
+
+    '<key>\t<url>\t[evidence]', one decision per line, # comments allowed. Both files exist so a
+    reviewer sees *which* deviation was approved and why, which is also why a malformed line is
+    reported instead of skipped: a silently dropped record means the check stops defending the thing
+    it was written for.
+    """
+    out = {}
     if not path.exists():
-        return moves
+        return out
     for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
         parts = [f.strip() for f in raw.split("\t")]
-        if len(parts) < 2 or not parts[0].startswith("http") or not parts[1].startswith("http"):
-            print(f"tools/gallery-moves.txt:{n}: expected '<old-url>\t<new-url>\t[evidence]', got: {raw}",
-                  file=sys.stderr)
+        if len(parts) < 2 or not key_ok(parts[0]) or not parts[1].startswith("http"):
+            print(f"{path.name}:{n}: expected '{shape}', got: {raw}", file=sys.stderr)
             continue
-        moves[parts[0]] = (parts[1], parts[2] if len(parts) > 2 else "(no evidence recorded)")
-    return moves
+        out[parts[0]] = (parts[1], parts[2] if len(parts) > 2 else "(no evidence recorded)")
+    return out
+
+
+def load_moves(path: pathlib.Path = MOVES):
+    """tools/gallery-moves.txt: old URL -> (new URL, evidence). See Q-11 in PLAN.md 4.1."""
+    return load_records(path, "<old-url>\t<new-url>\t[evidence]", lambda k: k.startswith("http"))
+
+
+def load_additions(path: pathlib.Path = ADDITIONS):
+    """tools/gallery-additions.txt: display name -> (URL, evidence). Entries the baseline does not
+    have are allowed one by one, never in bulk: a second addition needs its own approved record."""
+    return load_records(path, "<name>\t<url>\t[evidence]", lambda k: bool(k) and not k.startswith("http"))
 
 
 class Entry:
@@ -157,6 +178,8 @@ def main() -> int:
                     help="allow at most N entries that are not in the baseline (default 0 = pure migration)")
     ap.add_argument("--moves", default=str(MOVES),
                     help="recorded URL-move file (default tools/gallery-moves.txt)")
+    ap.add_argument("--additions", default=str(ADDITIONS),
+                    help="recorded approved-addition file (default tools/gallery-additions.txt)")
     ap.add_argument("--verbose", "-v", action="store_true",
                     help="print every category, addition and move record")
     args = ap.parse_args()
@@ -172,6 +195,7 @@ def main() -> int:
     # A URL the page still points at, that a move record claims to have moved, means the move was
     # reverted but the record survived (or the record names a project that no longer exists).
     moves = load_moves(pathlib.Path(args.moves))
+    additions = load_additions(pathlib.Path(args.additions))
     page_urls = {e.url for e in entries}
     for old, (new, _why) in moves.items():
         if old in page_urls:
@@ -183,6 +207,25 @@ def main() -> int:
         elif new not in page_urls:
             errors.append(f"tools/gallery-moves.txt claims {old} -> {new}, but nothing on the page links "
                           f"{new} - the entry's URL was changed to something else, or not at all")
+    # Upstream writes some URLs with a trailing slash and some without (github.com/zyedidia/micro/ is
+    # real), so records match on the URL modulo a trailing slash - otherwise a cosmetic difference
+    # turns an approved entry into an "unapproved addition" and a stale record into a clean one.
+    def same_url(a: str, b: str) -> bool:
+        return a.rstrip("/") == b.rstrip("/")
+
+    for name, (url, _why) in additions.items():
+        if any(b.name == name and same_url(b.url, url) for b in base_entries):
+            errors.append(f"tools/gallery-additions.txt approves '{name}' at {url}, which is already in "
+                          "the baseline - an approved addition is by definition an entry we did not "
+                          "have; delete the record")
+            continue
+        where = [e for e in entries if e.name == name]
+        if not any(same_url(e.url, url) for e in where):
+            hint = (f" - the page has '{name}' at {where[0].url} instead" if where else
+                    ", and no entry of that name on the page")
+            errors.append(f"tools/gallery-additions.txt approves '{name}' at {url}, but the page does "
+                          f"not carry it{hint} - delete the record or apply the entry, do not leave it "
+                          "looking approved")
 
     # --- structure -------------------------------------------------------------
     kept = [c for c in base_cats if c in cats]
@@ -248,6 +291,13 @@ def main() -> int:
 
     new_entries = [e for e in entries
                    if e.key not in {b.key for b in base_entries} and not recorded_move(e)]
+    approved = []
+    for e in list(new_entries):
+        rec = additions.get(e.name)
+        if rec and rec[0].rstrip("/") == e.url.rstrip("/"):
+            approved.append(e)
+            notes.append(f"approved addition: '{e.name}' {e.url} in '{e.category}' ({rec[1]})")
+            new_entries.remove(e)
     moved_in = [e for e in entries if e.key in {b.key for b in base_entries}
                 and any(b.key == e.key and b.category != e.category for b in base_entries)]
     if new_entries and args.verbose:
@@ -310,7 +360,8 @@ def main() -> int:
               "(PLAN.md 6.2).")
         return 1
     print(f"gallery: lossless - all {base_total} baseline entries present, order preserved, "
-          f"{len(new_entries)} addition(s) within --max-additions {args.max_additions}")
+          f"{len(new_entries)} addition(s) within --max-additions {args.max_additions}"
+          + (f" (+{len(approved)} approved and recorded in tools/gallery-additions.txt)" if approved else ""))
     return 0
 
 

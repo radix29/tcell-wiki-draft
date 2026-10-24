@@ -1,0 +1,30 @@
+# Approved Gallery additions - the only entries tools/check-gallery.py accepts that are NOT in
+# baseline/Gallery.md (PLAN.md 6.2, R2 "no prior information lost").
+# Format (tab separated, one per line):
+#   <display-name>	<url>	<evidence and decision, one line>
+#
+# Why a file and not a bigger --max-additions in CI: the number would approve "any" N new entries and
+# say nothing about which, so a stray bullet could ride along. A record names the project, its URL and
+# the reason, which is what a reviewer (and upstream, later) actually reads. One record per entry - a
+# second addition needs its own line, and --max-additions stays 0 for everything else.
+#
+# Evidence a record has to carry, same as tools/gallery-moves.txt: the URL resolves, the project is
+# real, and it is a *Tcell* program (this is the Tcell gallery, so a dependency check is the difference
+# between a curation and a guess). Say plainly if the request came from the author, because upstream's
+# maintainers are the ones who will have to be comfortable with the entry.
+goSSMS	https://github.com/radix29/gossms	author-supplied 2026-10-24 (radix29 owns this draft); URL 200, go.mod requires github.com/gdamore/tcell/v3 v3.6.0, wording paraphrases the README; full evidence in the notes above
+#
+# Full evidence for goSSMS (kept out of the record because the record is echoed on every run):
+#   - URL answers 200; the repository is Go, not a fork, active, 12 stars at the time of writing.
+#   - go.mod requires github.com/gdamore/tcell/v3 v3.6.0, so it is a genuine Tcell application and
+#     belongs in this Gallery rather than in a general tool list.
+#   - README: "goSSMS is a terminal-based SQL Server management application ... distributed as a
+#     single executable", for Linux, macOS and Windows. The entry paraphrases that; nothing about
+#     features the README does not claim made it in.
+#   - Placed at the end of "## Productivity & Utilities" because AGENTS.md appends within a category
+#     and never sorts alphabetically.
+#   - Display name keeps the project's own styling "goSSMS"; the page already carries internal-caps
+#     names (myGoAdventure, WTF), so it is not a new convention.
+#   - README ships a demo.gif (resolves, image/gif) but no media link was added: one URL per entry
+#     keeps the migration diff reviewable, and a gif on the wiki is a maintainer's call (D-5/D-6
+#     precedent: media URLs are reported, not curated by us).
