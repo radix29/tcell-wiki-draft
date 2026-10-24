@@ -1,0 +1,14 @@
+Baseline = the live wiki as fetched for route C (PLAN.md T0.3). Recovery point and the input S8.4 diffs pages against.
+
+upstream remote : https://github.com/gdamore/tcell.wiki.git
+upstream/master : 8e83ce1c2a80f7edf430a340a8c295e0999be638
+fetched/recorded: 2026-10-24
+
+checksums:
+1f6cc820e02ea00bd900356a2a94fefcd4b02c6751567ff9865e34d8d1fa7677  Home.md
+1006d6c2746cc523c3bf4ffc56a7eb1fc1f5c8861667c7ca8752cd8a2e01d4ee  Gallery.md
+
+Do not edit these files to make a check pass. They are the migration contract (PLAN.md Appendix B):
+49 bullets / 48 linked / 6 categories. A deliberate deviation needs a recorded decision first.
+
+Bullet total: 49
