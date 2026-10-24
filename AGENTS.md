@@ -44,7 +44,7 @@ render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via t
 
 Done: draft repo + wikis enabled (render branch is `master`; HEAD is `39e5378`, the second preview push
 of 2026-10-24, whose predecessor `32022f9` was the first real page preview and `2ebcbf8` GitHub's
-`Initial Home page` placeholder), `origin/master` is pushed and CI is green on it
+`Initial Home page` placeholder), `origin/master` was pushed once with CI green on it
 (`.github/workflows/qa.yml`, run `40112709147`, 15/15 steps), remotes rewired,
 `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
@@ -52,6 +52,14 @@ bullets). `master` deliberately diverges from `upstream/master` - that divergenc
 rolling a page back is `git checkout upstream/master -- Home.md Gallery.md`, never
 `git reset --hard upstream/master` (that would also drop tooling commits). Rollback of the whole
 experiment: delete the `origin`/`render` remotes and the two GitHub repos.
+
+Since that setup, work has been committed locally and not published (Phase 1's four stubs and
+`_Sidebar.md`, then Phase 2's `Home` rewrite), so `git rev-list --count origin/master..HEAD` is not zero
+and `render` still renders `39e5378`. That is Q-14 working, not a forgotten push: `tools/publish.sh`
+mirrors, pushes and re-reads the live wiki in one command, and it runs when the draft owner asks and not
+before. What a publish ships is whatever `tools/pages.txt` lists, because the mirror copies the manifest
+and not the commit, so a preview can never lag behind one page by accident - and `--dry-run` shows the
+pending file list without publishing anything.
 
 Verify a session against this repo (all seven must pass; CI runs the same set):
 
