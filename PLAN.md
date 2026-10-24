@@ -90,11 +90,11 @@ Rules that must be designed around (each is marked with how it is settled):
 | C2 | GitHub wikis expose **any** `.md` file as a public page | `PLAN.md` and `AGENTS.md` must stay uncommitted (use `.git/info/exclude`), or be deleted before publishing |
 | C3 | Slugs come from file names: `Getting-Started.md` -> `/wiki/Getting-Started`; spaces become `_` | prefer hyphenated, <= 3 word ASCII file names; internal links omit `.md` |
 | C4 | Nested/subdirectories are not reliably rendered as sub-pages | assume a **flat** page set; hierarchy via `_Sidebar.md` and Home nav only |
-| C5 | `_Sidebar.md` / `_Footer.md` apply to every page | needs maintainer sign-off (decision D-1); if rejected, use the Home nav + "next/prev" links fallback (Option B, S4) |
+| C5 | `_Sidebar.md` / `_Footer.md` apply to every page | **Settled by Q-3/Q-0b: we build it as a droppable prototype in our own draft wiki only (5.5) and never propose it unsolicited - a site-wide sidebar is an upstream call (D-1).** Pages never depend on it |
 | C6 | No CI in wiki repos | verification is scripts + manual checklists run locally (S8) |
 | C7 | Rewriting published history is not possible to unwind | one logical change per commit, wiki-style messages (`Created X (markdown)`, `Updated X (markdown)`), no force-push ever |
 | C8 | Existing deep links matter: `/wiki/Home`, `/wiki/Gallery`, and the README pointer | keep `Home` and `Gallery` file names exactly; never rename them |
-| C9 | Mermaid support in the wiki renderer is *assumed* but unproven here | probe task T6.1 before writing Architecture diagrams; fallback is ASCII art in fenced blocks. **Q-0b makes this cheap: T5.1's probe now runs against the author's own scratch wiki (renders identically) instead of pushing a throwaway page to the live official wiki.** |
+| C9 | Mermaid support in the wiki renderer is *assumed* but unproven here | probe task T5.1 in **our own draft wiki** before writing Architecture diagrams; fallback is ASCII art in fenced blocks. Q-0c removed the old "push a scratch page to the live official wiki" step entirely |
 | C10 | Hotlinked third-party images (2 blogspot URLs from 2015) can rot | verify status, keep URLs (do not silently drop content), and raise hosting option as D-6 |
 
 ---
@@ -103,10 +103,10 @@ Rules that must be designed around (each is marked with how it is settled):
 
 | ID | Question | Recommendation | Blocks |
 |---|---|---|---|
-| D-1* | Add `_Sidebar.md` for navigation across all pages? | Yes - only clean way to get hierarchy on a GitHub wiki | Phase 2 |
+| D-1* | Add `_Sidebar.md` for navigation across all pages? | **Draft-owner answer (Q-3): build it, mirror it only to `radix29/tcell-wiki-draft`, keep it droppable; it stays an upstream ask, never an unsolicited change** | Phase 1 |
 | D-2* | Canonical home for user docs: wiki, or repo `README`/`TUTORIAL.md` with the other pointing here? | Wiki canonical for tutorials/reference; repo keeps a 1-paragraph overview + link. Repo-side edit is a separate follow-up (F-1) | Phase 3, 5 |
 | D-3* | Page naming for the "how to use" area: `Getting-Started` + `Function-Reference`, or one big `How-To-Use`? | `Getting-Started` (learn path) + `Function-Reference` (find-the-API) - two different reader intents, two pages | Phase 2 |
-| D-4 | Version coverage: v3 only, or v3 + migration notes for v2 users? | v3-only voice, one dedicated `Migration-v2-to-v3` page summarizing `CHANGESv3.md` | Phase 5 |
+| D-4 | Version coverage: v3 only, or v3 + migration notes for v2 users? | **Moot for this build (Q-3): v3-only voice, `Migration-v2-to-v3` deferred; `Home`/`Function-Reference` link the repo `CHANGESv3.md` instead of forking it** | Phase 5 |
 | D-5 | Store screenshots in the wiki repo, or keep hotlinks only? | Keep hotlinks; add repo-hosted images only for the 3-4 diagrams we author ourselves | Phase 4 |
 | D-6 | Drop/keep the legacy unlinked `mouse demo` bullet + 2015 blogspot screenshots? | Keep the bullet, rewrite wording so it does not claim a shipped demo; keep URLs until they 404 | Phase 1 |
 | D-7 | Should the wiki list community/commercial support (TideLift, Staysail, Discord)? | Yes, short "Support" section on Home only (mirrors README) | Phase 2 |
@@ -120,10 +120,15 @@ wiki. D-3, D-4, D-5, D-6, D-9 are ours for as long as the work lives in our own 
 
 ### 4.1 Decision record (maintainer answers)
 
+Row IDs are the **decision** IDs (`Q-0`, `Q-0b`, `Q-0c`, `Q-2`, `Q-3`, ...) and they run one behind the
+question numbers used out loud in the Q&A, because `Q-0b` and `Q-0c` were follow-ups to `Q-0`. The next
+answer is recorded as `Q-4`. Mapping so far: requirements = Q-0, contributor premise = Q-0b, vehicle +
+motivation = Q-0c / Q-1, upstream timing = Q-2, scope = Q-3.
+
 | ID | Answer | Date | Effect on this plan |
 |---|---|---|---|
 | Q-0 (requirements) | **§10 is the complete requirements contract** - no deadline, tone/audience, gallery-restructure restriction, or size cap beyond what is already written here | 2026-10-24 | Section 10 upgraded from "traceability of the request" to the authoritative contract; no provenance gap remains |
-| Q-3 (scope) | **(b) 6 pages: `Home`, `Gallery`, `Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`** | 2026-10-24 | Re-estimates the plan at 39-51 h (page bodies 31-40 h). The other 6 topic pages of 5.1 become a **deferred second milestone** (5.1, 6.6, 12), which has three consequences bigger than the hour count: (1) `Function-Reference` absorbs their audience and grows to 1,000-1,400 words, (2) the 100%-symbol-coverage gate now concentrates the whole API into one page - the `pkg.go.dev` mirror tension is now live, see Q-9, and (3) no built page may link a deferred page (route-C self-containment rule). Also decides nav: `Home` is the hub and `_Sidebar.md` is built as a **droppable prototype mirrored only to our own wiki**, because a site-wide sidebar is an upstream call (D-1) and this keeps it reversible. D-4 (migration page) becomes moot - breaking changes are linked to repo `CHANGESv3.md` instead. |
+| Q-3 (scope) | **(b) 6 pages: `Home`, `Gallery`, `Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`** | 2026-10-24 | Re-estimates the plan at 39-51 h (page bodies 31-40 h). The other 6 topic pages of 5.1 become a **deferred second milestone** (5.1, 6.6, 12), which has three consequences bigger than the hour count: (1) `Function-Reference` absorbs their audience and grows to 1,000-1,400 words, (2) the 100%-symbol-coverage gate now concentrates the whole API into one page - the `pkg.go.dev` mirror tension is now live - open coverage-gate question, see 6.5 - and (3) no built page may link a deferred page (route-C self-containment rule). Also decides nav: `Home` is the hub and `_Sidebar.md` is built as a **droppable prototype mirrored only to our own wiki**, because a site-wide sidebar is an upstream call (D-1) and this keeps it reversible. D-4 (migration page) becomes moot - breaking changes are linked to repo `CHANGESv3.md` instead. |
 | Q-2 (upstream timing) | **"Ignore the talk for now, we build it first"** - no issue in `gdamore/tcell`, no upstream contact, until the draft says otherwise | 2026-10-24 | `setup.md` 7 marked PARKED (draft stays public so the eventual pitch is just a URL). Plan effects: Phase 7 T7.4 becomes "prepare the proposal package, do not send"; the D-list items that needed upstream (D-2 canonical home, D-1 site-wide sidebar, D-6 wording of a live line, D-7 whose support links) are now **decided as draft-owner questions by us** and separately flagged as "must be asked before it could ever land upstream"; new risk row added. Consequence to hold onto: everything we write must still be paste-able one page at a time, because "build first" must not quietly turn into "a different project with different constraints". |
 | Q-0c (vehicle) | **Route C**: author in `radix29/tcell-wiki-draft` (plain repo = source of truth; its own wiki = render preview), propose upstream page by page, GitHub Pages only if upstream declines. Motivation confirmed as "Tcell's docs should be better", not "a project I own end-to-end" | 2026-10-24 | `setup.md` written and referenced from Phase 0 (T0.0). Consequences: the official wiki becomes a fetch-only remote `upstream` plus a `--push` URL guard; tooling moves from "forever untracked" to committed in the draft repo (`tools/`, `samples/`, `AGENTS.md`, `PLAN.md`), because the C2 "every .md becomes a page" hazard now only exists in the *mirror*, which is driven by `tools/pages.txt`; CI becomes possible in the draft, so C6 reads "no CI **upstream**" and the draft's Actions is our gate while the upstream artefact stays untestable; T5.1's Mermaid probe and any `_Sidebar.md` experiment move to our own wiki, deleting the "push a scratch page to the live official wiki" step; new route-C rule: **a page body may not reference anything outside itself** (no repo-hosted `images/`, no `tools/` links), which pre-answers D-5 as "hotlinks + Mermaid/ASCII only". |
 | Q-0b (premise) | **We are not a maintainer of `tcell` or `tcell.wiki`.** Work happens in a repo the author owns, not in a fork of `tcell`; upstream contribution is by proposal, not by push | 2026-10-24 | Biggest single edit this plan has had. Affects: C1 + C9 (above), the D-list split into ours vs upstream's (above), D-7 dropped from our draft, Phase 0 (add: create draft repo + point `origin` at it, keep the official wiki as read-only `upstream`), Phase 7 (T7.5 "publish" becomes "propose + hand over per-page markdown"), T5.1 (probe on our own wiki), and §12 (GitHub Pages becomes a real fallback if upstream declines). Draft README must state *unofficial / not affiliated / official wiki at ...*; the wiki repo carries no `LICENSE` file, so attribution and Gallery URLs are preserved and no license is implied. |
@@ -135,7 +140,7 @@ question set raised in session `01a16d5c`, not to the `D-*` decision IDs above.)
 
 ## 5. Target information architecture
 
-### 5.1 Recommended page set (Option A: flat pages + sidebar)
+### 5.1 Page set for the build (flat pages; nav lives in `Home` per 5.5)
 
 ```
 Home                    short description + two nav groups
@@ -209,7 +214,8 @@ is added; ~10 min of extra work per new page and a standing risk of stale nav.
 ## 6. Page-by-page specification
 
 Each spec lists: sections, required source files, verification. All pages additionally get:
-one-sentence purpose at the top, `Prev/Up/Next` (Option B) or rely on sidebar, and a "See also" list.
+one-sentence purpose at the top and a "See also" list of links to the other built pages only (5.5:
+no `Prev/Up/Next` footers, no links to deferred pages).
 
 ### 6.1 `Home.md`
 
@@ -317,8 +323,8 @@ one-sentence purpose at the top, `Prev/Up/Next` (Option B) or rely on sidebar, a
   symbols named in the wiki pages.
   Exit criterion: 100% of root-package exported symbols appear in exactly one of the **6 built pages**
   (a page section or the tables), with an explicit `internal/advanced/deprecated` label for the rest.
-  **Caveat, pending the coverage-gate question (Q-9 in 4.1): with only 6 pages this gate forces
-  `Function-Reference` toward a `pkg.go.dev` mirror, which 12 lists as a non-goal.**
+  **Caveat, pending the coverage-gate question (open, next to be asked): with only 6 pages this gate
+  forces `Function-Reference` toward a `pkg.go.dev` mirror, which 12 lists as a non-goal.**
 
 ### 6.6 Topic pages - **only `Terminal-Setup` is built; the other 6 are deferred (Q-3)**
 
@@ -354,11 +360,13 @@ Nothing in the 6-page build may link to them (`setup.md` 3: a page must be self-
 - Every page: one H1 max (rendered page title already duplicates it - follow `Gallery.md`'s
   precedent of a single H1), blank line around lists/headings, one bullet per line, no wrapping
   (keeps wiki diffs one-line), no HTML tags, no `*emphasis_` mixing.
-- Images: only our own diagrams; PNG, <= 200 KB, stored at repo root as `images/<page>-<n>.png`
-  (wiki repos are not LFS-friendly - D-5), alt text always present.
+- Images: **no files in the page set (Q-0c pre-answers D-5).** Diagrams are Mermaid (if the T5.1 probe
+  renders it in our draft wiki) or ASCII in fenced blocks, because a page must survive being pasted into
+  someone else's wiki on its own (5.5). Third-party screenshots stay hotlinked where they already exist.
 - Code: `gofmt`-clean, `go` fence tag, tested (S8.1), no license headers in snippets, imports shown.
 - Never edit a published page by rewriting history; corrections are new commits.
-- `PLAN.md` / `AGENTS.md` stay out of the published tree (C2).
+- `PLAN.md` / `AGENTS.md` / `setup.md` are tracked in the **draft** repo but never mirrored into the
+  render tree and never proposed upstream (C2 applies to the mirror, `tools/pages.txt` is the gate).
 
 ---
 
@@ -385,7 +393,8 @@ maintainer approval, then a single publish commit per page.
 ## 9. Phased execution plan
 
 Estimates are focused hours for one author who has the source tree checked out. Phase totals are the
-sum of that phase's tasks (43-56 h without the Phase 6 publish slack quoted below, 44-57 h with it).
+sum of that phase's tasks. Recomputed after Q-3: **39-51 h** (Phase 0 3-4, 1 2-3, 2 3-4, 3 4-5,
+4 9-12, 5 8-10, 6 6-8, 7 4-5). The 44-57 h figure in section 1 predates the Q-3 scope cut.
 
 ### Phase 0 - Decisions and safety rails (3-4 h) - *blocks everything*
 - T0.0 Execute `setup.md`: create `radix29/tcell-wiki-draft` (`gh` is installed and authenticated as
@@ -403,12 +412,15 @@ sum of that phase's tasks (43-56 h without the Phase 6 publish slack quoted belo
   *current* 2-page wiki, baseline saved.
 
 ### Phase 1 - Skeleton and nav (2-3 h)
-- T1.1 Create `_Sidebar.md` (D-1 = yes) with the full page tree from S5.1, or the Option B nav. *(0.5 h)*
-- T1.2 Create stub pages (H1 + purpose sentence + "planned" note) so links resolve from the first
-  publish. Keep stubs honest - no empty-looking pages published. *(1 h)*
-- T1.3 Decide/freeze the style guide file (untracked) from S7; run S8.5 over stubs. *(0.5 h)*
-- Exit: sidebar/nav renders sensibly; zero broken internal links; publishable commit set prepared
-  (not pushed).
+- T1.1 Draft `_Sidebar.md` for the 6-page tree of 5.1 as the **droppable prototype** (5.5): mirrored to
+  our draft wiki, never linked to from a page, never in the upstream proposal. *(0.5 h)*
+- T1.2 Create stubs for the **5 not-yet-written built pages only** (H1 + purpose sentence + "planned"
+  note) so `Home`'s links resolve from the first mirror push. No stubs for deferred pages - nothing may
+  link to them anyway (5.5). Keep stubs honest - no empty-looking pages in the render tree. *(1 h)*
+- T1.3 Freeze the style guide file (from S7) and run S8.5 over the stubs; add all 6 pages +
+  `_Sidebar.md` to `tools/pages.txt` so the mirror is exercised from day one. *(0.5 h)*
+- Exit: `Home` nav + prototype sidebar both render sensibly in the draft wiki; zero broken internal
+  links; commit set pushed to `origin` (the draft), never to `upstream`.
 
 ### Phase 2 - Home rewrite (3-4 h)
 - T2.1 Draft `Home.md` per S6.1 (<= 400 words) including the required Gallery and "How to use"
@@ -442,8 +454,8 @@ sum of that phase's tasks (43-56 h without the Phase 6 publish slack quoted belo
   only this page.
 
 ### Phase 5 - Architecture (8-10 h)
-- T5.1 T6.1/T5.0 renderer probe: confirm mermaid on the wiki (push a scratch page, check the
-  rendered result, delete it) or fall back to ASCII. *(0.5-1 h)*
+- T5.1 Renderer probe: confirm mermaid in **our own draft wiki** (push to the mirror, look at it, no
+  official wiki involved) or fall back to ASCII for all diagrams. *(0.5-1 h)*
 - T5.2 Read the named source files; produce the "where to look" file->responsibility table first
   (it is the spine of the page). *(2-3 h)*
 - T5.3 Draft the sections in S6.4 with file citations. *(3-4 h)*
@@ -479,7 +491,8 @@ sum of that phase's tasks (43-56 h without the Phase 6 publish slack quoted belo
 - T7.5 Publish final touches; confirm public result page by page; record published commit SHAs. *(1 h)*
 
 Dependency graph: P0 -> P1 -> P2 -> P3 -> P4 -> P5 -> P6 -> P7. P3 is independent of P4/P5 content
-but shares the style/sidebar work; P6.5 depends on P4+P5 existing so cross-links resolve.
+but shares the style/nav work; T6.3 (symbol audit) depends on P4+P5 existing so cross-links and owner
+pages resolve.
 
 ---
 
@@ -507,15 +520,15 @@ applies beyond the page budgets in S5.1.
 |---|---|---|
 | Duplication drift: wiki vs repo `README`/`TUTORIAL`/`CHANGES*` | stale, contradictory docs | S5.4 ownership table; wiki links instead of copying; F-1 follow-up to add pointers |
 | Documenting v2 habits as v3 (PollEvent, StyleNormal, Attribute, SimulationScreen, `Color` consts) | readers write broken code | banned-symbol grep (T4.4); all snippets through the compile harness (S8.1) |
-| Mermaid assumption fails in the wiki renderer (C9) | rework of all diagrams | T5.0 probe before any diagram is written; ASCII fallback |
+| Mermaid support in the wiki renderer fails (C9) | rework of all diagrams | T5.1 probe in our own draft wiki before any diagram is written; fallback is ASCII art in fenced blocks |
 | A publish mistake goes live instantly | public misinformation | per-page review gate; baseline copies (T0.3); forward-fix commits only (C7) |
 | Loss of a gallery entry during migration (49 bullets, hand-edited) | visible content loss | S8.4 machine diff of bullets + URL sets before publishing |
 | Dead/legacy hotlinked screenshots (2 blogspot URLs) | broken images on the showcase | verify, report, propose D-5/D-6; do not silently drop |
 | Undocumented env var semantics guessed wrong | wrong user advice | read the handling in source and cite the file; if ambiguous, ask before documenting |
 | Wiki is publicly editable (spam/vandalism) | defaced pages | D-8 setting check; keep baseline + periodic `git pull --ff-only` + S8.4-style content diffs |
 | Scope creep into rewriting library code/README | plan never finishes | those are F-1 follow-ups, explicitly out of scope |
-| **No external signal until the draft is finished** (Q-2 defers all upstream contact): 13 pages of docs nobody asked for, built against guessed answers to D-1/D-2/D-6 | rework, or a public draft that diverges from what the project would accept | every page stays self-contained and paste-able (route-C rule, `setup.md` 3); keep 3 decisions separable and reversible in the draft - one file for `_Sidebar.md` (D-1) so it can be dropped without touching pages, `Home`/`Gallery` never renamed, support links (D-7) never written by us; the draft README states the project is a proposal; re-read this row before starting Phase 5 |
-| 13 pages become a maintenance burden | rot returns in a year | page budgets (S5.1), one-owner-per-topic rule, tables one-line-per-row, maintenance note (T7.3) |
+| **No external signal until the draft is finished** (Q-2 defers all upstream contact): 6 pages of docs nobody asked for, built against guessed answers to D-1/D-2/D-6 | rework, or a public draft that diverges from what the project would accept | every page stays self-contained and paste-able (route-C rule, `setup.md` 3, 5.5); keep 3 decisions separable and reversible in the draft - one file for `_Sidebar.md` (D-1) so it can be dropped without touching pages, `Home`/`Gallery` never renamed, support links (D-7) never written by us; the draft README states the project is a proposal; re-read this row before starting Phase 5 |
+| 6 built pages + 6 deferred ones become a maintenance burden | rot returns in a year | page budgets (S5.1), one-owner-per-topic rule, tables one-line-per-row, maintenance note (T7.3), and the deferred set stays unwritten until the built set survives a month of API churn |
 
 ---
 
@@ -546,7 +559,7 @@ applies beyond the page budgets in S5.1.
       `Terminal-Setup`) exist and are linked from `Home`; no page links to a deferred page. (Q-3)
 - [ ] Every code fence in the wiki is `go`-tagged, `gofmt`-clean and builds in the S8.1 harness.
 - [ ] Symbol coverage report shows 100% of root-package exported symbols owned by exactly one of the 6
-      built pages (gate wording pending Q-9).
+      built pages (gate wording pending the open coverage-gate question).
 - [ ] All 8 `TCELL_*` env vars and all 9 `Opt*` options documented, with precedence stated.
 - [ ] S8.2/S8.3/S8.4/S8.5 all green immediately before each publish commit.
 - [ ] The mirrored render tree contains exactly the 6 pages + the droppable `_Sidebar.md` prototype;
@@ -599,10 +612,14 @@ grep -rhoP 'TCELL_[A-Z_]+' --include='*.go' . | sort -u
 grep -hoP  'TCELL_[A-Z_]+' *.md | sort -u
 ```
 
-## Appendix D - Suggested commit sequence for publishing
+## Appendix D - Commit / paste sequence (Q-3 + Q-0b revised: we push to the draft, never upstream)
 
-One commit per page, in dependency order, wiki-style messages:
-`Created Getting-Started (markdown)` ... then `Updated Home (markdown)` last, so the landing page
-never links to a page that does not exist yet. `Created _Sidebar (markdown)` lands last (it exposes
-links to everything at once). Never bundle two pages in one commit - the page history is the
-reader-facing changelog.
+In the **draft** repo, one commit per page so the draft's own history reads like a changelog, in the
+order the pages get written: `Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`,
+then `Updated Home` last, so the hub never links to a page that does not exist yet. `_Sidebar.md` goes
+in its own commit and lands last (it is droppable, 5.5).
+
+If upstream ever accepts pages (Q-2 parked), the same order is the **paste order** in the wiki web
+editor, with GitHub's own messages (`Created <Page> (markdown)`, `Updated Home (markdown)`): one page
+per paste, never two pages in one edit, because the wiki page history is the reader-facing changelog
+and a maintainer reviews it as such. Home still goes last.
