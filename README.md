@@ -19,11 +19,15 @@ radix29/tcell-wiki-draft.git  (origin)    this repo; source of truth for the dra
 ...-draft.wiki.git            (render)    pages only, written by tools/mirror-wiki.sh
 ```
 
-`Home.md` is byte-identical to upstream and `Gallery.md` differs from it by three lines, each one a
-recorded decision (Q-11's two URL moves, Q-13's one addition), so a page edit stays one logical change
-rather than a rewrite. The four Q-3 pages (`Getting-Started`, `Architecture`, `Function-Reference`,
-`Terminal-Setup`) are written as honest stubs and `_Sidebar.md` is D-1's droppable navigation prototype;
-both reach the preview at the next publish. Pages are gated by `tools/pages.txt`: a file becomes a wiki
+The diff against upstream is the deliverable. `Gallery.md` differs by three lines, each one a recorded
+decision (Q-11's two URL moves, Q-13's one addition), so a Gallery edit stays one logical change.
+`Home.md` is the Phase 2 rewrite: upstream's Home is three sentences and a link, so this page replaces an
+apology with the hub the wiki never had - lede, Why, Versions, Install, Gallery, How to Use, Platforms,
+License - keeping that one link, and it is the one page whose diff is a rewrite rather than an edit (T2.1).
+`baseline/` keeps upstream's two files byte for byte, so any page here can still be compared with what it
+replaced. The four Q-3 pages (`Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`)
+are written as honest stubs and `_Sidebar.md` is D-1's droppable navigation prototype; all of it reaches
+the preview at the next publish. Pages are gated by `tools/pages.txt`: a file becomes a wiki
 page exactly when its name is on that list. `PLAN.md`, `AGENTS.md`, this README, `tools/` and `samples/`
 are tracked but never mirrored, which is what makes it safe to keep tooling in a repo whose
 push target renders pages.

@@ -14,8 +14,9 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   `tools/pages.txt`.** `PLAN.md`, `AGENTS.md`, `README.md`, `tools/`, `samples/` are tracked on purpose
   and never render as pages; the upstream artefact is the text of one page `.md`, pasted one page at a
   time into someone else's wiki.
-- Page bodies sit at the repo root as plain `.md` - the 6 pages of Q-3: `Home.md`, `Gallery.md` and,
-  since Phase 1, `Getting-Started.md`, `Architecture.md`, `Function-Reference.md`, `Terminal-Setup.md`,
+- Page bodies sit at the repo root as plain `.md` - the 6 pages of Q-3: `Home.md` (the nav hub since
+  Phase 2, and the last page in Appendix D's commit order), `Gallery.md` and, since Phase 1,
+  `Getting-Started.md`, `Architecture.md`, `Function-Reference.md`, `Terminal-Setup.md`,
   the last four being honest stubs (purpose sentence, planned scope, a pointer to what to read today, and
   no API claimed in backticks, which Q-6 reserves for the page that owns the symbol). `_Sidebar.md` sits
   beside them as D-1's droppable prototype: it is in the manifest, it is not a content page, and no page
@@ -57,8 +58,9 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 ```bash
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
 git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 3
-                                                            # lines (2 URL moves Q-11, 1 addition Q-13),
-                                                            # Home 0; the 4 stubs are additions, not diffs
+                                                            # lines (2 URL moves Q-11, 1 addition Q-13)
+                                                            # plus the Phase 2 Home rewrite; the 4 stubs
+                                                            # are additions, not diffs
 git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
 ```
 
@@ -154,7 +156,9 @@ Entry format — exactly this shape, one line each:
   `Some_Page.md` or with spaces. **Never rename `Home.md` or `Gallery.md`**: it breaks `Home.md`'s link
   and the `wikis/Gallery` URL hardcoded in `../tcell/README.md`.
 - GitHub renders the page slug as the page heading, so an in-file `#` H1 shows up as a duplicate
-  title; `Gallery.md` does this and `Home.md` has no H1. Follow `Gallery.md` for new content pages.
+  title; a page therefore carries exactly one of them. `Gallery.md` always did, `Home.md` got one with
+  the Phase 2 rewrite (upstream's `Home.md` has none, which is why its diff is a rewrite and not an
+  edit), and the four stubs follow `Gallery.md`.
 - `_emphasis_` is the established idiom; don't introduce `*emphasis_` mixes or HTML tags. Blank
   line before and after every list and heading.
 - The library is **`_Tcell_` in prose** (Q-9) - bare `Tcell` only in headings, file names and paths,
@@ -192,7 +196,7 @@ optional page arguments plus `--verbose`. CI (`.github/workflows/qa.yml`) runs a
 fresh `gdamore/tcell` clone via `TCELL_DIR`; locally they default to the sibling `../tcell`.
 
 ```text
-tools/review-checklist.py   S8.7  all gates below + per-page review questions (start here)
+tools/review-checklist.py   S8.7  all gates below + review questions + both word counts (start here)
 tools/check-style.py        S8.5  house style (PLAN.md 7); --all includes non-page docs
 tools/check-links.py        S8.2  internal slugs/anchors, then external URLs via curl; --offline
 tools/check-gallery.py      S8.4  Gallery migration is lossless vs baseline/ (49 bullets, append-only)
@@ -201,16 +205,18 @@ tools/check-demos.py        S8.2b the demos/TUTORIAL links a page makes resolve;
 tools/make-samples.py       S8.1  every go fence compiles; headless=yes also runs it (S8.6)
 tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit
 tools/apiface/          S8.3  the surface dumper (go/parser, no downloads) - run from its own dir
-tools/wikilib.py              shared stdlib helpers: manifest, fences, links, ASCII
+tools/wikilib.py              shared stdlib helpers: manifest, fences, links, ASCII, prose words
 tools/gallery-additions.txt     approved entries the baseline lacks (Q-13): name, URL, evidence
 tools/publish.sh                THE publish path: mirror the preview, then push, then verify (Q-14)
 tools/mirror-wiki.sh            render-wiki mirror only; --dry-run to inspect, --check as a gate
 ```
 
-Allow-lists carry only legacy exceptions with a written reason: `tools/style-allow.txt` (2 upstream
- defects), `tools/link-status-allow.txt` (statuses we investigated and deliberately keep - after Q-11
- nothing unreachable is left on a page, and allow-listing a dead URL to quiet CI is now explicitly
- against policy), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
+Allow-lists carry only legacy exceptions with a written reason: `tools/style-allow.txt` (1 upstream
+defect left, the `## UI Frameworks ` trailing space D-9 says to leave; its second entry retired when Phase 2
+rewrote `Home.md` and fixed the missing final newline as part of the page),
+`tools/link-status-allow.txt` (statuses we investigated and deliberately keep - after Q-11
+nothing unreachable is left on a page, and allow-listing a dead URL to quiet CI is now explicitly
+against policy), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
 you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only).
 
 Still useful one-liners that no tool covers:
