@@ -1,7 +1,8 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phase 1 built and
-green locally, publish pending the draft owner's ask; Phases 2-7 not started
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-2 built
+and green locally - Phase 2 rewrote `Home.md` as the hub - with publish pending the draft owner's ask;
+Phases 3-7 not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -247,8 +248,11 @@ no `Prev/Up/Next` footers, no links to deferred pages).
   notifications, bracketed paste, performance), `## Versions` (v3 current + import path; v2/v1
   availability + "v1 unmaintained"; link the repo `CHANGESv3.md`, not a wiki migration page (Q-3)),
   `## Install` (one `go get` block + `NewScreen` one-liner), `## Gallery` (2 sentences + link -
-  requirement R2), `## How to Use` (3 bullets pointing at `Getting-Started`, `Architecture`,
-  `Function-Reference` - requirement R3), `## Platforms` (1 line each, linking the repo `README-*.md`
+  requirement R2), `## How to Use` (four bullets pointing at `Getting-Started`, `Architecture`,
+  `Function-Reference` and `Terminal-Setup` - requirement R3. This row said three bullets until Phase 2 was
+  built, which was written before Q-3 made `Terminal-Setup` one of the 6 built pages and before 13's "the 6
+  built pages are linked from `Home`" became an acceptance item, so the fourth bullet is 13 asking for it
+  rather than scope creep, corrected the way T1.2's "five stubs" was corrected), `## Platforms` (1 line each, linking the repo `README-*.md`
   since there is no `Platforms` page in scope), `## License` (Apache-2.0).
   **No Support/Community section (Q-8, closing Q-0b/Q-2: TideLift, Staysail and Discord links are the
   project's to place, not a contributor's; and per Q-4 the wiki does not copy README's list anyway).** Home is also the nav hub (5.5), so these sections carry the links.
@@ -449,7 +453,7 @@ implemented under `tools/` and run on every push in `.github/workflows/qa.yml`, 
 `preview` step (`tools/mirror-wiki.sh --check`) that fails when the live render wiki does not render the
 pushed pages - the mechanical half of Q-14.**
 
-| S8.7 | **Built (2026-10-24):** `tools/review-checklist.py` runs every other tool as a GATE, adds the mechanical CHECKs (v2 leakage vs the real surface, resize prose naming `EventResize`, orphan pages, duplicated `##` topics, non-self-contained diagrams) and prints the ASK lines a human must answer | consistent manual review | verified both ways: clean pages exit 0; a page with `PollEvent`/`StyleNormal`/unnamed-resize exits 1 with three named findings |
+| S8.7 | **Built (2026-10-24):** `tools/review-checklist.py` runs every other tool as a GATE, adds the mechanical CHECKs (v2 leakage vs the real surface, resize prose naming `EventResize`, orphan pages, duplicated `##` topics, non-self-contained diagrams) and prints the ASK lines a human must answer. Since Phase 2 it prints **both** word counts per page - `wikilib.prose_words()` (fences, link targets, inline code and markup out) for 5.1's budgets and the raw `split()` count for 6.1's cap, because they are two different questions and printing one number invited grading the page by whichever was convenient (Phase 2's record has the reasoning, and the function's docstring lists the ten shapes it was checked against) | consistent manual review | verified both ways: clean pages exit 0; a page with `PollEvent`/`StyleNormal`/unnamed-resize exits 1 with three named findings |
 
 Review gates: each phase ends with (a) scripts green, (b) second read of raw markdown, (c) explicit
 maintainer approval, then a single publish commit per page.
@@ -579,12 +583,102 @@ larger, not safer.
   change to the official wiki. Nothing was pushed to `upstream`, which cannot be pushed at all.
 
 ### Phase 2 - Home rewrite (3-4 h)
-- T2.1 Draft `Home.md` per S6.1 (<= 400 words) including the required Gallery and "How to use"
-  sections - and no Support/Community section (Q-8). *(2 h)*
-- T2.2 Cross-check every factual claim against `../tcell` source/README; verify links (S8.2). *(0.5 h)*
-- T2.3 Review gate + publish: `Updated Home (markdown)`. *(0.5 h)*
-- Exit: R1 met (description + >= 2 navigation sub-sections); Home links to Gallery and to all three
-  how-to pages.
+
+**Status: built, green locally, committed on `master` - and not published, which is the only half of T2.3
+still open.** `Home.md` is the page 6.1 spec'd: `# Tcell` plus seven `##` sections in 6.1's order (Why,
+Versions, Install, Gallery, How to Use, Platforms, License), no Support/Community section (Q-8), 330 prose
+words against 5.1's 250-350 budget and 395 counting code and markup against 6.1's "<= 400" cap. All six
+GATEs pass (`style`, `links`, `gallery`, `demos`, `snippets`, `symbols`) and `review-checklist.py` is clean
+with Home the only page reporting nothing to ask. Nothing was pushed: `AGENTS.md` makes an unprompted push
+the one thing this repo never does, so the preview still renders `39e5378` (the two Phase 0 pages),
+`tools/mirror-wiki.sh --check` says "BEHIND", and `--dry-run` now refuses outright because the page was
+dirty - which is Q-14's guard doing its job and is the practical reason the page is committed rather than
+parked in the working tree. Q-14 makes the publish half one command (`tools/publish.sh`) whenever the
+draft owner asks; a publish ships 7 files, because the mirror copies the manifest and not the commit, so
+Phase 1's "waiting makes the next publish larger, not safer" is still true and now carries a rewritten hub.
+Landed inside the 3-4 h estimate; the fact-checking was the work, the writing was fast.
+
+- T2.1 **Done.** The page 6.1 describes, with four things worth stating because they were decisions and
+  not transcription:
+  - **It claims no API.** There is no backticked symbol anywhere on Home, so `symbol-coverage.py` still
+    reports "0 page-cited symbol(s) checked": `NewScreen`, `Init` and `Fini` appear only inside the `go`
+    fence, which the tool deliberately does not read as a claim of ownership. That keeps Q-6's single-owner
+    contract intact for Phase 6, where `Function-Reference` owns those three names in a Lifecycle table and
+    a second owner would be a `SHARE` failure. The two import paths in backticks (both on the Versions
+    line; the one in the `go get` line is inside a fence, so it is not a claim either) resolve through the
+    `pkg:github` entry already in `tools/api-allow.txt`, so the invented-API gate saw
+    zero claims and stayed green rather than being quieted.
+  - **The `NewScreen` one-liner 6.1 asks for is a real program, and is deliberately not `headless=yes`.**
+    A plain ` ```go ` fence must be a complete program (S8.1's label rule), so the fence carries its
+    `package`/`import`/`func main` and builds and links gofmt-clean in the harness; marking it `headless=yes`
+    would be a label lie dressed as extra rigor, because the S8.6 emulator asserts a *non-blank* screen and
+    a fence that only opens a screen draws nothing - and making it draw is precisely how a Home page starts
+    becoming the second tutorial Q-4 forbids. The `go get` line sits in a `console` fence so the harness is
+    never asked to compile a shell command.
+  - **Nav only, no second content.** Six internal links over five distinct pages: Gallery, plus all four
+    other built pages, with `Getting-Started` reached twice (from Install and from How to Use).
+    `## Gallery` and `## How to Use` are the two lists 5.5 says carry navigation. No link to any of the six
+    deferred topic pages, no `Prev | Up | Next` footer, no "See also" block: for the hub page 6's per-page
+    "See also" and 6.1's nav sections are the same list, and a second copy of it on the same page would need
+    a second owner. Each `## How to Use` line is that page's *own* stub purpose sentence compressed, so Home
+    makes no completion claim about a stub - a reader who clicks through finds the page saying what Home said
+    it was for.
+  - **The draft disclaimer is not on this page.** Q-0b's honesty (unofficial, not affiliated, official wiki
+    over there) lives in `README.md`, which is never mirrored, and in `_Sidebar.md`, which renders beside the
+    preview's Home and is droppable. A page body that upstream adopted must not contain a sentence that turns
+    false on adoption, and Home is the one page upstream is most likely to adopt. Found in this phase, decided
+    in this phase, and it belongs in T7.4's package as an explicit line rather than as a surprise.
+- T2.2 **Done, and it is where the phase went.** Every claim on the page traces to the library, the
+  non-obvious ones traced to source rather than to prose: "only the changed cells are sent" is
+  `tscreen.go`'s `drawCell`, which returns early when `cells.Dirty(x, y)` is false (and whose comment says
+  most cells are clean); "titles ... when offered" is `tScreen.SetTitle`, which does nothing unless
+  `t.setTitle != ""`, i.e. unless the terminal has the capability at all; notifications are OSC 777 only per
+  the `ShowNotification` doc comment; "the current and previous _Go_ releases" is README's stated support
+  policy; the four platform lines are README's own platform list plus what `README-windows.md` (modern VT
+  console API, and it is the one that names the minimum version), `README-wasm.md` (build flags plus support
+  files) and `README-plan9.md` (best-effort) actually contain. Two claims were *cut* rather than checked:
+  v3's freedom from the terminal database is real but is `Terminal-Setup`'s to make, and "pure _Go_" stays a
+  portability bullet rather than growing an OS list that duplicates `## Platforms`. Version claims are
+  README's own v3/v2/v1 note, and it is why Home gives v2's import path and not v1's: printing an import path
+  for the release the sentence calls unmaintained advertises the thing the sentence warns about.
+  Links: `check-links.py` with network is 64 external URLs and 12 internal links, 0 broken; Home's seven are
+  six links into the library repo (`README.md`, `CHANGESv3.md`, `README-windows.md`, `README-wasm.md`,
+  `README-plan9.md`, `LICENSE`) plus `pkg.go.dev` for the package root, and all seven answer 200 today.
+  `check-demos.py` additionally verifies
+  the six library-file links exist in the checkout on the *detected* default branch (`main`, via
+  `git ls-remote --symref`), which is the check that catches an upstream rename instead of a reader finding it.
+- T2.3 **Review gate met; publish is the draft owner's call.** The page was read raw as well as through the
+  tools, then rendered in the head of a first-time reader: "is this the library for me" is answered by the
+  lede plus Why without scrolling, "what do I run first" by Install, "where is the reference" by How to Use -
+  5.3's three reader intents, three sections, no backtracking. The commit is `Updated Home (markdown)`,
+  wiki-styled per `AGENTS.md`, single-line, single-purpose, and local; three commits follow it (the tool
+  measure, the retired style suppression, the two runbook docs) and a fourth closes the phase here, none of
+  them pushed, and nothing was force-pushed, amended or rebased.
+- Found here, and it belongs to the tools rather than the page: 6.1's "word count <= 400" and 5.1's
+  "Home 250-350 words" measure different things, and `review-checklist.py` printed one number for both -
+  `len(text.split())`, which counts a 60-character URL, eight fence delimiters and fifteen bullet dashes as
+  words. Home is 330 prose words and 395 raw, so it clears both, but `Getting-Started` with 8-12 snippets
+  and `Function-Reference` with tables would have had the two measures diverge hard, and a budget graded by
+  the wrong number is a budget that gets argued with. Fixed forward: `wikilib.prose_words()` (fences, link
+  targets, inline code, table pipes and `#`/`-` markers out) is printed next to the raw count, tested on
+  ten shapes (prose, links, a fence, bullets, a heading, table rows with both delimiter-row spellings, a
+  thematic break, inline code, empty); those shapes are written into the function's docstring rather than
+  into a test file, because `tools/` commits no test file and a docstring can be re-run by hand by whoever
+  touches it next. `AGENTS.md`'s Tooling list
+  says so too, since a reviewer reading the tool list should know which of the two numbers to compare to 5.1.
+- Found here too, and left alone: `_Sidebar.md`'s blurb and Home's lede now open with nearly the same
+  sentence, which is visible on the rendered preview where both appear at once. Not fixed, because the
+  sidebar has to stand alone on the other six renders (5.5: droppable, load-bearing for nothing) and
+  rewording a reviewed Phase 1 artifact for a duplication only the preview shows is not Phase 2's call. It is
+  a T7.2 nav-completeness item, and if upstream ever takes both files together they will trim one of them.
+- Exit **met, except for its publish half (2026-10-24):** R1 is met - a short project description plus seven
+  navigation sub-sections including the required `## Gallery` and `## How to Use`, inside both word budgets -
+  and Home links the Gallery and all four other built pages, which is 13's "the 6 built pages are linked from
+  `Home`" satisfied a full phase before four of those pages have any content in them - with the one wrinkle
+  that 13 phrases it as all six, and `Home` is the page it cannot link itself: that is why
+  `review-checklist.py` exempts `Home` from the orphan CHECK, and why `_Sidebar.md` links it even though no
+  page may depend on the sidebar (5.5). Phase 3 is unblocked,
+  and Phase 3 is where the lossless-migration contract (Appendix B) has to be met rather than described.
 
 ### Phase 3 - Gallery (4-5 h)
 - T3.1 Run S8.4 to snapshot the 49 bullets + URL set as the migration contract. *(0.5 h)*
