@@ -54,9 +54,14 @@ $ tools/check-demos.py --build            # the demos the pages link really ship
 Publishing a preview (never the official wiki):
 
 ```console
-$ tools/mirror-wiki.sh --dry-run
-$ tools/mirror-wiki.sh
+$ tools/mirror-wiki.sh --dry-run          # what a publish would ship, publishing nothing
+$ tools/publish.sh                        # mirror, then push, then re-read the live wiki (Q-14)
 ```
+
+`tools/publish.sh` is the whole publish path and needs no approval: Q-15 pre-delegated it, so a green gate
+set is the only input, and the preview is never left behind a commit on purpose. The official wiki is still
+reached by an issue with page markdown attached (Q-2), never by a push - this repo cannot push there even
+if it wanted to.
 
 ## Ground rules worth knowing before you send a PR
 
