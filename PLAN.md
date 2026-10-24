@@ -1,8 +1,8 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-2 built
-and green locally - Phase 2 rewrote `Home.md` as the hub - with publish pending the draft owner's ask;
-Phases 3-7 not started
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-2 built,
+green and **published** - Q-15 removed the ask, so the preview at `radix29/tcell-wiki-draft/wiki` renders
+all 7 manifest pages including Phase 2's `Home.md` rewrite; Phases 3-7 not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -94,7 +94,7 @@ Rules that must be designed around (each is marked with how it is settled):
 
 | # | Constraint | Consequence |
 |---|---|---|
-| C1 | Publish-on-push, no PRs, anyone with the link can also edit in the web UI | every phase ends with a local review gate; publish only on explicit approval. **Revised by Q-0b: we cannot push at all, so "publish" now means a web-UI edit accepted upstream, or handing content to a maintainer; the review gate moves from "before we push" to "before we propose".** |
+| C1 | Publish-on-push, no PRs, anyone with the link can also edit in the web UI | every phase ends with a local review gate; publish only on explicit approval. **Revised by Q-0b: we cannot push at all, so "publish" now means a web-UI edit accepted upstream, or handing content to a maintainer; the review gate moves from "before we push" to "before we propose".** **Revised again by Q-15: for the draft's own two repos the approval is pre-delegated, so C1's protection here is the review gate and the mirror's guards rather than a human answer - and upstream is unchanged, because a proposal stays the only channel there.** |
 | C2 | GitHub wikis expose **any** `.md` file as a public page | **Settled by Q-0c + `AGENTS.md` Runbook: it only bites where a push renders.** Pages reach a wiki solely through `tools/pages.txt`, so `PLAN.md`/`AGENTS.md`/`README.md` are committed in the draft and never mirrored; `upstream` stays fetch-only |
 | C3 | Slugs come from file names: `Getting-Started.md` -> `/wiki/Getting-Started`; spaces become `_` | prefer hyphenated, <= 3 word ASCII file names; internal links omit `.md` |
 | C4 | Nested/subdirectories are not reliably rendered as sub-pages | assume a **flat** page set; hierarchy via `_Sidebar.md` and Home nav only |
@@ -130,11 +130,11 @@ wiki. D-3, D-4, D-5, D-6, D-9 are ours for as long as the work lives in our own 
 
 Row IDs are the **decision** IDs (`Q-0`, `Q-0b`, `Q-0c`, `Q-2`, `Q-3`, ...) and they run one behind the
 question numbers used out loud in the Q&A, because `Q-0b` and `Q-0c` were follow-ups to `Q-0`. The next
-answer is recorded as `Q-15`. Mapping so far: requirements = Q-0, contributor premise = Q-0b, vehicle +
+answer is recorded as `Q-16`. Mapping so far: requirements = Q-0, contributor premise = Q-0b, vehicle +
 motivation = Q-0c / Q-1, upstream timing = Q-2, scope = Q-3, canonical docs home = Q-4, page naming =
 Q-5, coverage gate = Q-6, legacy demo bullet = Q-7, support links = Q-8, name styling = Q-9, wiki
-editing boundary = Q-10, dead-host policy = Q-11, publish + preview = Q-12, gallery addition = Q-13, standing publish rule =
-Q-14.
+editing boundary = Q-10, dead-host policy = Q-11, publish + preview = Q-12, gallery addition = Q-13,
+standing publish rule = Q-14, publish without asking = Q-15.
 
 | ID | Answer | Date | Effect on this plan |
 |---|---|---|---|
@@ -154,6 +154,7 @@ Q-14.
 | Q-12 (publish) | **Option 3: commit, push the draft, publish the render preview** | 2026-10-24 | Executed the same turn: 14 commits pushed to `origin/master` (now `5eee58c`, `d8aa87b..5eee58c` fast-forward, nothing forced or amended), then `tools/mirror-wiki.sh` published `Home.md` + `Gallery.md` to the draft wiki - render HEAD `2ebcbf8` -> `32022f9` (`Preview draft pages`), so the preview at `github.com/radix29/tcell-wiki-draft/wiki` is now something a reader can look at instead of a plan section, and `/wiki/Gallery` renders with the moved Codeberg links. Two facts this turned from prediction into measurement: **CI passed for real** (run `40112709147`, 15/15 steps green including the informational mirror step), which is the first evidence that the gates are not just green on my machine; and the `git diff --stat upstream/master HEAD -- Home.md Gallery.md` check in AGENTS' verify list changed meaning from "must be empty" to "is the deliverable" - today it is 2 lines in `Gallery.md`, 0 in `Home.md`, and any future growth in that number is the review surface. Upstream is still untouched by construction: its push URL is a dead path. Next unblocked step is Phase 1 (`_Sidebar.md` prototype to look at D-1 rendered, plus the Home rewrite skeleton), and Q-13 is whichever question Phase 1 surfaces next. |
 | Q-13 (gallery addition) | **Add `goSSMS` to `## Productivity & Utilities`** - the author asked for their own application to be listed | 2026-10-24 | First addition to the Gallery since the baseline, so the contract moved from "49 bullets" to "49 + N recorded additions" (Appendix B allowed exactly that and this is the first time `N` is non-zero). Verified before writing the line: URL answers 200; `radix29/gossms` is Go, not a fork, active; `go.mod` requires `github.com/gdamore/tcell/v3 v3.6.0`, which is what makes it eligible for a *Tcell* gallery at all; the description paraphrases the README ("a terminal-based SQL Server management application", Linux/macOS/Windows) rather than inventing features, and on review drops the README's "single executable" packaging detail - a one-binary note is a distribution fact that ages the moment the project starts shipping packages, which is the same rule that bans star counts and "(new)" markers; appended at the end of the category per AGENTS (never alphabetical); display name keeps the project's own `goSSMS` styling, which the page already tolerates (`myGoAdventure`, `WTF`). Mechanically this is why the addition is legal and everything else still fails: `tools/gallery-additions.txt` holds one record per approved entry (name, URL, evidence) and `check-gallery.py` subtracts those from the addition budget, so `--max-additions` stays 0 in CI and a second unrecorded bullet still fails - tested against a synthetic second entry, a record for an entry that is not on the page, a record whose URL disagrees with the page (both trailing-slash forms, since upstream writes `github.com/zyedidia/micro/` with a slash), and a record approving an entry that is already upstream. Deliberately *not* done: no `demo.gif` media link (the README has one and it resolves, but one URL per entry keeps the migration diff reviewable and media is a maintainer call), and no claim that this was curated - it is author-supplied, recorded as such, and goes into the proposal package (T7.4) flagged the same way. Page state after the edit: 50 bullets, 49 linked, `github.com` 45, `codeberg.org` 2, and `git diff --stat upstream/master HEAD -- Home.md Gallery.md` up from 2 lines to 3. |
 | Q-14 (standing publish rule) | **Every push publishes the preview.** `tools/publish.sh` is now the publish path: mirror, then push, then re-check the live wiki | 2026-10-24 | Recorded because "I'll remember to mirror" is how a preview goes stale, and a preview nobody trusts is worse than none: the CI step that used to be `continue-on-error: true` informational is now a real gate (`tools/mirror-wiki.sh --check`, exit 1 when the live wiki does not render the manifest exactly). Order is mirror-then-push, which looks backwards until you notice CI starts on the push - pushing first makes the gate race the mirror, and a gate that fails for no real reason gets ignored the next time it means something. Two side effects worth having: the mirror now **refuses** to publish pages with uncommitted edits (the render tree is a build output of committed text, so publishing a dirty page would put words on a public wiki that no commit and no review ever saw - `FORCE=1` exists for an emergency), and `restore_mirror()` replaced the copy-pasted dry-run cleanup so the check cannot leave the clone dirty. Tested both ways: in-sync preview exits 0; a locally edited page exits 2 at the guard, and with `FORCE=1` exits 1 with the drift diff plus the reminder that a web-UI edit belongs in the repo first. Two things only running it for real found: the script called `mirror-wiki.sh` at the repo root instead of in `tools/` (it has never been anything else, which is what committing an untested script is worth), and an interrupted `--check` - mine died on `SIGPIPE` from `head -3` - left the shared render clone staged, after which the mirror aborted with "commit or clean it first" for a directory nobody has ever edited by hand. That guard now resets the clone and says why, because worktree dirt there can only be this script's own leftovers (a web-UI edit arrives by the pull above and is reported there), and it is a build output of this repo. Also fixed two pieces of stale documentation found while writing this: AGENTS still listed D-2/D-6/D-7/D-8 as "an upstream call" after Q-4/Q-7/Q-8/Q-10 closed them, and it described `tools/link-status-allow.txt` as the place where unreachable URLs are kept, which Q-11 made the opposite of policy. |
+| Q-15 (publish authority) | **The agent publishes.** Commit, mirror and push whenever the work needs it - no per-page ask, no per-commit ask | 2026-10-24 | The draft owner's instruction, in their words: "change the agents so you can push, publish and mirror automatically when you need it". Recorded as a decision rather than a mood because the rule it replaces was the strongest one in `AGENTS.md` ("Never `git push` (or `git commit`) unless explicitly asked to. Ask instead."), and removing it moves real risk: the render wiki is public, has no review gate, and publishes instantly, so an unreviewed page can now reach a reader with nobody in the loop. What pays for that is the machinery this plan had already made a gate instead of a courtesy - six GATEs plus the mechanical CHECKs in `tools/review-checklist.py`, `--dry-run` to inspect a publish before it happens, the mirror's refusal to publish a dirty page (Q-14), and CI's `preview` step, which is the reviewer the human "yes" was standing in for. Keeping the ask also contradicted Q-14's own reasoning: a preview nobody trusts is worse than none, and a preview that waits on one word from a human is that - measured here, Phase 1 sat complete and unpublished for a whole phase and Phase 2's hub sat the same way, so the preview rendered a two-page draft while seven pages existed on disk. What did **not** change, because none of it is what Q-15 was about: Q-14's mechanism (mirror, then push, then re-read the live wiki, one command), one logical change per commit with wiki-styled page messages, forward-only history with nothing mirrored ever force-pushed, rebased or amended, `upstream` still unpushable by construction (dead push URL), and Q-2's rule that `gdamore/tcell` is not contacted until the draft owner says so - that one is a human opening an issue on someone else's repo, and pre-authorization on our two repos does not reach it. First run of the authority: `tools/publish.sh` shipped render `39e5378` -> `fa34e5a` (`Preview draft pages`, 6 files, 116 insertions: the rewritten `Home.md`, four Q-3 stubs, `_Sidebar.md`) and pushed `origin/master` `731b430..91a0da9` (17 commits), after which the script's own re-read reported "preview is current ... 7 page(s)". |
 | Q-0b (premise) | **We are not a maintainer of `tcell` or `tcell.wiki`.** Work happens in a repo the author owns, not in a fork of `tcell`; upstream contribution is by proposal, not by push | 2026-10-24 | Biggest single edit this plan has had. Affects: C1 + C9 (above), the D-list split into ours vs upstream's (above), D-7 dropped from our draft, Phase 0 (add: create draft repo + point `origin` at it, keep the official wiki as read-only `upstream`), Phase 7 (T7.5 "publish" becomes "propose + hand over per-page markdown"), T5.1 (probe on our own wiki), and §12 (GitHub Pages becomes a real fallback if upstream declines). Draft README must state *unofficial / not affiliated / official wiki at ...*; the wiki repo carries no `LICENSE` file, so attribution and Gallery URLs are preserved and no license is implied. |
 
 (Answers are recorded one row at a time as the plan is walked through; `Q1..Q16` map to the
@@ -455,8 +456,11 @@ pushed pages - the mechanical half of Q-14.**
 
 | S8.7 | **Built (2026-10-24):** `tools/review-checklist.py` runs every other tool as a GATE, adds the mechanical CHECKs (v2 leakage vs the real surface, resize prose naming `EventResize`, orphan pages, duplicated `##` topics, non-self-contained diagrams) and prints the ASK lines a human must answer. Since Phase 2 it prints **both** word counts per page - `wikilib.prose_words()` (fences, link targets, inline code and markup out) for 5.1's budgets and the raw `split()` count for 6.1's cap, because they are two different questions and printing one number invited grading the page by whichever was convenient (Phase 2's record has the reasoning, and the function's docstring lists the ten shapes it was checked against) | consistent manual review | verified both ways: clean pages exit 0; a page with `PollEvent`/`StyleNormal`/unnamed-resize exits 1 with three named findings |
 
-Review gates: each phase ends with (a) scripts green, (b) second read of raw markdown, (c) explicit
-maintainer approval, then a single publish commit per page.
+Review gates: each phase ends with (a) scripts green, (b) second read of raw markdown, then a single
+publish commit per page. **(c) used to be "explicit maintainer approval"; Q-15 replaced it with
+pre-authorization, which is only safe in the order written here - (a) and (b) are the review, and the
+publish that follows is `tools/publish.sh` refusing to ship a dirty page, not a bare `git push`. A red gate
+is a stop, never a way to ask CI.**
 
 ---
 
@@ -528,7 +532,9 @@ insertions pending), which is also the answer to "just `git push` then": CI's `p
 same check, so pushing `origin` without mirroring first turns the run red on purpose (Q-14). The
 remaining act is `tools/publish.sh`, and it is one command: mirror, push, re-read the live wiki.
 `AGENTS.md` makes an unprompted push the one thing this repo never does, and Q-14 settled *how* a push
-publishes, not when one is allowed - so the draft owner's ask is the missing input.
+publishes, not when one is allowed - so the draft owner's ask is the missing input. **[Closed the same day:
+Q-15 took the ask out of the loop and `tools/publish.sh` ran, so this act is recorded under Phase 2 and in
+4.1, and the preview carries both pages and all seven.]**
 Landed inside the 2-3 h estimate; none of it was research. Phase 2 is unblocked for authoring, but note
 what the mirror does to a deferred publish: it publishes the whole manifest, not one file, so T2.3 would
 ship these seven files whether or not anyone wanted them shipped yet - waiting makes the next publish
@@ -580,23 +586,36 @@ larger, not safer.
   deliberately not touched: its nav is T2.1's rewrite, and touching it here would spend Phase 2's work
   twice and grow the one diff upstream is actually being offered - which after this phase is still
   `Gallery.md`, 3 lines, Q-11 plus Q-13, because four new pages are additions to a draft and not a
-  change to the official wiki. Nothing was pushed to `upstream`, which cannot be pushed at all.
+  change to the official wiki. Nothing was pushed to `upstream`, which cannot be pushed at all. **[Both
+  open items closed the same day by Q-15's publish; the SHAs are in Phase 2's "Published" note.]**
 
 ### Phase 2 - Home rewrite (3-4 h)
 
-**Status: built, green locally, committed on `master` - and not published, which is the only half of T2.3
-still open.** `Home.md` is the page 6.1 spec'd: `# Tcell` plus seven `##` sections in 6.1's order (Why,
+**Status: built, green, committed on `master`, published (Q-15).** `Home.md` is the page 6.1 spec'd:
+`# Tcell` plus seven `##` sections in 6.1's order (Why,
 Versions, Install, Gallery, How to Use, Platforms, License), no Support/Community section (Q-8), 330 prose
 words against 5.1's 250-350 budget and 395 counting code and markup against 6.1's "<= 400" cap. All six
 GATEs pass (`style`, `links`, `gallery`, `demos`, `snippets`, `symbols`) and `review-checklist.py` is clean
-with Home the only page reporting nothing to ask. Nothing was pushed: `AGENTS.md` makes an unprompted push
-the one thing this repo never does, so the preview still renders `39e5378` (the two Phase 0 pages),
-`tools/mirror-wiki.sh --check` says "BEHIND", and `--dry-run` now refuses outright because the page was
-dirty - which is Q-14's guard doing its job and is the practical reason the page is committed rather than
-parked in the working tree. Q-14 makes the publish half one command (`tools/publish.sh`) whenever the
-draft owner asks; a publish ships 7 files, because the mirror copies the manifest and not the commit, so
-Phase 1's "waiting makes the next publish larger, not safer" is still true and now carries a rewritten hub.
-Landed inside the 3-4 h estimate; the fact-checking was the work, the writing was fast.
+with Home the only page reporting nothing to ask. For one commit it was also unpublished: `AGENTS.md` still
+said an unprompted push was the one thing this repo never does, so the preview was on `39e5378` (the two
+Phase 0 pages), `tools/mirror-wiki.sh --check` said "BEHIND", and `--dry-run` refused outright because the
+page was dirty - which is Q-14's guard doing its job and is the practical reason the page is committed
+rather than parked in the working tree. Q-14 had made the publish half one command; Q-15 took the waiting
+out of it, and the run is recorded below. A publish ships 7 files, because the mirror copies the manifest
+and not the commit, so Phase 1's "waiting makes the next publish larger, not safer" held, and the next
+publish carried a rewritten hub with it.
+
+**Published (2026-10-24, the first act under Q-15).** `tools/publish.sh` mirrored, pushed and re-read: render
+HEAD `39e5378` -> `fa34e5a` (`Preview draft pages`, 6 files, 116 insertions - the rewritten `Home.md`, the
+four Q-3 stubs and `_Sidebar.md`), `origin/master` `731b430..91a0da9` (17 commits, fast-forward, nothing
+forced or amended), and the script's own verification step then reported *"preview is current ... renders
+exactly the 7 page(s) in tools/pages.txt"*. Two things that only a real run can settle: Phase 1's exit
+criterion - "`Home` nav + prototype sidebar both render sensibly in the draft wiki" - is met now rather
+than promised, because the sidebar and the rewritten hub are on the same rendered page for anyone to look
+at; and the deferred publish really did just grow the one publish, since six pages and 17 commits went out
+together with no merge conflicts, no drift and no lost work, which is the argument Phase 1 made in prose
+and this made in shas. Landed inside the 3-4 h estimate; the fact-checking was the work, the writing was
+fast, and the publish itself was one command and about a minute of waiting for the re-read.
 
 - T2.1 **Done.** The page 6.1 describes, with four things worth stating because they were decisions and
   not transcription:
@@ -647,13 +666,13 @@ Landed inside the 3-4 h estimate; the fact-checking was the work, the writing wa
   `check-demos.py` additionally verifies
   the six library-file links exist in the checkout on the *detected* default branch (`main`, via
   `git ls-remote --symref`), which is the check that catches an upstream rename instead of a reader finding it.
-- T2.3 **Review gate met; publish is the draft owner's call.** The page was read raw as well as through the
+- T2.3 **Review gate met, and published (Q-15).** The page was read raw as well as through the
   tools, then rendered in the head of a first-time reader: "is this the library for me" is answered by the
   lede plus Why without scrolling, "what do I run first" by Install, "where is the reference" by How to Use -
   5.3's three reader intents, three sections, no backtracking. The commit is `Updated Home (markdown)`,
-  wiki-styled per `AGENTS.md`, single-line, single-purpose, and local; three commits follow it (the tool
-  measure, the retired style suppression, the two runbook docs) and a fourth closes the phase here, none of
-  them pushed, and nothing was force-pushed, amended or rebased.
+  wiki-styled per `AGENTS.md`, single-line, single-purpose; five commits follow it (the tool measure, the
+  retired style suppression, the two runbook docs, closing the phase, the Q-15 rule change), the publish
+  pushed every one of them, and nothing was force-pushed, amended or rebased.
 - Found here, and it belongs to the tools rather than the page: 6.1's "word count <= 400" and 5.1's
   "Home 250-350 words" measure different things, and `review-checklist.py` printed one number for both -
   `len(text.split())`, which counts a 60-character URL, eight fence delimiters and fifteen bullet dashes as
@@ -671,7 +690,7 @@ Landed inside the 3-4 h estimate; the fact-checking was the work, the writing wa
   sidebar has to stand alone on the other six renders (5.5: droppable, load-bearing for nothing) and
   rewording a reviewed Phase 1 artifact for a duplication only the preview shows is not Phase 2's call. It is
   a T7.2 nav-completeness item, and if upstream ever takes both files together they will trim one of them.
-- Exit **met, except for its publish half (2026-10-24):** R1 is met - a short project description plus seven
+- Exit **met (2026-10-24, publish included per Q-15):** R1 is met - a short project description plus seven
   navigation sub-sections including the required `## Gallery` and `## How to Use`, inside both word budgets -
   and Home links the Gallery and all four other built pages, which is 13's "the 6 built pages are linked from
   `Home`" satisfied a full phase before four of those pages have any content in them - with the one wrinkle
@@ -824,7 +843,9 @@ applies beyond the page budgets in S5.1.
 - [ ] Every page reviewed in raw markdown **and** as rendered in our draft wiki at
       `https://github.com/radix29/tcell-wiki-draft/wiki/<slug>` (Q-0b: the official wiki is read-only,
       so "reviewed where it is published" means the mirror until upstream accepts something).
-- [ ] Maintainer explicitly approved each publish; nothing force-pushed; history is forward-only.
+- [ ] Every publish went through `tools/publish.sh` with the gates green and the raw markdown re-read (Q-15
+      pre-delegated the "maintainer explicitly approved" this line used to require; a proposal to upstream
+      still needs a human, per Q-2); nothing force-pushed; history is forward-only.
 
 ---
 
