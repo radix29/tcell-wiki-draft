@@ -172,3 +172,54 @@ def anchors_in(text: str) -> set:
 
 def is_external(target: str) -> bool:
     return bool(SCHEME_RE.match(target)) or target.startswith("//")
+
+
+BULLET_MARKER_RE = re.compile(r"^(?P<indent> *)(?:[-*+]|\d+[.)])[ \t]+")
+HEADING_MARKER_RE = re.compile(r"^#{1,6}[ \t]+")
+# A markdown table's delimiter row (|---|:--|), a thematic break (---, ***, ___) and a bare rule are all
+# markup with no words in them, so they must not be counted; every other pipe on a page is table syntax
+# here too (PLAN.md 6.5's tables are the only pipes this page set uses), so '|' is treated as whitespace.
+MARKUP_ONLY_RE = re.compile(r"^[|:*_.\- ]+$")
+
+
+def prose_words(text: str) -> int:
+    r"""The words a reader reads, for the budgets in PLAN.md 5.1 and the '<= 400 words' in 6.1.
+
+    What comes out, and why: fenced blocks (code is not prose, and a page carrying a dozen snippets
+    must not be graded on them), the target of each markdown link (a 60-character URL is one 'word' to
+    str.split() and zero to a reader; the link *text* stays), inline code, and the `#` / `-` markers that
+    are markup rather than words. What stays is heading text, prose and list text, which is what a person
+    reads top to bottom.
+
+    `len(text.split())` is still worth printing next to this (it is the cheap size proxy, and 6.1's cap
+    was written against it), so callers show both: a page can only be inside its budget on the first
+    measure and under the cap on the second at the same time, and printing one number invites reading
+    the budget as the other.
+
+    Shapes it was checked against when it was written (PLAN.md Phase 2's record; `tools/` commits no test
+    file, so these are the reproducible form of that check, each expecting the comment's number):
+      "three four words" -> 3          a plain line is unchanged
+      "see [Gallery](Gallery) and [long](https://ex.com/a/b/c) ok" -> 5   link text stays, target goes
+      "prose here\n\n```go\npackage main\n\nfunc main() {}\n```\n\nmore prose" -> 4   raw is 11
+      "- one two\n- three four five" -> 5                       markers are markup, not words
+      "## Why Tcell" -> 2
+      "| Sym | What |\n|---|---|\n| a | b |" -> 4               raw is 11 (delimiter row is not prose)
+      "| --- | --- |\n| a | b |" -> 2                          the spaced delimiter row spelling too
+      "---\n***" -> 0                                           thematic breaks
+      "use `tcell.NewScreen` here" -> 2                        inline code is code, not prose
+      "" -> 0
+    """
+    spans = fence_ranges(text)
+    lines = [line for n, line in enumerate(text.splitlines(), 1) if not in_fence(n, spans)]
+    out = []
+    for line in lines:
+        line = LINK_RE.sub(lambda m: m.group("link") if m.group("link") is not None else (m.group("text") or ""),
+                           line)
+        line = strip_inline_code(line)
+        if MARKUP_ONLY_RE.match(line.strip(" \t")):
+            continue
+        line = line.replace("|", " ")
+        line = HEADING_MARKER_RE.sub("", line)
+        line = BULLET_MARKER_RE.sub("", line)
+        out.append(line)
+    return len(" ".join(out).split())

@@ -13,6 +13,12 @@ Three kinds of line, on purpose:
         precedence?" is not decidable from text - but printing it every time is the difference
         between a review and a re-read.
 
+Each page's line prints two word counts, because PLAN.md 5.1's budgets and 6.1's "<= 400 words" are
+checked against different things: `prose_words` (fences, link targets, inline code and markup out) is
+what a reader reads and what a budget like "Home 250-350 words" means, and the raw `split()` count is
+the page's size on disk, which is what a cap like "<= 400" was written against. A page is inside its
+budget and under the cap when both numbers say so; printing one invites grading it by the other.
+
 Pages default to tools/pages.txt, so the checklist covers exactly what publishes. Exit 0 = no GATE or
 CHECK failure, 1 = something to fix, 2 = bad usage/environment.
 """
@@ -144,7 +150,9 @@ def main() -> int:
         text = texts[page]
         fails, asks = check_page(page, text, built, links_out, headings)
         words = len(text.split())
-        print(f"  {page} ({words} words, {len(re.findall(r'^##', text, re.M))} sections)")
+        prose = W.prose_words(text)
+        print(f"  {page} ({prose} prose words, {words} counting code and markup, "
+              f"{len(re.findall(r'^##', text, re.M))} sections)")
         for f in fails:
             bad += 1
             print(f"    [FAIL] {f}")
