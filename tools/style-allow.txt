@@ -1,13 +1,13 @@
-# S8.5 allow list - the two legacy defects in the *published* pages that route C deliberately keeps.
+# S8.5 allow list - the one legacy defect in the *published* pages that route C deliberately keeps.
 # Format (tab separated): <file-or-*><TAB><rule-or-*><TAB><needle-or-*>
 #
-# Both entries exist because PLAN.md says not to touch them, not because they are nice:
+# The entry exists because PLAN.md says not to touch it, not because it is nice:
 #   - trailing-space in Gallery.md: D-9 / 6.2 say "leave it, it renders identically; cosmetic churn
 #     pollutes the published page-diff history". It disappears by itself if Phase 3 rewrites Gallery.
-#   - final-newline in Home.md: Home.md is 5 lines ending without LF, and Phase 2 rewrites Home.md
-#     anyway (T2.1), which fixes it. Until then, adding a byte to a published page for nothing is a
-#     wiki commit we do not need.
+#
+# There used to be a second entry, final-newline for Home.md's five lines ending without LF. The Phase 2
+# rewrite of Home.md (T2.1, 2026-10-24) fixed that as part of rewriting the page instead of as a byte of
+# its own, so the entry went with the defect and this file keeps its one honest exception.
 # Delete an entry as soon as the file it names no longer needs it; check-style.py reports entries that
 # matched nothing, so this list cannot rot silently. Never add an entry to make a *new* violation go away.
 Gallery.md	trailing-space	## UI Frameworks 
-Home.md	final-newline	in action.
