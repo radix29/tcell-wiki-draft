@@ -102,18 +102,27 @@ Entry format — exactly this shape, one line each:
   (only `AGENTS.md` uses em dashes); keep new wiki text ASCII.
 - No trailing period on descriptions. Italicize third-party tool/library names with underscores
   on first mention in an entry: `_nano_`, `_vim_`, `_tmux_`, `_tshark_`, `_gowid_`.
-- Prefer the project's real home, including non-GitHub hosts (`code.rocketnine.space`,
-  `git.sr.ht`, `termshark.io`). Check the URL actually resolves before adding it (see
-  `curl` below) — there is no automated link checker here.
+- Prefer the project's real home, including non-GitHub hosts (`codeberg.org`, `git.sr.ht`,
+  `termshark.io`). Check the URL actually resolves before adding it (`curl` below, or
+  `tools/check-links.py`, which re-checks every URL on the page locally and in CI).
+- When an inherited URL's host died, follow Q-11: find where the project lives now and **move the
+  URL**, recording old, new and evidence in `tools/gallery-moves.txt` — that is what keeps
+  `tools/check-gallery.py` calling it the same entry instead of a lost one. Evidence, not taste: a
+  repository whose own description says `THIS IS A MIRROR` is not a home (GitHub's `tslocum/*` are
+  mirrors; Codeberg is the home and the `go.mod` module path), so check description, homepage,
+  `go.mod` and tag SHAs before relinking. Never keep a dead link by allow-listing it, and never
+  delete the entry — the allow-list file is for statuses we *keep*, and it says so.
 - Duplicate display names are tolerated when the URLs differ (`go-tetris` appears twice for two
   different repos). Search for the project name and URL before adding; prefer extending or
   consolidating an existing entry over adding a near-duplicate.
 - Don't add dates, star counts, version/compatibility notes, or "(new)" markers to entries — no
   entry carries one, and they rot immediately since nothing here is regenerated.
 - The first `## Demonstrations` bullet has no link (`mouse demo - included mouse test ...`). It is
-  legacy, from when Tcell shipped a mouse test (the old screenshot URL is from 2015); the current
+  legacy, from when Tcell shipped a mouse test (the old screenshot URLs are from 2015); the current
   `../tcell` checkout keeps that code only as `_demos/mouse.go` under `//go:build ignore`, and
-  `../tcell/demos` has no mouse demo. Leave it as-is rather than inventing a URL for it.
+  `../tcell/demos` has no mouse demo. Per Q-7 it stays, is never given an invented URL, and is reworded
+  only to stop claiming a shipped demo - and it stays the un-numbered 49th bullet so Appendix B's
+  migration contract keeps holding.
 
 # Markdown Conventions
 
@@ -125,6 +134,9 @@ Entry format — exactly this shape, one line each:
   title; `Gallery.md` does this and `Home.md` has no H1. Follow `Gallery.md` for new content pages.
 - `_emphasis_` is the established idiom; don't introduce `*emphasis_` mixes or HTML tags. Blank
   line before and after every list and heading.
+- The library is **`_Tcell_` in prose** (Q-9) - bare `Tcell` only in headings, file names and paths,
+  and `tcell` inside code/backticks because that is the package name. `check-style.py` rules `name`
+  and `heading-period` enforce both, so `Gallery.md`'s `# Gallery of Tcell Examples` H1 stays legal.
 - Don't mass-reformat. `Gallery.md` contains one legacy trailing space (`## UI Frameworks `);
   leave whitespace alone unless the whitespace *is* the fix, since cosmetic churn pollutes the
   published page-diff history.
@@ -158,6 +170,7 @@ tools/review-checklist.py   S8.7  all gates below + per-page review questions (s
 tools/check-style.py        S8.5  house style (PLAN.md 7); --all includes non-page docs
 tools/check-links.py        S8.2  internal slugs/anchors, then external URLs via curl; --offline
 tools/check-gallery.py      S8.4  Gallery migration is lossless vs baseline/ (49 bullets, append-only)
+tools/gallery-moves.txt         recorded URL moves (Q-11): old, new, evidence; stale records fail
 tools/check-demos.py        S8.2b the demos/TUTORIAL links a page makes resolve; --markdown, --build
 tools/make-samples.py       S8.1  every go fence compiles; headless=yes also runs it (S8.6)
 tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit
