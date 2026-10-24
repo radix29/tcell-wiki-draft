@@ -42,9 +42,10 @@ origin    https://github.com/radix29/tcell-wiki-draft.git      this repo; draft 
 render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via tools/mirror-wiki.sh
 ```
 
-Done: draft repo + wikis enabled (render branch is `master`; HEAD is `39e5378`, the second preview push
-of 2026-10-24, whose predecessor `32022f9` was the first real page preview and `2ebcbf8` GitHub's
-`Initial Home page` placeholder), `origin/master` was pushed once with CI green on it
+Done: draft repo + wikis enabled (render branch is `master`; render HEAD moves with every publish, so
+read it with `git ls-remote --symref render HEAD` rather than trusting this sentence, whose history runs
+`2ebcbf8` GitHub's `Initial Home page` placeholder -> `32022f9` first real page preview -> `39e5378` second
+preview, all three on 2026-10-24), `origin/master` was pushed once with CI green on it
 (`.github/workflows/qa.yml`, run `40112709147`, 15/15 steps), remotes rewired,
 `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
@@ -53,11 +54,12 @@ rolling a page back is `git checkout upstream/master -- Home.md Gallery.md`, nev
 `git reset --hard upstream/master` (that would also drop tooling commits). Rollback of the whole
 experiment: delete the `origin`/`render` remotes and the two GitHub repos.
 
-Since that setup, work has been committed locally and not published (Phase 1's four stubs and
-`_Sidebar.md`, then Phase 2's `Home` rewrite), so `git rev-list --count origin/master..HEAD` is not zero
-and `render` still renders `39e5378`. That is Q-14 working, not a forgotten push: `tools/publish.sh`
-mirrors, pushes and re-reads the live wiki in one command, and it runs when the draft owner asks and not
-before. What a publish ships is whatever `tools/pages.txt` lists, because the mirror copies the manifest
+Publishing is a command, not an approval step (Q-15): `tools/publish.sh` mirrors, pushes and re-reads the
+live wiki in one call, and nothing waits on a human saying yes. So
+`git rev-list --count origin/master..HEAD`
+is 0 at the end of a session and `tools/mirror-wiki.sh --check` is clean; if either is not true the
+session stopped mid-work, and the fix is to finish and publish, not to leave a green phase in a local
+branch. What a publish ships is whatever `tools/pages.txt` lists, because the mirror copies the manifest
 and not the commit, so a preview can never lag behind one page by accident - and `--dry-run` shows the
 pending file list without publishing anything.
 
@@ -79,12 +81,21 @@ What used to be true of this clone is now true of the mirror and of upstream's w
 page into a wiki repo and pushing it changes a rendered wiki instantly**, with no review gate, and the
 commit history becomes the visible page revision history. So page bodies still get the discipline below,
 and the two things `PLAN.md` 4 still leaves upstream (D-1's site-wide `_Sidebar.md` and every F-1 change
-to the library repo) stay proposals, not an edit - `PLAN.md` Q-2 parks it: no contact with `gdamore/tcell` until the draft owner
-says so.
+to the library repo) stay proposals, not an edit - `PLAN.md` Q-2 parks it: no contact with
+`gdamore/tcell` until the draft owner says so.
 
-- Never `git push` (or `git commit`) unless explicitly asked to. Ask instead. When asked: `origin`
-  takes ordinary commits, the `render` wiki is only ever written by the mirror script, and `upstream`
-  cannot be pushed at all.
+- **Publishing is pre-authorized (Q-15, 2026-10-24, draft owner): commit, mirror and push when the work
+  needs it, without asking first.** The rule that used to sit here - "never `git push` (or `git commit`)
+  unless explicitly asked to" - was costing a human one word per green phase while a preview nobody
+  publishes is the exact failure Q-14 was written against, so the ask is gone and the discipline is what
+  is left. Authorization is about *whether to publish*, never about *how*: `origin` takes ordinary
+  commits, the `render` wiki is written only by the mirror script, `upstream` cannot be pushed at all (its
+  push URL is a dead string and Q-15 changes none of that), and every bullet below still binds. Publish
+  when there is something a reader could use - a finished page, a phase exit, a fix to a live page - and
+  not to make a red gate look busy: a red `tools/review-checklist.py` is a reason to stop, not a reason to
+  let CI be the reviewer. What Q-15 does **not** buy is the official wiki or the library repo: `upstream`
+  stays unpushable, and Q-2's "no contact with `gdamore/tcell` until the draft owner says so" is about a
+  human opening an issue or a PR, which no amount of pre-authorization here touches.
 - **A push is not finished until the preview shows it (Q-14, standing rule from the draft owner).**
   Run `tools/publish.sh`, which mirrors and then pushes and then re-reads the live wiki to prove it;
   pushing with bare `git push` leaves `radix29/tcell-wiki-draft/wiki` rendering an older commit, and
@@ -248,8 +259,9 @@ its report instead of guessing, and never invent a URL from a project name.
 3. Re-read the raw file, not a rendered guess: confirm the entry sits in the right section, then run
    `tools/review-checklist.py --offline` and confirm `git diff --stat` shows the expected single-line
    change.
-4. Commit in the wiki's message style (page commits) or plain imperative (tooling), and only push when
-   asked.
+4. Commit in the wiki's message style (page commits) or plain imperative (tooling), then publish with
+   `tools/publish.sh` once the gates are green - committing and publishing are autonomous work now (Q-15),
+   not something to ask about, and an unpublished green phase is a preview that has gone stale on purpose.
 
 # Note About This File
 
