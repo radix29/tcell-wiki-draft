@@ -135,6 +135,26 @@ def env_vars_in_source(tcell: pathlib.Path) -> set:
     return out
 
 
+def reader_meets(tcell: pathlib.Path, symbols: set):
+    """Which exported API names the library's own prose and demos put in front of a reader.
+
+    TUTORIAL.md, README.md, CHANGESv3.md and every demos/ program - the material a reader reaches for
+    next, so it is the priority list inside the structural gate (PLAN.md 6.5, Q-6) rather than a second
+    standard. Names are matched against the real surface, so a typo in a doc is not "API a reader met".
+    """
+    where = collections.defaultdict(set)
+    docs = [tcell / "TUTORIAL.md", tcell / "README.md", tcell / "CHANGESv3.md"]
+    docs += sorted((tcell / "demos").glob("*/*.go"))
+    for doc in docs:
+        if not doc.is_file():
+            continue
+        text = doc.read_text(encoding="utf-8", errors="replace")
+        for name in set(re.findall(r"\b[A-Z][A-Za-z0-9]{2,}\b", text)):
+            if name in symbols:
+                where[name].add(doc.name)
+    return where
+
+
 def mentions(paths):
     """Collect backticked identifiers per page: {page: {token: [lineno, ...]}}."""
     out = collections.defaultdict(lambda: collections.defaultdict(list))
@@ -160,11 +180,11 @@ def main() -> int:
     ap.add_argument("--report", metavar="FILE", help="write the full coverage table to FILE")
     ap.add_argument("--list-uncovered", action="store_true", help="print uncovered symbol names")
     ap.add_argument("--gate", action="store_true",
-                    help="FAIL on incomplete coverage (PLAN.md 6.5's 100%% gate; needs the open "
-                         "coverage-gate question answered first)")
-    ap.add_argument("--gate-kinds", default="type,func,var",
-                    help="which buckets --gate measures (default type,func,var; methods/consts are the "
-                         "600-name tail that the coverage question is about)")
+                    help="enforce PLAN.md 6.5 as answered by Q-6: every structural name (types, funcs, "
+                         "vars, methods) named by exactly one page, every constant group owned by group")
+    ap.add_argument("--gate-kinds", default="type,func,var,method",
+                    help="which buckets --gate measures (default type,func,var,method = the 179 structural "
+                         "names; constants are covered by group, never one row per name)")
     ap.add_argument("--strict-dots", action="store_true",
                     help="treat pkg.Symbol references to unknown packages as errors, not warnings")
     args = ap.parse_args()
@@ -258,11 +278,14 @@ def main() -> int:
     print(f"  {'TOTAL':<18} {total_cov:>4}/{total_syms:<4} {100.0 * total_cov / total_syms:5.1f}%"
           f"   ({claimed} page-cited symbol(s) checked)")
 
+    kinds = {k.strip() for k in args.gate_kinds.split(",") if k.strip()}
     if args.list_uncovered:
         for bucket, _n, _c, miss in table:
-            if miss and bucket in ("type", "func", "var"):
+            if not miss:
+                continue
+            if bucket in kinds:
                 print(f"\nuncovered {bucket}s: {', '.join(miss)}")
-            elif miss and bucket not in ("type", "func", "var"):
+            else:
                 print(f"\nuncovered {bucket}: {len(miss)} name(s), first 30: {', '.join(miss[:30])}")
 
     # --- env var audit (PLAN.md 2: TCELL_ALTSCREEN/TCELL_COLS/TCELL_LINES are implemented but
@@ -287,6 +310,8 @@ def main() -> int:
         print(f"\nnote: {len(dupes)} symbol(s) documented on more than one page (PLAN.md 5.4 wants one owner):")
         for t, pages in sorted(dupes.items()):
             print(f"  {t}: {', '.join(pages)}")
+    gate_dupes = {t: v for t, v in dupes.items()
+                  if any(t in names for b, names in by_bucket.items() if b in kinds)}
 
     if args.report:
         out = pathlib.Path(args.report)
@@ -309,14 +334,43 @@ def main() -> int:
         print(f"\n{len(errors)} symbol reference(s) a page claims that the library does not have.")
         return 1
 
+    meets = reader_meets(tcell_dir, symbols)
+    print(f"reader   {len(meets)} of the API names appear in the library's own TUTORIAL/README/CHANGES/"
+          f"demos - that is the priority list inside the gate (Q-6), missing from pages: "
+          f"{len([n for n in meets if n not in all_tokens])}")
+
     if args.gate:
-        kinds = {k.strip() for k in args.gate_kinds.split(",") if k.strip()}
-        n = sum(len(names) for b, names in by_bucket.items() if b in kinds)
-        c = sum(len({x for x in names if x in all_tokens}) for b, names in by_bucket.items() if b in kinds)
-        if n and c < n:
-            print(f"COVERAGE  {c}/{n} of {'/'.join(sorted(kinds))} documented; PLAN.md 6.5 wants 100% "
-                  "once the coverage-gate question is answered")
+        print("gate      PLAN.md 6.5 as answered by Q-6: structural names owned by exactly one page, "
+              "constant groups owned by group")
+        bad = []
+        for bucket in sorted(kinds & set(by_bucket)):
+            names = by_bucket[bucket]
+            miss = sorted(n for n in names if n not in all_tokens)
+            if miss:
+                bad.append(f"STRUCT  {bucket}: {len(miss)}/{len(names)} named by no page "
+                           f"(first 20: {', '.join(miss[:20])})")
+        for t, pages in sorted(gate_dupes.items()):
+            bad.append(f"SHARE   {t} is owned by {len(pages)} pages ({', '.join(pages)}); 6.5 wants one")
+        groups = {b: names for b, names in by_bucket.items() if b.startswith("const ")}
+        owned = set()
+        for path in paths:
+            text = W.read(path)
+            for token in re.findall(r"`([A-Za-z][A-Za-z0-9]*)\*`", text):
+                owned.add(token)
+        unowned = sorted(g for g in groups
+                         if re.sub(r"\*$", "", g.split(" ", 1)[1]) not in owned)
+        if unowned:
+            bad.append(f"GROUP   {len(unowned)}/{len(groups)} constant group(s) no page claims by group "
+                       f"(a page must name the group in backticks, e.g. `{unowned[0].split()[1]}...`): "
+                       f"{', '.join(g.split()[1] for g in unowned)})")
+        for line in bad:
+            print(line)
+        if bad:
+            print(f"\n{len(bad)} gate problem(s). Q-6: 100% of the structural surface, constants by group; "
+                  "the 712-name tail is documented by group and linked, never row by row.")
             return 1
+        print(f"gate      clean - {sum(len(by_bucket[b]) for b in kinds if b in by_bucket)} structural "
+              f"name(s) owned exactly once, {len(groups)} constant group(s) claimed")
     return 0
 
 
