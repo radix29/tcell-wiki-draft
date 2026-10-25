@@ -25,9 +25,12 @@ decision (Q-11's two URL moves, Q-13's one addition), so a Gallery edit stays on
 apology with the hub the wiki never had - lede, Why, Versions, Install, Gallery, How to Use, Platforms,
 License - keeping that one link, and it is the one page whose diff is a rewrite rather than an edit (T2.1).
 `baseline/` keeps upstream's two files byte for byte, so any page here can still be compared with what it
-replaced. The four Q-3 pages (`Getting-Started`, `Architecture`, `Function-Reference`, `Terminal-Setup`)
-are written as honest stubs and `_Sidebar.md` is D-1's droppable navigation prototype; all of it reaches
-the preview at the next publish. Pages are gated by `tools/pages.txt`: a file becomes a wiki
+replaced. Three of the Q-3 pages (`Architecture`, `Function-Reference`, `Terminal-Setup`) are still
+honest stubs. `Getting-Started.md` is the Phase 4 page and the plan's routing rule made visible: install
+from an empty directory, the demo to run first, the five pieces every program contains, and the order to
+read `TUTORIAL.md` in - with no code of its own to paste, because its examples are the library's and its
+walk-through is the library's tutorial (Q-4, Q-Ex). `_Sidebar.md` is D-1's droppable navigation prototype;
+all of it reaches the preview at the next publish. Pages are gated by `tools/pages.txt`: a file becomes a wiki
 page exactly when its name is on that list. `PLAN.md`, `AGENTS.md`, this README, `tools/` and `samples/`
 are tracked but never mirrored, which is what makes it safe to keep tooling in a repo whose
 push target renders pages.

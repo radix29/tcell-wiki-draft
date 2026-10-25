@@ -1,10 +1,12 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-3 built,
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-4 built,
 green and **published** - Q-15 removed the ask, so the preview at `radix29/tcell-wiki-draft/wiki` renders
-all 7 manifest pages including Phase 2's `Home.md` rewrite and Phase 3's `Gallery.md` (all 49 baseline
+all 7 manifest pages including Phase 2's `Home.md` rewrite, Phase 3's `Gallery.md` (all 49 baseline
 entries intact, one recorded addition, the sanctioned `## Demos in the Repository` section, and every URL
-on the page answering 200); Phases 4-7 not started
+on the page answering 200) and Phase 4's `Getting-Started.md` (1,134 prose words, five authored sections,
+two measured `console` blocks, zero lines of Go, and 14 external targets all answering 200); Phases 5-7
+not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -35,7 +37,9 @@ Rebuild the Tcell wiki as a v3-first, task-oriented documentation set with:
 
 **Scope is 6 pages, not 13 (Q-3, see 4.1): `Home`, `Gallery`, `Getting-Started`, `Architecture`,
 `Function-Reference`, `Terminal-Setup`.** Total estimate **39-51 focused hours** across 7 phases; the
-six page bodies themselves are **31-40 h**, the rest is Phase 0 tooling and Phases 1/7 rails.
+six page bodies themselves are **31-40 h**, the rest is Phase 0 tooling and Phases 1/7 rails. (Q-4 re-cut
+Phase 4 from 9-12 h to 4-6 h the same day, which makes the honest total **34-45 h**; section 9 carries the
+arithmetic, and Phase 4's record the hours it actually took.)
 Phases 1-4 remain the user-visible minimum (Home + Gallery + Getting-Started tutorial); Phase 6 shrank
 from 11-14 h to 6-8 h when the topic pages were deferred to a second milestone.
 
@@ -190,6 +194,9 @@ Page budgets (so the set stays maintainable by one person): Home 250-350 words, 
 Architecture 900-1,300 words + 3-4 diagrams, Function-Reference 1,000-1,400 words + tables (it absorbs
 what the deferred topic pages would have carried, which is why it grows past the original 700-1,000),
 Terminal-Setup 700-1,100 words. 6 pages built + 6 deferred vs 2 today; see 5.5 for the nav shape.
+Getting-Started's snippet half broke at Phase 4 and its word half held (1,134 prose words): Q-4 left the
+routing page nothing to paste, so it has 0 snippets and 2 `console` blocks - see 6.3's rules line and
+Phase 4's T4.3 record for why an honest version of "8-12 snippets" is no snippets.
 
 ### 5.2 Navigation actually used: `Home` as the hub (sidebar is a droppable prototype)
 
@@ -318,6 +325,14 @@ no `Prev/Up/Next` footers, no links to deferred pages).
   and the grapheme-width return values, the wrap loop, `Style` chaining, `EventQ` + `select`,
   `EventResize` -> `Sync()`, mouse events, clipboard/notifications/title/suspend - all sections of
   `TUTORIAL.md`, named in the order a reader should meet them.
+  **Corrected at T4.1, which read the file instead of trusting this list:** `Style` chaining is not a
+  section (it is two values inside the demo application), and clipboard / notifications / title / suspend
+  are not in `TUTORIAL.md` at all (the closest it comes is `EnablePaste` in the demo), so those four are
+  routed to `Function-Reference`, whose 6.5 scope already owns them. The width claim is also wrong: of the
+  three calls named here only `Put` returns anything (`(string, int)`, `screen.go:55`); `PutStr` and
+  `PutStrStyled` return nothing (`screen.go:59`, `screen.go:63`), which is why the page says "the one that
+  draws a single grapheme at a time". The reading order this line asked for is on the page, and it is not
+  the file's own order - see T4.1.
 - Sources: `../tcell/TUTORIAL.md` (reuse prose/samples where already v3-correct: drawText loop,
   event loop), `../tcell/demos/hello`, `../tcell/demos/styles`, `../tcell/demos/cursors`,
   `CHANGESv3.md` (event-model changes), `go doc` output.
@@ -325,6 +340,11 @@ no `Prev/Up/Next` footers, no links to deferred pages).
   `ChannelEvents`, `PostEvent`, `SimulationScreen`, `StyleNormal`, `Attribute`, `Color(ForegroundX)`
   forms are all banned - they are v2/v1 and were removed); every code fence tagged `go`; snippets
   <= 30 lines, with the full program assembled once at the end.
+  **(Phase 4: the v2 ban was enforced and is clean; the other two clauses are pre-Q-Ex prose that the
+  page did not need - it has no snippet at all, so nothing is <= 10 lines and nothing is assembled, and
+  its two fences are `console` because they are shell. "Assembled once at the end" became "named once at
+  the end": the section closes by sending the reader to the Usage section, to `demos/hello` and to the
+  demo application. Rationale in Phase 4's T4.3 record.)**
 - Deliverable side-effect: the compile-harness fixture directory (S8.1) is created alongside.
 
 ### 6.4 `Architecture.md`
@@ -475,7 +495,9 @@ is a stop, never a way to ask CI.**
 
 Estimates are focused hours for one author who has the source tree checked out. Phase totals are the
 sum of that phase's tasks. Recomputed after Q-3: **39-51 h** (Phase 0 3-4, 1 2-3, 2 3-4, 3 4-5,
-4 9-12, 5 8-10, 6 6-8, 7 4-5). The 44-57 h figure in section 1 predates the Q-3 scope cut.
+4 9-12, 5 8-10, 6 6-8, 7 4-5). Q-4 then cut Phase 4 to 4-6 h, so the set is **34-45 h** (0 3-4, 1 2-3,
+2 3-4, 3 4-5, 4 4-6, 5 8-10, 6 6-8, 7 4-5), and Phase 4 landed near the bottom of its range. The 44-57 h
+figure an earlier revision of section 1 carried predates both of those cuts.
 
 ### Phase 0 - Decisions and safety rails (3-4 h) - *blocks everything*
 
@@ -847,17 +869,148 @@ tools, nowhere around in the page.
   the demos section instead of promising it, because the section exists and every command in it runs.
 
 ### Phase 4 - Tutorial (`Getting-Started`) (4-6 h) - *re-estimated by Q-4, was 9-12 h*
-- T4.1 Read `TUTORIAL.md` end to end; build the link map (its headings -> the order a reader meets
-  them) and note where it is thin or wrong (that list becomes F-1 material, not page content). *(1 h)*
-- T4.2 Write only the authored sections per S6.3 (Install, Run the demos, Before you start, the 5
-  pieces, Where to go next). *(2-3 h)*
-- T4.3 Fragments through the S8.1 harness; `headless=yes` where a fragment is a whole program. *(0.5 h)*
-- T4.4 v2-API-leak sweep (banned-symbol grep across pages); ASCII/style sweep; `check-demos.py` green. *(0.5 h)*
-- T4.5 Follow the page as a reader: empty module -> `go run ./demos/hello` -> first own program, using
-  only this page plus the links it names; note friction; adjust. *(1 h)*
-- T4.6 Review + publish: `Created Getting-Started (markdown)`. *(0.5 h)*
-- Exit: R3a met in its Q-4 form - a reader goes from empty module to a running, resizing, quit-able
-  program following this page and the links it names; the page itself contains no second tutorial.
+
+**Status: built, green, committed, published (Q-15).** `Getting-Started.md` is the routing page Q-4 asked
+for: 1,134 prose words against 5.1's 900-1,400, five `##` sections in 6.3's order (Install, Run the
+Demos, Before You Start, What a Tcell Program Always Contains, Where to Go Next), 19 external links over
+14 distinct targets answering 200, 6 internal links over 4 built pages including one anchor into
+`Gallery#demos-in-the-repository`, and **zero lines of Go**: the page contains no code a reader pastes, so
+there is nothing on it that can rot on the next API change, which is what Q-Ex and Q-4 were for. Every
+non-obvious claim on the page was measured before it was written (the list is in T4.2). Two tools changed,
+one because the page caught the link gate being wrong about an anchor the page publishes (T4.4), the other
+by leaving a gate silent rather than lying (T4.3). Spend about 3 h of the 4-6 h: the measurements were the
+work, the writing was one pass, and the only CHECK that fired on the page's own substance was the one that
+was right (T4.5's note on `EventResize`).
+
+**Published (2026-10-25, under Q-15).** `tools/publish.sh` mirrored, pushed and re-read: render HEAD
+`ca574fc` -> `95fd1d6` (`Preview draft pages`, 1 file, 53 insertions / 2 deletions - the Phase 1 stub
+replaced by the page), `origin/master` `1e9aecf..4ec1443` (fast-forward, nothing forced or amended), then
+the script's own re-read reported "preview is current ... 7 page(s)". `git diff --stat upstream/master
+HEAD -- Home.md Gallery.md` is unchanged by this phase, because `Getting-Started.md` is a new file: the
+review surface a future upstream paste sees is still Home 72/3 and Gallery 24/3, plus a 55-line page that
+does not exist upstream at all. That publish carried the page and nothing else; `tools/publish.sh` ran
+again for the gate fix and these records, and the standing claim this note has to keep true is the one
+AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0 and the mirror is clean.
+
+- T4.1 **Done first, and the link map became the page's structure.** `TUTORIAL.md` read end to end (330
+  lines). Its headings in *file* order are Resize events, Key events, Key event restrictions, Mouse
+  events, Mouse buttons, Usage, Demo application: the three event-reference sections sit before the
+  section that opens a screen and the loop that reads the events they describe, which is fine as a
+  document and wrong as a first read, so the page states a reading order (Usage, then the demo
+  application, then Key and Mouse events, then restrictions "cheaper to read early than to discover
+  late") instead of inheriting the file's. Where it is thin (all of it is F-1 now, none of it page
+  content): 6.3's link list expected sections for `Style` chaining and for clipboard / title /
+  notifications / suspend and the file has no such sections - chaining exists only as two values inside
+  the demo application, and those four topics are simply absent (`grep` for `SetTitle`, `Suspend`,
+  `clipboard`, `notif`: the only hit in the file is `EnablePaste` in the demo), which is why the page
+  sends a reader who needs them to `Function-Reference`, whose 6.5 scope already owns them; there is no
+  module setup anywhere in it; its fragments reference `log`, `os`, `fmt` and `color` with no import
+  block, which PLAN 7 forbids on a page and which costs a reader three compile errors if they paste one
+  into an empty module; `Fini` first appears in the demo application, three pages after the screen is
+  opened. One thing that looked like a defect and is not: a fence in the Usage section is closed with
+  four backticks where it opens with three, which is legal CommonMark (a closing fence may be longer), so
+  it renders and stays.
+  *(1 h)*
+- T4.2 **Done. Five authored sections, and the facts in them are measurements.** What was measured, in
+  the order it was run: (1) empty directory -> `go mod init` -> `go get github.com/gdamore/tcell/v3`
+  resolves v3.6.0 and writes `go.sum` -> `go run github.com/gdamore/tcell/v3/demos/hello` draws "Hello,
+  World!" on a pty and exits 0 on ESC, in a directory with **no .go file and nothing cloned**. That
+  command is the page's own contribution to the reader's first minute, and it is why `## Run the Demos`
+  does not duplicate the Gallery's clone block: 6.3 asked for `go run ./demos/hello`, which is the clone
+  route the generated Gallery section already carries, and the module-path route needs no clone. (2)
+  `GOTOOLCHAIN`: with the default (`auto`) the go command downloads a toolchain matching the library's go
+  directive, and with `GOTOOLCHAIN=local` it stops with "go.mod requires go >= X (running go Y;
+  GOTOOLCHAIN=local)", so the version sentence describes a flag's behaviour it has seen. (3) No
+  terminal: `NewScreen` succeeds and `Init` fails with `open /dev/tty: no such device or address`, which
+  is the first "Before You Start" bullet, hedged to "the systems that have one" because Windows words the
+  same failure differently. (4) Raw mode: a program on a 30x100 pty logged `Ctrl+C` (0x03) arriving as an
+  `EventKey` rather than as a signal, then ESC, then exit 0 after `Fini`, which is bullet two. (5) Size:
+  on a 120x40 pty, `Size()` right after `Init` already reports 120x40 and the first event off `EventQ` is
+  an `EventResize`, so bullet three can tell the reader they do not have to wait for an event before
+  drawing - the TUTORIAL says the event arrives, and the "size is already right" half is what this run
+  added. (6) `demos/hello` is the shortest of the eight (77 lines, next is `beep` at 82) and all eight
+  carry a `_test.go` (`check-demos.py` prints 8/8), which is what "the library keeps a rendering test for
+  each of the eight" claims and means. (7) The tutorial's demo application compiles unchanged against
+  v3.6.0, draws, and quits on ESC with status 0 - so the page's strongest claim about a link target ("all
+  five in one program") was tested rather than assumed. What the page deliberately does not say: anything
+  about `TERM`, terminfo or color depth. Measured and left unsaid: with `TERM` unset the demo still
+  opened a screen, and the bytes at `Init` are a negotiation (DA1, DA2, kitty, mode queries) rather than a
+  terminfo lookup. "v3 does not need the terminal database" is `Terminal-Setup`'s sentence to say - T2.2
+  turned that down for `Home` for the same reason and it turns it down here. *(2 h)*
+- T4.3 **Done, and empty on purpose - the one task this phase did not need.** There are no fragments to
+  put through the harness. 6.3 says a `go` fence here is a "<= 10-line fragment that illustrates the one
+  API under discussion", Q-Ex says the library's own programs *are* the examples, and a routing page has
+  no API under discussion: every fragment it could paste is either the TUTORIAL's code (which Q-4 forbids
+  it to restate) or a demo (which the library tests, 8 of 8). So the page pastes shell instead, and both
+  `console` blocks are commands that were run - the same argument `Home.md` made in Phase 2 for the
+  `go get` line and `Gallery.md` made in Phase 3 for the clone block. `make-samples.py` still runs over
+  the page set and reports Home's one program building and linking, which is the whole `go` surface of
+  this wiki today. Consequence recorded rather than hidden: `review-checklist.py` prints "page has no
+  `go` fence yet" as an ASK on `Getting-Started` (and on `Gallery` and the three stubs). The ASK stays -
+  it is the check that catches a page pasting untested Go, the one failure mode this repo cannot review
+  its way out of - and the answer is this bullet. `headless=yes` is unused for the same reason: T4.3 asks
+  for it "where a fragment is a whole program", and this page has no whole program, so marking Home's
+  open-a-screen fence with it would be the label lie Phase 2 already declined to tell. *(0 h, was 0.5)*
+- T4.4 **Done, and it found a bug in the gate instead of a bug in the page.** The eight banned v2 names
+  (`V2_BANNED` in `review-checklist.py`) appear on no page, and a manual sweep finds no v2 idiom either;
+  `check-style.py` is clean over all 7 files with the one legacy suppression and no new one; every page is
+  still pure ASCII (`wikilib.is_ascii` over the manifest). Then `check-links.py --verbose Getting-Started.md`
+  came back **BROKEN** on the one internal link this page adds that no page had reason to make before:
+  `[...](Gallery#demos-in-the-repository)`, "anchor matches no heading in Gallery.md". The page was right
+  and the gate was wrong, twice over, and the fix is commit `5e2706c`:
+  **(a)** `anchors_in()` was handed whole files while its own doc comment asks for a body, so each target
+  page's duplicate in-file `#` H1 entered the anchor set. Nothing broke, which was the problem - PLAN 7
+  says GitHub drops that H1, so a link to a page's own title anchor would have been a green PASS and a 404
+  for the reader, exactly the false pass Phase 1 wrote out of `check-gallery.py`.
+  **(b)** It could not see a heading inside a blockquote, and PLAN 6.2 puts Gallery's `## Demos in the
+  Repository` heading inside one, so the anchor the generated section owns was invisible. Before touching
+  the rule I checked the renderer instead of reasoning about it: `curl` of the published `Gallery` page on
+  the render wiki carries `href="#demos-in-the-repository"` - GitHub renders the quoted heading and gives
+  it the anchor - so the link ships and the gate was taught, not the page bent. `anchors_in()` now gets the
+  body with the H1 line removed and strips a leading `>` before matching a heading; the regression probe is
+  four assertions, in the commit's own argument: the blockquoted anchor resolves, the six ordinary Gallery
+  headings still resolve, a wrong anchor (`demos-in-the-repo`, `nope`) still FAILS, and no anchor is
+  invented out of the fenced clone block. One honesty note on **(a)**: dropping the H1 from the anchor set
+  rests on PLAN 7's reading of the renderer, not on a measurement, because no page on this wiki links a
+  page title anchor - the change is inert today and would only bite a future link, which is the right
+  direction for an unmeasured rule (fail the link, not the reader).
+  `check-demos.py` is green and is now load-bearing rather than advisory: 21 library-file links across the
+  pages, 13 of them this page's, 10 carrying a heading anchor and every one of those 10 here, each checked
+  against a file that exists in the checkout and a heading the file actually has - the Q-4 rename guard,
+  working for the first time on the page that needed it. *(0.5 h, plus the gate fix)*
+- T4.5 **Done as a run, not a re-read.** Fresh directory, page open, nothing else: init, get, run the
+  demo, ESC, program gone, terminal intact; then `hello.go` read against the five pieces (all five are
+  in it, in order); then the tutorial by the order the page gives, with the demo application built and
+  run to check the page was not pointing at something broken. Friction found, and all four fixes went
+  into the page rather than into the reader's habits: (a) Install told the reader to write a main.go the
+  page does not contain, so it now says plainly that main.go is the tutorial's subject and moves on,
+  because the next section gets a program onto the screen with no code at all; (b) an earlier draft said
+  the drawing calls "return how wide that text came out", which is true of `Put` and false of `PutStr`
+  and `PutStrStyled`, and the cause was 6.3's own summary line rather than a misreading - the page now
+  says "the one that draws a single grapheme at a time", and 6.3 carries the correction where somebody
+  repeating the mistake will find it; (c) "the eight are listed with their descriptions next to the
+  commands" overread what the Gallery block actually holds (one example command, not eight), so the
+  sentence now asks it for the list and the clone commands and nothing more; (d) three back-references
+  reading "the section walked above" / "named above" became the plain words Usage and Demo application,
+  each linked once at the head of its section, because a reader should not have to hunt for what "above"
+  means. One naming decision the walk settled: `review-checklist.py`'s resize CHECK wants the literal
+  string `EventResize` on any page that says "resize", and this page writes it in **plain prose** rather
+  than backticks - the CHECK is a substring test and passes either way, which is the right outcome,
+  because that CHECK is about not teaching a v2 polling pattern while Q-6 is about who owns a symbol, and
+  plain prose answers only the first. *(1 h)*
+- T4.6 **Review gate met, and published (Q-15).** Read raw twice, then as the reader path above, then
+  with every gate: `review-checklist.py --offline` exits 0 (6 GATEs PASS, only ASK lines left), and with
+  network `check-links.py` reports 81 external URLs and 18 internal links across the page set, 0 broken,
+  every one of this page's 14 external targets 200. Commit `Created Getting-Started (markdown)`, single
+  line, single file, first page commit in Appendix D's order because Home still goes last. Then
+  `tools/publish.sh`, whose output is in the Published note above. *(0.5 h)*
+- Exit **met (2026-10-25, publish included per Q-15):** R3a in its Q-4 form - a reader with an empty
+  directory ends up with a module, a dependency, a running program on their screen and a route to their
+  own first program, using this page and the links it names, and the page carries no second tutorial: it
+  has no Go in it at all. Nothing in the page links a deferred topic page (5.5), nothing references a
+  file in this repo, and the whole page is paste-able into the upstream web editor as it stands. Phase 5
+  is unblocked, and can now assume the reader has run something: `Architecture` answers why it repaints
+  the way it does, which is the question this page deliberately did not answer.
 
 ### Phase 5 - Architecture (8-10 h)
 - T5.1 Renderer probe: confirm mermaid in **our own draft wiki** (push to the mirror, look at it, no
@@ -895,8 +1048,16 @@ tools, nowhere around in the page.
 - T7.4 Follow-up list for `../tcell` (F-1: README/TUTORIAL pointers to the wiki, fix the legacy
   `wikis/Gallery` URL, document the `TCELL_*` vars the source reads but no doc names - Q-6's audit
   counts 8, note the stale `mouse demo` claim, and list the 2 URL moves Q-11 made so a maintainer can
-  re-check the evidence and re-publish them upstream);
-  file as issues/PRs **only if asked**. **Q-2: parked - prepare this package, do not send it.** *(0.5 h)*
+  re-check the evidence and re-publish them upstream); **plus the `TUTORIAL.md` thin spots found reading
+  it end to end at T4.1** (no module setup or `go get`; the three event-reference sections sit before the
+  section that creates the screen and the loop that reads them, so a beginner meets `EventResize` before
+  `NewScreen`; its fragments use `log`/`os`/`fmt`/`color` with no import block, so pasting one into an
+  empty module is three compile errors; `Fini` appears only in the demo application, three pages after
+  the screen is opened; nothing on the clipboard, the title, notifications or suspend) **and one library
+  defect measured during T4.5** (calling `Fini` on a screen whose `Init` failed panics with `close of nil
+  channel` in `tScreen.finish`, `tscreen.go:676`, so a program that exits on a failed `Init` is fine and
+  one that cleans up first is not); none of it is page content and none of it is sent (Q-2);  file as
+  issues/PRs **only if asked**. **Q-2: parked - prepare this package, do not send it.** *(0.5 h)*
 - T7.5 Publish final touches; confirm public result page by page; record published commit SHAs - by
   Q-14 that is `tools/publish.sh` plus reading the rendered page, not a manual `git push`. *(1 h)*
 
@@ -968,6 +1129,9 @@ applies beyond the page budgets in S5.1.
 - [ ] The 6 built pages (`Home`, `Gallery`, `Getting-Started`, `Architecture`, `Function-Reference`,
       `Terminal-Setup`) exist and are linked from `Home`; no page links to a deferred page. (Q-3)
 - [ ] Every code fence in the wiki is `go`-tagged, `gofmt`-clean and builds in the S8.1 harness.
+      (Phase 2 onward: shell commands live in `console` fences, which PLAN 7 and `check-style.py` accept
+      and the harness skips by design, so the honest reading of this box is "every `go` fence ..."; if it
+      is still worded this way at T7.1, tick it against that reading and say so in the note.)
 - [ ] `tools/symbol-coverage.py --gate` is clean: all 179 structural names owned by exactly one of the 6
       built pages, all 14 constant groups claimed by group, no structural symbol with two owners (Q-6).
 - [ ] All 8 `TCELL_*` env vars and all 9 `Opt*` options documented, with precedence stated.

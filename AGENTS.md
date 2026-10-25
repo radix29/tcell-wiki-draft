@@ -15,10 +15,11 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   and never render as pages; the upstream artefact is the text of one page `.md`, pasted one page at a
   time into someone else's wiki.
 - Page bodies sit at the repo root as plain `.md` - the 6 pages of Q-3: `Home.md` (the nav hub since
-  Phase 2, and the last page in Appendix D's commit order), `Gallery.md` and, since Phase 1,
-  `Getting-Started.md`, `Architecture.md`, `Function-Reference.md`, `Terminal-Setup.md`,
-  the last four being honest stubs (purpose sentence, planned scope, a pointer to what to read today, and
-  no API claimed in backticks, which Q-6 reserves for the page that owns the symbol). `_Sidebar.md` sits
+  Phase 2, and the last page in Appendix D's commit order), `Gallery.md`, `Getting-Started.md` (the
+  Phase 4 page: five authored sections, two `console` blocks, no `go` fence and no Go on it at all), and
+  the three that are still honest stubs from Phase 1 - `Architecture.md`, `Function-Reference.md`,
+  `Terminal-Setup.md` - each one a purpose sentence, the planned scope, a pointer to what to read today,
+  and no API claimed in backticks, which Q-6 reserves for the page that owns the symbol. `_Sidebar.md` sits
   beside them as D-1's droppable prototype: it is in the manifest, it is not a content page, and no page
   links it. `tools/` (QA scripts), `samples/` (snippet compile harness) and `.github/workflows/qa.yml`
   (CI) exist; see Tooling below.
@@ -197,7 +198,12 @@ Entry format — exactly this shape, one line each:
 # Markdown Conventions
 
 - Internal links omit the extension and any path: `[Gallery](Gallery)`, never `Gallery.md` or
-  `./Gallery`. Multi-word pages are hyphenated (`Getting-Started.md` -> `[Getting-Started]`), never
+  `./Gallery`. Internal anchors follow the renderer's model, which is the *page body*: a page's duplicate
+  `#` H1 contributes no anchor (PLAN 7 says GitHub drops it), a heading inside a blockquote does (so
+  `Gallery#demos-in-the-repository` resolves - `curl` of the published page shows GitHub really renders
+  that anchor), and `check-links.py` therefore feeds `anchors_in()` the body with the H1 line removed
+  rather than the whole file - feeding it whole files made both mistakes silent (Phase 4's T4.4).
+  Multi-word pages are hyphenated (`Getting-Started.md` -> `[Getting-Started]`), never
   `Some_Page.md` or with spaces. **Never rename `Home.md` or `Gallery.md`**: it breaks `Home.md`'s link
   and the `wikis/Gallery` URL hardcoded in `../tcell/README.md`.
 - GitHub renders the page slug as the page heading, so an in-file `#` H1 shows up as a duplicate
@@ -227,6 +233,21 @@ Entry format — exactly this shape, one line each:
   tag is a complete program, `snippet=name` merges fences with the same name, `mode=lib` type-checks a
   fragment, `mode=skip` is not Go (transcripts, v2 comparisons), and `headless=yes` also *runs* the
   program on the vt emulator, which requires an ESC arm. See `samples/README.md`.
+- **A page backticks an API name only if it owns it (Q-6).** The single owner is `Function-Reference`,
+  which 6.5 requires to name all 179 structural names in its tables, so the other pages write names like
+  EventResize and EnableMouse in plain prose, or show them inside a code fence where they are code and
+  not a claim. That is why `symbol-coverage.py` reports "0 page-cited symbol(s) checked" and why Phase 6
+  will not open with a `SHARE` failure; it also costs nothing at review time, because
+  `review-checklist.py`'s "talks about resizing but never names `EventResize`" CHECK is a substring test
+  and plain prose passes it. (Home's Install fence and any future fragment are the same rule: a fence is
+  not an ownership claim.)
+- **Shell commands go in a `console` fence, never in `go`.** PLAN 7's marker, validated by
+  `check-style.py` and skipped by `make-samples.py`, and the reason a page can publish a command it has
+  actually run: Home's `go get`, Gallery's clone block, and Getting-Started's module setup and its
+  module-path demo run, all measured (the last one from a directory with no source file in it). So the
+  `review-checklist.py` ASK "page has no `go` fence yet" is the *expected* state for a page whose code is
+  shell and whose examples are the library's (Q-Ex): answer it in the review note, do not paste Go to
+  silence it.
 - **The library's own programs are the examples.** Pages link `demos/` and `TUTORIAL.md` in
   `gdamore/tcell`; they do not re-author sample code, because a wiki fence rots on the next API change
   while `demos/` ships with a rendering test per program. `tools/check-demos.py` verifies the names,
