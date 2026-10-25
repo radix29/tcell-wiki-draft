@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """S8.4 Gallery migration checker - proves the rewrite is lossless (PLAN.md S2, R2, Appendix B).
 
-Usage: tools/check-gallery.py [--gallery F] [--baseline F] [--allow-new-section S]
-                              [--max-additions N] [--verbose]
+Usage: tools/check-gallery.py [--gallery F] [--baseline F] [--sections FILE]
+                              [--allow-new-section S] [--max-additions N] [--verbose]
 
 Compares Gallery.md against baseline/Gallery.md (the live wiki as fetched, see baseline/RECORD.txt):
 
   lossless   every baseline entry (name + URL) still exists, in the same category, in the same
              relative order (append-only, so a re-sorted category looks like a rewrite);
-  structure  the 6 baseline categories still exist and stay in baseline order; a new section needs
-             --allow-new-section, because PLAN.md 6.2 sanctions exactly one ("## Demos in the
-             Repository") and forbids one-off sections per entry;
+  structure  the 6 baseline categories still exist and stay in baseline order; a new section needs a
+             record in tools/gallery-sections.txt (or --allow-new-section for a one-off run), because
+             PLAN.md 6.2 sanctions exactly one ("## Demos in the Repository") and forbids one-off
+             sections per entry. A record approves the *section*, and with it the entries inside it:
+             their content is generated from the library checkout by tools/check-demos.py --markdown,
+             so the additions budget (which is about new *projects*) does not apply to them, while the
+             shape and ASCII rules below still do. What no checker can know is what *belongs* in a
+             generated section - the reviewer's check on that content is to re-run the tool and diff
+             it, which is also why an approved section whose heading has disappeared is an error: a
+             dropped section is a regression, and a record nobody needs is a silent lie.
   shape      every bullet matches the frozen entry format of PLAN.md 6.2 / AGENTS.md
              ("- [name](url) - lowercase description", ASCII ' - ', no trailing period, no star
              counts, dates or "(new)" markers);
@@ -49,15 +56,17 @@ TRAILING_PERIOD_RE = re.compile(r"\.$")
 CATEGORY_ORDER_NOTE = "PLAN.md 6.2 keeps the 6 baseline categories and their order"
 MOVES = W.ROOT / "tools" / "gallery-moves.txt"
 ADDITIONS = W.ROOT / "tools" / "gallery-additions.txt"
+SECTIONS = W.ROOT / "tools" / "gallery-sections.txt"
 
 
-def load_records(path: pathlib.Path, shape: str, key_ok):
-    """Shared parser for the two decision files that let the migration contract bend.
+def load_records(path: pathlib.Path, shape: str, key_ok, val_ok=lambda v: v.startswith("http")):
+    """Shared parser for the decision files that let the migration contract bend.
 
-    '<key>\t<url>\t[evidence]', one decision per line, # comments allowed. Both files exist so a
+    '<key>\t<value>\t[evidence]', one decision per line, # comments allowed. The files exist so a
     reviewer sees *which* deviation was approved and why, which is also why a malformed line is
     reported instead of skipped: a silently dropped record means the check stops defending the thing
-    it was written for.
+    it was written for. `val_ok` is what makes a URL record refuse a value that is not a URL; a
+    section record carries prose evidence in that field, so it accepts anything non-empty.
     """
     out = {}
     if not path.exists():
@@ -67,7 +76,7 @@ def load_records(path: pathlib.Path, shape: str, key_ok):
         if not line or line.startswith("#"):
             continue
         parts = [f.strip() for f in raw.split("\t")]
-        if len(parts) < 2 or not key_ok(parts[0]) or not parts[1].startswith("http"):
+        if len(parts) < 2 or not key_ok(parts[0]) or not parts[1] or not val_ok(parts[1]):
             print(f"{path.name}:{n}: expected '{shape}', got: {raw}", file=sys.stderr)
             continue
         out[parts[0]] = (parts[1], parts[2] if len(parts) > 2 else "(no evidence recorded)")
@@ -83,6 +92,15 @@ def load_additions(path: pathlib.Path = ADDITIONS):
     """tools/gallery-additions.txt: display name -> (URL, evidence). Entries the baseline does not
     have are allowed one by one, never in bulk: a second addition needs its own approved record."""
     return load_records(path, "<name>\t<url>\t[evidence]", lambda k: bool(k) and not k.startswith("http"))
+
+
+def load_sections(path: pathlib.Path = SECTIONS):
+    """tools/gallery-sections.txt: section heading -> (evidence for approving the whole section). A
+    *section* approval, for the one new `##` PLAN.md 6.2 sanctions; the entries it carries are
+    generated from the library checkout, so they are governed by the shape rules and not by the
+    additions budget, which is the record of approved new *projects*."""
+    return load_records(path, "<section>\t[evidence]", lambda k: bool(k) and not k.startswith("http"),
+                        val_ok=lambda v: bool(v))
 
 
 class Entry:
@@ -173,13 +191,16 @@ def main() -> int:
     ap.add_argument("--gallery", default="Gallery.md")
     ap.add_argument("--baseline", default="baseline/Gallery.md")
     ap.add_argument("--allow-new-section", action="append", default=[],
-                    metavar="SECTION", help="approve one new category name (PLAN.md 6.2 allows exactly one)")
+                    metavar="SECTION", help="approve one new category name for this run only "
+                    "(the standing approval is a record in tools/gallery-sections.txt)")
     ap.add_argument("--max-additions", type=int, default=0, metavar="N",
                     help="allow at most N entries that are not in the baseline (default 0 = pure migration)")
     ap.add_argument("--moves", default=str(MOVES),
                     help="recorded URL-move file (default tools/gallery-moves.txt)")
     ap.add_argument("--additions", default=str(ADDITIONS),
                     help="recorded approved-addition file (default tools/gallery-additions.txt)")
+    ap.add_argument("--sections", default=str(SECTIONS),
+                    help="recorded approved-section file (default tools/gallery-sections.txt)")
     ap.add_argument("--verbose", "-v", action="store_true",
                     help="print every category, addition and move record")
     args = ap.parse_args()
@@ -196,6 +217,12 @@ def main() -> int:
     # reverted but the record survived (or the record names a project that no longer exists).
     moves = load_moves(pathlib.Path(args.moves))
     additions = load_additions(pathlib.Path(args.additions))
+    sections = load_sections(pathlib.Path(args.sections))
+    # A --allow-new-section flag is the same approval for one run, tagged so the note cannot be read
+    # as a record that outlives the command line it came from.
+    approved = {name: (why, str(pathlib.Path(args.sections).name)) for name, why in sections.items()}
+    for name in args.allow_new_section:
+        approved.setdefault(name, ("approved on the command line for this run only", "--allow-new-section"))
     page_urls = {e.url for e in entries}
     for old, (new, _why) in moves.items():
         if old in page_urls:
@@ -236,11 +263,17 @@ def main() -> int:
     for missing in [c for c in base_cats if c not in cats]:
         errors.append(f"category '{missing}' disappeared ({CATEGORY_ORDER_NOTE})")
     for extra in [c for c in cats if c not in base_cats]:
-        if extra not in args.allow_new_section:
-            errors.append(f"new category '{extra}' is not approved; re-run with --allow-new-section "
-                          f"'{extra}' only if PLAN.md 6.2/12 sanctions it (one-off sections are forbidden)")
+        if extra not in approved:
+            errors.append(f"new category '{extra}' is not approved; PLAN.md 6.2 sanctions exactly one "
+                          "new section and forbids one-off sections per entry, so a second one is a "
+                          "plan change and not an edit. A sanctioned one needs a record in "
+                          f"{SECTIONS.relative_to(W.ROOT)} (or --allow-new-section '{extra}' to test it)")
         else:
-            notes.append(f"approved new category: '{extra}'")
+            notes.append(f"approved new category: '{extra}' [{approved[extra][1]}] ({approved[extra][0]})")
+    for name in [n for n in sections if n not in cats]:
+        errors.append(f"tools/{SECTIONS.name} approves the section '{name}', which the page no longer "
+                      "has - a sanctioned section that disappears is a content loss (R2), and a record "
+                      "nobody needs is a stale lie; fix the page or delete the record")
 
     # --- lossless + order ------------------------------------------------------
     by_cat_now = collections.defaultdict(list)
@@ -289,8 +322,19 @@ def main() -> int:
         """An entry whose URL a tools/gallery-moves.txt record moved to exactly this one."""
         return any(b.name == e.name and b.url in moves and moves[b.url][0] == e.url for b in base_entries)
 
+    # An approved section is outside the additions contract: that budget counts new *projects* added to
+    # the inherited categories, while the entries of a sanctioned section are generated text about the
+    # library's own programs (PLAN.md 6.2, tools/check-demos.py). They stay under the shape rules below.
+    in_sections = [e for e in entries if e.category in approved
+                   and e.key not in {b.key for b in base_entries}]
     new_entries = [e for e in entries
-                   if e.key not in {b.key for b in base_entries} and not recorded_move(e)]
+                   if e.key not in {b.key for b in base_entries} and not recorded_move(e)
+                   and e.category not in approved]
+    if in_sections:
+        notes.append(f"{len(in_sections)} entry(ies) sit in the approved section "
+                     f"'{in_sections[0].category}' and are exempt from the additions budget; their "
+                     "content is generated, so the check on them is to re-run tools/check-demos.py "
+                     "--markdown and diff it")
     approved = []
     for e in list(new_entries):
         rec = additions.get(e.name)

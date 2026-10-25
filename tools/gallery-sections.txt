@@ -1,0 +1,21 @@
+# Approved new sections - the `##` headings tools/check-gallery.py lets onto Gallery.md even though
+# baseline/Gallery.md has no match for them (PLAN.md 6.2, R2 "no prior information lost").
+# Format (tab separated, one per line):
+#   <section heading, exactly as written on the page>    <evidence and decision, one line>
+#
+# Why a section needs a record and an entry needs a different one: an entry is a *project* entering a
+# curated list, which is a decision about somebody else's software (tools/gallery-additions.txt). A
+# section is a structural change to the page, and PLAN.md 6.2 sanctions exactly one of them -
+# "## Demos in the Repository" - while forbidding one-off sections per project. So this file is short
+# on purpose: if it ever grows past that one section, the plan changed and this file is the wrong place
+# to notice (PLAN.md 6.2 and 12 list the deferred sections, and 12 keeps them deferred).
+#
+# A record here approves the *section*, not a curation call: the entries inside it are generated from
+# the library checkout by tools/check-demos.py --markdown, which is also what makes them exempt from
+# the additions budget. Shape, ASCII, duplicate-URL and category-order rules still apply to every line
+# of an approved section, and the checker says in its own report which entries it exempted and why.
+#
+# A record whose section is missing from the page is an error, not a shrug: either the page lost
+# sanctioned content (R2) or the record outlived its use, and both read as drift. That failure mode is
+# also the reason a record and the section it approves land in one commit: added earlier, the record
+# alone would redden every check until the page caught up.
