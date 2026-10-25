@@ -1036,14 +1036,13 @@ AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0
 ### Phase 5 - Architecture (8-10 h)
 
 **Status: done and published (2026-10-25).** `Architecture.md` is written: eleven `##` sections in 6.4's
-order and on 6.4's topics, 1,298 prose words inside 5.1's 900-1,300, three Mermaid diagrams counted
-rendering on the live page, 28 distinct source files cited, no `go` fence at all (its code is three diagrams
-and two tables), and every claim
-read out of `../tcell` at `acf267d` during T5.5. The renderer question is still what T5.1 answered, and
-T5.1 is unchanged below; what changed is that the answer got used, so the page's diagrams are drawn from a
-diagram language and the page itself says so in its own body instead of in a probe section that had to be
-removed later. Three findings this phase made are recorded under Found at the end, and two of them say what
-Phase 6 must not write.
+order and on 6.4's topics, 1,298 prose words inside 5.1's 900-1,300, three Mermaid diagrams counted rendering
+on the live page, 28 distinct source files cited, no `go` fence at all (its code is three diagrams and two
+tables), and every claim read out of the library checkout rather than out of 6.4's summary of it - the two
+places where the checkout and 6.4 disagree are written down under T5.3. T5.1's probe is what this phase built
+on and its record below is unchanged; what changed is that the answer got used, in a real page rather than in
+a probe section that had to be removed afterwards. Four findings are recorded under Found at the end, and
+three of them say what Phase 6 or Phase 7 must not write.
 
 - T5.1 **Done (2026-10-25): Mermaid renders in GitHub's wiki renderer, so no fallback was needed.** The
   question was only answerable by publishing, so that is what happened, on our own wiki, exactly as Q-0c
@@ -1146,9 +1145,10 @@ Phase 6 must not write.
     when the screen is built, the keyboard queries are skipped when a protocol was forced (tscreen.go:1703
     `if !t.forceKbd`), and the forced value is re-asserted after negotiation (tscreen.go:1721). The page says
     it in those words, and Found item 2 below is the warning that this ladder is not general.
-  - Word cost, said out loud: the first draft was 2,044 prose words and 746 of them came out, because 5.1
-    gives this page 1,300 and not 2,000. What is gone: the grapheme-table and sixel digression, one of the
-    three `cell.go` measuring fast paths, the `$COLORTERM` asymmetry as a sentence (it is a clause now), and
+  - Word cost, said out loud: the first draft ran to 2,431 prose words and 1,133 of them came out, because 5.1
+    gives this page 1,300 and not 2,000. What is gone: the grapheme-table and sixel digression, the
+    `OptRGB`/`Opt256Colors`/`OptNoColor` list and its "before Init" clause, the `$COLORTERM` asymmetry as a
+    sentence (it is a clause now), and
     the vt file inventory 6.4 asks for. Two 6.4 clauses are therefore only met in part and this is the record
     saying so: `color.Reset` ("theme-respecting") is not on the page, and `## Terminal capability handling`
     cites five vt files rather than the eleven it names. The reason is the budget and the reader, not an
@@ -1160,7 +1160,8 @@ Phase 6 must not write.
   backend/platform matrix and it ships as a four-row **table** instead, because that is what a matrix is; the
   count is 3, inside 6.4's "Diagrams (3-4)" and inside 5.1's "3-4 diagrams". Measured on the live page, the
   command T5.1 left as the re-check: `curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Architecture
-  | grep -c 'data-type="mermaid"'` answers **3** at render `0bd845c` and again **3** at `f9608dc`, one
+  | grep -c 'data-type="mermaid"'` answers **3** at every one of the three publishes this phase made (renders
+  `0bd845c`, `f9608dc`, `8d0da4d`), one
   container per fence, so every fence written for the real page became a diagram. Two rules from T5.1
   respected: no diagram holds the only copy of a fact (mode 2026, the dirty pair, the size poll, the two
   goroutines and the event-filter split all sit in the prose too), and no `mermaid` fence carries a snippet
@@ -1172,15 +1173,21 @@ Phase 6 must not write.
     `OptColors(8)` and `OptTerm("ansi")`), and all eight `demos/*_test.go` do use it. The claim stayed, the
     reason for it got rewritten. And the two "measures only when it must" fast paths the page names are the
     library's own newest work: printable ASCII at cell.go:85-87 and drawn-text reuse at cell.go:88-91, the
-    second one added by `acf267d` (2026-10-19), with `6d51850` and `7ac1a34` behind it being the wide-character
+    second one added by `acf267d`, with `6d51850` and `7ac1a34` behind it being the wide-character
     and `Dirty` behavior the Screen-model section describes. A reviewer who checks the page against the tip
-    finds the page describing the tip, which is all a page like this can promise.
+    finds the page describing that checkout, which is the most a page like this can promise.
   - Currency, stated exactly rather than assumed: the claims were read from the sibling checkout at `acf267d`
     (2026-10-22), and `origin/main` is three commits newer at `62aecba` (2026-10-24), all three in the resize
-    path, because that clone was made the day the phase ran. So the two claims most exposed to resize churn
-    were re-read against `origin/main` itself, where engageLocked still asks in the same order with
-    `requestPrimaryDA` still last, and Show still calls resize and then draw and nothing else. `git -C ../tcell
-    rev-list --count HEAD..origin/main` is the check a later session runs first.
+    path, because that clone was made the day the phase ran. So the claims most exposed to resize churn were
+    re-read against `origin/main` itself: engageLocked still asks in the same order with `requestPrimaryDA`
+    still last, Show still takes the lock, resizes and draws in that order and nothing else (the page's "polls
+    the window size" sentence is `Show` calling `t.resize` then `t.draw`), the one-second number the page
+    credits is the library's own documentation of that poll (tscreen.go's `Init` comment, "a one second poll in
+    the absence of such events"), and `drawCell` is still the dirty check first. The line numbers moved and
+    were corrected: `Show` 1058, `draw` 1087-1140 with the per-cell scan at 1116-1131, `drawCell` 1094. Two
+    things were struck rather than corrected: `PollSize` and `onePixelX` appear nowhere in the library, so any
+    sentence naming them as the size mechanism is wrong, which is why the page says only what `Show` does. The
+    check a later session runs first is `git -C ../tcell rev-list --count HEAD..origin/main`.
   - "measures CIE76 distance cached per screen" is true and now known why: `color/fit.go:41`
     `DistanceCIE76` (with the comment saying CIE94 would be more accurate and "really really expensive"), and
     `tscreen.go:717-724` `resolvePalette` caching into `t.colors`, which is per screen. 6.4's
@@ -1197,8 +1204,9 @@ Phase 6 must not write.
     three known terminals are st, Terminal.app and WezTerm (tscreen.go:1596-1653), consulted before the burst
     at 1696.
   - "no display list" and "one comparison per cell per frame" are this draft's words, not the library's; the
-    mechanism behind them is `CellBuffer.Dirty` (cell.go:164) and the per-cell scan in `draw()`
-    (tscreen.go:1087-1140). The page says so in its own voice and the record says the voice is the draft's.
+    mechanism behind them is `CellBuffer.Dirty` (cell.go:164) and the per-cell scan inside `draw()`
+    (tscreen.go:1087-1140, the loop at 1116-1131). The page says so in its own voice and the record says the
+    voice is the draft's.
   - After publishing: the sentence that told the reader Terminal Setup "documents" TCELL_ESCDELAY became
     "owns" (`f929d67`), because the page is a stub and only T6.2 changes that. Same reason the intro points at
     the two reference pages as owners and not as finished prose. *(1 h)*
@@ -1206,9 +1214,9 @@ Phase 6 must not write.
   `Updated Architecture (markdown)`, not `Created Architecture (markdown)`, because the page has existed since
   `f1854a3` put the Phase 1 stub there, and AGENTS reserves `Created` for a page that is new to the wiki. Three
   page commits, all forward, all mirrored, one per logical edit: `f9cb697` wrote the page (+122/-2, the stub's
-  three sentences replaced), `f929d67` carried the three wording and citation fixes T5.5 left, and the commit
-  this session ends on rewords one clause about `cell.go`'s reuse fast path after that commit was read a third
-  time - the page had said "text it just measured" where the code compares against what it last drew. No page
+  three sentences replaced), `f929d67` carried the three wording and citation fixes T5.5 left, and `ea5c6d6`
+  rewords one clause about `cell.go`'s reuse fast path after that commit was read a third time - the page had
+  said "text it just measured" where the code compares against what it last drew. No page
   commit was amended, squashed or reverted, and `tools/publish.sh` ran for each one with the live page re-read
   afterwards, so the published history reads: stub, probe in, probe out, page, two polishes. That is what a
   changelog a reader can follow costs on a rendered page. `tools/review-checklist.py --offline` exits 0 with
