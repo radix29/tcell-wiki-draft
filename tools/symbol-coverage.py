@@ -42,6 +42,18 @@ BUILTIN = {"true", "false", "nil", "iota", "int", "rune", "byte", "string", "err
            "make", "new", "len", "cap", "append", "panic", "recover", "close", "delete", "copy",
            "main", "init", "context", "fmt", "os", "go", "defer", "range", "chan", "struct", "interface"}
 IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+# A backticked path is a claim about the repository, never about the API, and PLAN.md 6.4 wants pages
+# to cite files by name (`tscreen.go`, `vt/emulate.go`, `color/fit.go`). Reading those as symbol claims
+# would push a writer toward plain text for a file name or toward an allow-list entry per file, and both
+# are worse than fixing the tokenizer: the tool that *can* check a path is tools/check-demos.py, and it
+# already fails a page that names a demo or a `_demos` file the checkout does not have.
+SOURCE_SUFFIX = (".go", ".md", ".yml", ".yaml", ".txt", ".json", ".png", ".mod", ".sum")
+
+
+def path_like(base: str) -> bool:
+    """True for a backticked token that reads as a file or directory rather than a Go identifier."""
+    return "/" in base or base.endswith(SOURCE_SUFFIX)
+
 # Constants are where the API surface explodes (Color*, Key*, Rune*...), so they are reported in
 # buckets instead of as one number - that split is what the open coverage-gate question turns on.
 CONST_PREFIXES = ("Color", "Key", "Rune", "Mod", "Button", "Attr", "CursorStyle", "Underline",
@@ -224,6 +236,8 @@ def main() -> int:
         base = token.split("(")[0].strip()
         if base in allow or base in BUILTIN or reasons.get(base):
             continue
+        if path_like(base):
+            continue  # a repository path or a source file name, checked by tools/check-demos.py
         if "." in base:
             head, _, rest = base.partition(".")
             leaf = rest.split(".")[-1].split("(")[0]
