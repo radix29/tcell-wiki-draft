@@ -887,7 +887,7 @@ was right (T4.5's note on `EventResize`).
 replaced by the page), `origin/master` `1e9aecf..4ec1443` (fast-forward, nothing forced or amended), then
 the script's own re-read reported "preview is current ... 7 page(s)". `git diff --stat upstream/master
 HEAD -- Home.md Gallery.md` is unchanged by this phase, because `Getting-Started.md` is a new file: the
-review surface a future upstream paste sees is still Home 72/3 and Gallery 24/3, plus a 55-line page that
+review surface a future upstream paste sees is still Home 72/3 and Gallery 24/3, plus a 58-line page that
 does not exist upstream at all. That publish carried the page and nothing else; `tools/publish.sh` ran
 again for the gate fix and these records, and the standing claim this note has to keep true is the one
 AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0 and the mirror is clean.
@@ -918,9 +918,14 @@ AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0
   command is the page's own contribution to the reader's first minute, and it is why `## Run the Demos`
   does not duplicate the Gallery's clone block: 6.3 asked for `go run ./demos/hello`, which is the clone
   route the generated Gallery section already carries, and the module-path route needs no clone. (2)
-  `GOTOOLCHAIN`: with the default (`auto`) the go command downloads a toolchain matching the library's go
-  directive, and with `GOTOOLCHAIN=local` it stops with "go.mod requires go >= X (running go Y;
-  GOTOOLCHAIN=local)", so the version sentence describes a flag's behaviour it has seen. (3) No
+  `GOTOOLCHAIN`: the library's `go.mod` says `go 1.26.0`, and both halves of the page's sentence were run
+  rather than read off a manual - a module whose directive outruns the toolchain and `GOTOOLCHAIN=local`
+  refuses with `go: go.mod requires go >= 1.99 (running go 1.27.3; GOTOOLCHAIN=local)`, while the same
+  module under the default `auto` tries to fetch what it needs (`go: downloading go1.99.0`, failing only
+  because that release does not exist), and pinning an older real toolchain reproduces the refusal against
+  the library's own directive (`go: go.mod requires go >= 1.26.0 (running go 1.25.0; ...)`). The machine
+  this was tested on (`go1.27.3`) is precisely the case where none of it fires, which is why the page says
+  "if yours is older" and not "you need". (3) No
   terminal: `NewScreen` succeeds and `Init` fails with `open /dev/tty: no such device or address`, which
   is the first "Before You Start" bullet, hedged to "the systems that have one" because Windows words the
   same failure differently. (4) Raw mode: a program on a 30x100 pty logged `Ctrl+C` (0x03) arriving as an
@@ -930,13 +935,19 @@ AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0
   drawing - the TUTORIAL says the event arrives, and the "size is already right" half is what this run
   added. (6) `demos/hello` is the shortest of the eight (77 lines, next is `beep` at 82) and all eight
   carry a `_test.go` (`check-demos.py` prints 8/8), which is what "the library keeps a rendering test for
-  each of the eight" claims and means. (7) The tutorial's demo application compiles unchanged against
-  v3.6.0, draws, and quits on ESC with status 0 - so the page's strongest claim about a link target ("all
-  five in one program") was tested rather than assumed. What the page deliberately does not say: anything
-  about `TERM`, terminfo or color depth. Measured and left unsaid: with `TERM` unset the demo still
-  opened a screen, and the bytes at `Init` are a negotiation (DA1, DA2, kitty, mode queries) rather than a
-  terminfo lookup. "v3 does not need the terminal database" is `Terminal-Setup`'s sentence to say - T2.2
-  turned that down for `Home` for the same reason and it turns it down here. *(2 h)*
+  each of the eight" claims and means. (7) The tutorial's demo application compiles unchanged against what
+  `go mod tidy` resolved on the second run - `v3.6.1-0.20261024233502-b1c3e111e032`, the default branch as
+  a pseudo-version, not just the tagged v3.6.0 the first `go get` had added - draws, and quits on ESC with
+  status 0, so the page's strongest claim about a link target ("all five in one program") was tested on
+  current library code rather than assumed. One near-miss worth recording, because it is why a later
+  sentence stays unsaid: the first pass at these runs inherited `TERM=xterm-256color` from the harness
+  environment, which hands the child a terminal type it never had to look up and makes any observation
+  about the terminal database worthless; the facts above are from the re-run with a clean environment,
+  where `TERM` unset still let the demo open a screen and the bytes at `Init` turned out to be a
+  negotiation (XTGETTCAP for DA1/DA2/kitty flags, modes 1049/2026/1004/1000-1003/1006, 7041,
+  keyboard-push) rather than a terminfo lookup. Whether v3 needs the terminal database is `Terminal-Setup`'s
+  sentence to say, so this page says nothing about it - T2.2 turned the same sentence down for `Home`.
+  *(2 h)*
 - T4.3 **Done, and empty on purpose - the one task this phase did not need.** There are no fragments to
   put through the harness. 6.3 says a `go` fence here is a "<= 10-line fragment that illustrates the one
   API under discussion", Q-Ex says the library's own programs *are* the examples, and a routing page has
