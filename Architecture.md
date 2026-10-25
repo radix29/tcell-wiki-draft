@@ -15,7 +15,7 @@ flowchart TB
   app["your program"] --> pub["the package you import - Screen, Style, Event"]
   pub --> base["baseScreen - shared drawing into a CellBuffer"]
   base --> tscr["tScreen - negotiation, escape sequences, the loops"]
-  tscr --> vtdef["vt - modes, keys, attributes, emulator"]
+  tscr --> vtdef["vt - coords, colors, cursors, keys, modes, attributes, layouts, emulator"]
   tscr --> tty["tty - raw mode, reads, writes, window size"]
   tty --> term["terminal or console"]
   term --> tty
@@ -77,7 +77,7 @@ flowchart LR
 
 Two goroutines per screen, in `tscreen.go`: inputLoop does the blocking read in one of its own so a stop can interrupt it, and mainLoop pushes the bytes through the locale decoder into the parser in `input.go`. Its header comment states the bet: one parser for every terminal, because key sequences are unambiguous. filterEvents keeps the terminal's own replies off the event queue, where keys, mouse, paste and resizes wait.
 
-`input.go` also decides when to stop waiting. A lone Escape is ambiguous under every keyboard protocol, so it is held 50 ms before being called Escape, or 125 ms on Windows; once an introducer has arrived nothing is ambiguous, and the parser waits a full second. A program may lengthen the short number, and TCELL_ESCDELAY overrides it from the shell, a knob [Terminal Setup](Terminal-Setup) documents.
+`input.go` also decides when to stop waiting. A lone Escape is ambiguous under every keyboard protocol, so it is held 50 ms before being called Escape, or 125 ms on Windows; once an introducer has arrived nothing is ambiguous, and the parser waits a full second. A program may lengthen the short number, and TCELL_ESCDELAY overrides it from the shell, a knob [Terminal Setup](Terminal-Setup) owns.
 
 ## Keyboard Protocols
 
@@ -95,7 +95,7 @@ Color takes two roads: 24-bit once the screen has chosen truecolor, and palette 
 
 A cell holds one grapheme cluster, which may be several runes, and is one or two cells wide; a wide cluster is marked dirty as a pair, and in the last column it becomes a space. Put hands back the rest of the string and the width it used, so a program can wrap text without measuring twice, and `cell.go` measures only when it must, skipping the segmenter for printable ASCII and for text it just measured.
 
-Neither clustering nor width is in this library: both come from [_displaywidth_](https://github.com/clipperhouse/displaywidth) and [_uax29_](https://github.com/clipperhouse/uax29), configured once by `internal/widthutil` and shared by `cell.go` and the emulator. Character sets are separate: `charset_unix.go` reads the locale, `encoding.go` turns a name into an encoder and decoder.
+Neither clustering nor width is in this library: both come from [_displaywidth_](https://github.com/clipperhouse/displaywidth) and [_uax29_](https://github.com/clipperhouse/uax29), configured once by `internal/widthutil` and shared by `cell.go` and by the emulator through `vt/width.go`. Character sets are separate: `charset_unix.go` reads the locale, `encoding.go` turns a name into an encoder and decoder.
 
 ## Concurrency
 
