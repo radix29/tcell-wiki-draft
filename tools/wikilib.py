@@ -157,14 +157,26 @@ def github_slug(text: str) -> str:
     return s.replace(" ", "-")
 
 
+# A blockquote marker at the start of a line, possibly nested or padded. GitHub renders the markup it
+# quotes, so '> ## Demos in the Repository' (Gallery.md's generated section, PLAN 6.2) is still an h2 and
+# still gets the anchor: the published page carries href="#demos-in-the-repository", measured on the
+# render wiki on 2026-10-25. Until this was stripped, `[demos](Gallery#demos-in-the-repository)` - a link
+# that works for a reader - was reported BROKEN, which is the false failure this module warns about.
+QUOTE_PREFIX_RE = re.compile(r"^(?:\s*>\s*)+")
+
+
 def anchors_in(text: str) -> set:
-    """Every heading anchor a reader could link to in this markdown, fences excluded."""
+    """Every heading anchor a reader could link to in this markdown, fences excluded.
+
+    Blockquoted headings count, because GitHub gives them one (see QUOTE_PREFIX_RE); everything else
+    about this is the same deliberate approximation as github_slug.
+    """
     out = set()
     spans = fence_ranges(text)
     for n, line in enumerate(text.splitlines(), 1):
         if in_fence(n, spans):
             continue
-        m = re.match(r"^#{1,6}\s+(.*)$", strip_inline_code(line))
+        m = re.match(r"^#{1,6}\s+(.*)$", strip_inline_code(QUOTE_PREFIX_RE.sub("", line)))
         if m:
             out.add(github_slug(m.group(1)))
     return out

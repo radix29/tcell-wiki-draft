@@ -120,7 +120,13 @@ def main() -> int:
     slugs = {name[:-3] for name in W.manifest_pages() if name.endswith(".md")}
     rules = load_allow()
     text_of = {rel_of(p): W.read(p) for p in paths}
-    anchors = {name: W.anchors_in(text) for name, text in text_of.items()}
+    # anchors_in() wants a page *body*, and a body has no H1: PLAN 7 gives each page exactly one, the
+    # duplicate title GitHub renders above the content and drops from the anchor set, so feeding it the
+    # whole file used to make every target page look like it had one anchor too many and never the one a
+    # reader clicks. Same page, same call, one line shorter - see PLAN.md Phase 4's T4.3 note on this
+    # being the same fence-blindness bug family as Phase 1's S8.4 report.
+    anchors = {name: W.anchors_in(text.split("\n", 1)[1] if text.startswith("# ") else text)
+               for name, text in text_of.items()}
 
     internal_bad = []
     external = collections.OrderedDict()
