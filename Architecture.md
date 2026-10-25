@@ -93,7 +93,7 @@ Color takes two roads: 24-bit once the screen has chosen truecolor, and palette 
 
 ## Unicode and Width
 
-A cell holds one grapheme cluster, which may be several runes, and is one or two cells wide; a wide cluster is marked dirty as a pair, and in the last column it becomes a space. Put hands back the rest of the string and the width it used, so a program can wrap text without measuring twice, and `cell.go` measures only when it must, skipping the segmenter for printable ASCII and for text it just measured.
+A cell holds one grapheme cluster, which may be several runes, and is one or two cells wide; a wide cluster is marked dirty as a pair, and in the last column it becomes a space. Put hands back the rest of the string and the width it used, so a program can wrap text without measuring twice, and `cell.go` measures only when it must, skipping the segmenter for printable ASCII and for text already on screen.
 
 Neither clustering nor width is in this library: both come from [_displaywidth_](https://github.com/clipperhouse/displaywidth) and [_uax29_](https://github.com/clipperhouse/uax29), configured once by `internal/widthutil` and shared by `cell.go` and by the emulator through `vt/width.go`. Character sets are separate: `charset_unix.go` reads the locale, `encoding.go` turns a name into an encoder and decoder.
 
