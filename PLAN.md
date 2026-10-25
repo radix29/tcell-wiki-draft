@@ -1422,6 +1422,14 @@ branch on purpose.
      to write the row or the list line, not to widen a gate (AGENTS says so about allow-lists already); T7.3's
      maintenance note has to carry this sentence, because it is now the first thing a stranger's CI does to a
      stranger after an upstream release.
+  5. **CI's link probe can call a live URL broken, and the fix is a re-run.** The first CI run of this
+     phase's record step failed on `https://github.com/gdamore/tcell/blob/main/interrupt.go` answering 503 in
+     step 7. The same URL answered 200 to three probes a minute later from this machine, and the rows that cite
+     it are event rows `tools/check-demos.py` has verified against the checkout on every run since. Nothing was
+     allow-listed, moved or softened, and the commit was not touched: the failed job was re-run and run
+     `40239719189` is green at that same commit unchanged. A 5xx is a reason to look and not a reason to edit a
+     page - `tools/link-status-allow.txt` gained no line, which is the whole difference between this and the
+     failure mode AGENTS warns about.
 - Exit **met (2026-10-25, publish included per Q-15):** the criterion is "R3c met at hub level - provided
   functionality documented by task and by symbol across the 6 built pages; topic pages explicitly listed as the
   deferred remainder". By task: the hub page's fourteen sections are 6.5's eleven areas in 6.5's order plus

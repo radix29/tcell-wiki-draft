@@ -330,8 +330,11 @@ defect left, the `## UI Frameworks ` trailing space D-9 says to leave; its secon
 rewrote `Home.md` and fixed the missing final newline as part of the page),
 `tools/link-status-allow.txt` (statuses we investigated and deliberately keep - after Q-11
 nothing unreachable is left on a page, and allow-listing a dead URL to quiet CI is now explicitly
-against policy), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
-you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only). The one list file
+against policy), `tools/api-allow.txt` (non-API package prefixes). CI's link probe can also catch a GitHub
+5xx on a URL that is plainly live (2026-10-25: `blob/main/interrupt.go` answered 503 in CI and 200 to three
+probes a minute later, in rows `check-demos.py` had verified against the checkout all along); the answer is to
+re-run the failed job - which is what turned run `40239719189` from red to green at the same commit - and never
+to move a live URL or allow-list it. Never add an entry to silence a finding you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only). The one list file
 that is **not** an allow-list is `tools/tcell-env-vars.txt`: it carries no exceptions, it is a claim about
 what the library reads, and the auditor fails the pages when the claim stops matching the source.
 
