@@ -1392,6 +1392,13 @@ branch on purpose.
   setup page, `27f32a0` the one-variable markup fix, `f6e895b` the tooling. Published with `tools/publish.sh`,
   which mirrored `20c2e6c` to the render wiki and pushed `f6e895b` to `origin`, and CI is green on it (run
   `40237344498`, 11 QA steps, the symbols step now carrying the gate). *(0.5-1 h, ~1 h with the guardrail)*
+- The ASKs this phase added to the checklist output, and the answers T6.1 said belong in a record and not on a
+  page: both new pages are told they "repeat a `##` topic" that `Architecture` also has, which is 5.4's way of
+  asking for a link rather than a rewrite, and the link runs both ways already - `Architecture.md:5` hands names
+  to this hub and settings to this setup page, `Architecture.md:125-126` lists both, and both new pages name
+  `Architecture` back (FR at `:7` and `:414`, setup at `:101`). `Terminal-Setup` is asked for a precedence order
+  in the checklist's stale flag/env/terminfo words, which is answered under Found item 1 and re-worded by T7.1,
+  and is asked why it has no `go` fence, which is answered two lines above by Q-Ex and 6.6.
 - Found, and it belongs to Phase 7 and to the F-1 package it will assemble:
   1. **The precedence ladder the checklist asks for is not the library's rule, and the missing rung is the
      middle one.** Measured: the environment wins for the alternate screen, the mouse, the keyboard protocol,
