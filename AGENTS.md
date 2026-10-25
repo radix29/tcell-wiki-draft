@@ -18,11 +18,18 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   Phase 2, and the last page in Appendix D's commit order), `Gallery.md`, `Getting-Started.md` (the
   Phase 4 page: five authored sections, two `console` blocks, no `go` fence and no Go on it at all), and
   `Architecture.md` (the Phase 5 page: eleven sections, 1,298 prose words, three `mermaid` fences and nothing
-  else fenced, 28 library files cited by path and no symbol name backticked, which is why
-  `symbol-coverage.py` still prints "0 page-cited symbol(s) checked" and why Phase 6 has to move that number
-  on `Function-Reference` alone), and the two that are still honest stubs from Phase 1 -
-  `Function-Reference.md`, `Terminal-Setup.md` - each one a purpose sentence, the planned scope, a pointer to
-  what to read today, and no API claimed in backticks, which Q-6 reserves for the page that owns the symbol.
+  else fenced, 28 library files cited by path and no symbol name backticked, which is why its file-path
+  backticks are all the auditor sees on that page and why the two reference pages are the ones that claim
+  symbols), `Function-Reference.md` (the Phase 6 page and the owner of every API name: twelve tables and 178
+  one-line rows carrying all 179 structural names with the file that declares each of them, 14 constant groups
+  claimed by group and never row by row, the 11 names no program can call kept and explained instead of
+  dropped, one `headless=yes` program the harness really runs, and 1,364 words outside its tables against 5.1's
+  "1,000-1,400 words + tables"), and `Terminal-Setup.md` (the other Phase 6 page: three tables and one
+  `console` block, 1,068 words outside the tables against 5.1's 700-1,100, all 8 `TCELL_*` names plus the 11
+  other environment names the library reads, and the precedence stated per knob because a single rule would be
+  wrong for two of the knobs - see Tooling for the list that keeps the variables honest). Q-6 reserves every
+  backticked name for the page that owns it, and both Phase 6 pages are now subject to that gate rather than
+  waiting for it.
   `_Sidebar.md` sits
   beside them as D-1's droppable prototype: it is in the manifest, it is not a content page, and no page
   links it. `tools/` (QA scripts), `samples/` (snippet compile harness) and `.github/workflows/qa.yml`
@@ -72,14 +79,17 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 
 ```bash
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
-git diff --stat upstream/master HEAD -- Home.md Gallery.md Architecture.md   # the deliverable; today:
+git diff --stat upstream/master HEAD -- Home.md Gallery.md Architecture.md Function-Reference.md \
+                                                          Terminal-Setup.md   # the deliverable; today:
                                                             # Gallery 24 insertions / 3 deletions (2 URL
                                                             # moves Q-11, 1 addition Q-13, 1 reword Q-7, and
                                                             # the new `## Demos in the Repository` section),
-                                                            # the Phase 2 Home rewrite (72/3), and
-                                                            # Architecture's 127 insertions against upstream,
-                                                            # where it is a new page (its Phase 1 stub is our
-                                                            # own commit); the two reference pages are stubs
+                                                            # the Phase 2 Home rewrite (72/3), Architecture's
+                                                            # 127 insertions and the two Phase 6 reference
+                                                            # pages' 416 and 103, all three new pages as far
+                                                            # as upstream is concerned (their Phase 1 stubs
+                                                            # are our own commits, which is why the diff of a
+                                                            # written page still reads as all additions)
 git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
 ```
 
@@ -218,7 +228,7 @@ Entry format — exactly this shape, one line each:
 - GitHub renders the page slug as the page heading, so an in-file `#` H1 shows up as a duplicate
   title; a page therefore carries exactly one of them. `Gallery.md` always did, `Home.md` got one with
   the Phase 2 rewrite (upstream's `Home.md` has none, which is why its diff is a rewrite and not an
-  edit), and the four stubs follow `Gallery.md`.
+  edit), and the four pages written since follow `Gallery.md`.
 - `_emphasis_` is the established idiom; don't introduce `*emphasis_` mixes or HTML tags. Blank
   line before and after every list and heading.
 - The library is **`_Tcell_` in prose** (Q-9) - bare `Tcell` only in headings, file names and paths,
@@ -251,13 +261,23 @@ Entry format — exactly this shape, one line each:
   fragment, `mode=skip` is not Go (transcripts, v2 comparisons), and `headless=yes` also *runs* the
   program on the vt emulator, which requires an ESC arm. See `samples/README.md`.
 - **A page backticks an API name only if it owns it (Q-6).** The single owner is `Function-Reference`,
-  which 6.5 requires to name all 179 structural names in its tables, so the other pages write names like
-  EventResize and EnableMouse in plain prose, or show them inside a code fence where they are code and
-  not a claim. That is why `symbol-coverage.py` reports "0 page-cited symbol(s) checked" and why Phase 6
-  will not open with a `SHARE` failure; it also costs nothing at review time, because
+  which 6.5 requires to name all 179 structural names in its tables and does, so the other pages write names
+  like EventResize and EnableMouse in plain prose, or show them inside a code fence where they are code and
+  not a claim. Phase 6 closed the loop the earlier phases only predicted: `symbol-coverage.py --gate` now
+  reports every structural name owned by exactly one page (and 180-odd page-cited names checked, where it
+  used to report 0 because only file paths were backticked), and that gate runs in CI and inside
+  `review-checklist.py`. It also costs nothing at review time, because
   `review-checklist.py`'s "talks about resizing but never names `EventResize`" CHECK is a substring test
   and plain prose passes it. (Home's Install fence and any future fragment are the same rule: a fence is
   not an ownership claim.)
+- **Environment variables are owned by `Terminal-Setup` the same way, and only that page backticks them.**
+  They are not API, so the gate above cannot police them: `symbol-coverage.py` counts a variable as
+  documented when *any* page backticks it, which is how one page can silently satisfy another's claim. The
+  fix is the list, not the tool: `tools/tcell-env-vars.txt` names all 19 variables the library reads, and the
+  auditor checks three directions on every run (listed and documented, listed and still read, read and listed)
+  so a variable cannot age out of the docs the way `TCELL_ALTSCREEN` did. A mention of one on a different page
+  is prose, unbackticked - `Function-Reference` writes the RUNEWIDTH_EASTASIAN toggle in words and lets
+  `Terminal-Setup` own it.
 - **Shell commands go in a `console` fence, never in `go`.** PLAN 7's marker, validated by
   `check-style.py` and skipped by `make-samples.py`, and the reason a page can publish a command it has
   actually run: Home's `go get`, Gallery's clone block, and Getting-Started's module setup and its
@@ -266,7 +286,9 @@ Entry format — exactly this shape, one line each:
   shell and whose examples are the library's (Q-Ex): answer it in the review note, do not paste Go to
   silence it. `Architecture.md` raises it on purpose too: its code is three `mermaid` fences, its tables hold
   file paths, and Q-Ex still routes its examples to `demos/`, so nothing on that page is Go and nothing there
-  should be.
+  should be. `Terminal-Setup.md` raises it for the same reason and with the same answer: 6.6 asks that page
+  for a worked example, and its worked example is a `console` transcript of demo programs run one variable at
+  a time, which is a thing a reader can copy and no Go line of this wiki's invention.
 - **The library's own programs are the examples.** Pages link `demos/` and `TUTORIAL.md` in
   `gdamore/tcell`; they do not re-author sample code, because a wiki fence rots on the next API change
   while `demos/` ships with a rendering test per program. `tools/check-demos.py` verifies the names,
@@ -290,8 +312,12 @@ tools/gallery-sections.txt      the one approved new `##` on Gallery (PLAN 6.2):
 tools/check-demos.py        S8.2b the demos/TUTORIAL links a page makes resolve; --markdown prints the
                               Gallery block, --build also builds each `_demos` file a page names
 tools/make-samples.py       S8.1  every go fence compiles; headless=yes also runs it (S8.6)
-tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit; a backticked
+tools/symbol-coverage.py    S8.3  invented API, coverage table, the env audit and the PLAN 6.5 coverage gate
+                                  (`--gate`, run by CI and by review-checklist too); a backticked
                               path like `vt/emulate.go` is a path, not an API claim
+tools/tcell-env-vars.txt    S8.3  the 19 variables a reader can set (T6.2): one name per line, why it is a
+                              reader's knob, and where the library reads it; the auditor fails if the list,
+                              the source and the pages stop agreeing
 tools/apiface/          S8.3  the surface dumper (go/parser, no downloads) - run from its own dir
 tools/wikilib.py              shared stdlib helpers: manifest, fences, links, ASCII, prose words
 tools/gallery-additions.txt     approved entries the baseline lacks (Q-13): name, URL, evidence
@@ -305,7 +331,9 @@ rewrote `Home.md` and fixed the missing final newline as part of the page),
 `tools/link-status-allow.txt` (statuses we investigated and deliberately keep - after Q-11
 nothing unreachable is left on a page, and allow-listing a dead URL to quiet CI is now explicitly
 against policy), `tools/api-allow.txt` (non-API package prefixes). Never add an entry to silence a finding
-you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only).
+you do not understand, and never add a `.md` pattern to `.gitignore` (build noise only). The one list file
+that is **not** an allow-list is `tools/tcell-env-vars.txt`: it carries no exceptions, it is a claim about
+what the library reads, and the auditor fails the pages when the claim stops matching the source.
 
 Still useful one-liners that no tool covers:
 
@@ -324,6 +352,18 @@ git diff -- Home.md Gallery.md
 # adds.
 curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Architecture | grep -c 'data-type="mermaid"'
 ```
+
+Does the live hub page render as many tables as the file has? Phase 6 published twelve and measured twelve,
+which is the difference between a page read and a page assumed; the file side of the same check is
+`grep -c '^|---' Function-Reference.md`.
+
+```bash
+curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Function-Reference | grep -c '<table'
+```
+
+The two numbers Phase 6 published its env story with are one line of the auditor, and the invariant they
+assert is worth re-checking after any upstream move, because it is the check that catches a variable the
+library started or stopped reading: `tools/symbol-coverage.py | grep envlist`.
 
 If the `curl` check inside `check-links.py` fails because of sandbox/network restrictions it says so in
 its report instead of guessing, and never invent a URL from a project name.

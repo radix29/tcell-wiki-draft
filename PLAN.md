@@ -1,13 +1,16 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-5 built,
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-6 built,
 green and **published** - Q-15 removed the ask, so the preview at `radix29/tcell-wiki-draft/wiki` renders
 all 7 manifest pages including Phase 2's `Home.md` rewrite, Phase 3's `Gallery.md` (all 49 baseline
 entries intact, one recorded addition, the sanctioned `## Demos in the Repository` section, and every URL
 on the page answering 200), Phase 4's `Getting-Started.md` (1,134 prose words, five authored sections,
-two measured `console` blocks, zero lines of Go, and 14 external targets all answering 200) and Phase 5's
+two measured `console` blocks, zero lines of Go, and 14 external targets all answering 200), Phase 5's
 `Architecture.md` (1,298 prose words, eleven sections, three Mermaid diagrams measured rendering on the
-live page, 28 source files cited, zero backticked symbols); Phases 6-7 not started
+live page, 28 source files cited, zero backticked symbols), Phase 6's `Function-Reference.md` (179 of 179
+structural names owned once, 14 constant groups, twelve tables measured in the live HTML, one snippet that
+runs headless on the vt emulator) and Phase 6's `Terminal-Setup.md` (8 of 8 `TCELL_*` names and 19 of 19
+reader knobs, precedence measured per knob on the vt mock); Phase 7 not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -1274,16 +1277,160 @@ three of them say what Phase 6 or Phase 7 must not write.
      cites (`acf267d`, `6d51850`, `7ac1a34`), which live in `../tcell` and not here.
 
 ### Phase 6 - Functionality documentation - **2 pages (6-8 h) after Q-3**
-- T6.1 `Function-Reference.md`: hub + area tables (S6.5), absorbing the material the 6 deferred topic
-  pages would have carried, as one-line table rows + a short block per area. *(4-5 h)*
-- T6.2 `Terminal-Setup.md`: all 8 `TCELL_*` vars + all 9 `Opt*` options + precedence rule, including
-  reading the 3 never-documented vars (`TCELL_ALTSCREEN`, `TCELL_COLS`, `TCELL_LINES`) in source first.
-  *(1.5-2 h)*
-- T6.3 Run S8.3 symbol auditor; iterate until every exported symbol is owned by one of the 6 built
-  pages; put the coverage report in the review note, not on a page. *(0.5-1 h, gate re-opened by Q-9)*
-- T6.4 Snippets for both pages through the S8.1 harness; review; one commit per page.
-- Exit: R3c met **at hub level** - provided functionality documented by task and by symbol across the
-  6 built pages; topic pages explicitly listed as the deferred remainder.
+
+**Status: done and published (2026-10-25).** `Function-Reference.md` and `Terminal-Setup.md` are written:
+179 structural names on the hub page, each owned by exactly one row and each citing the file that declares
+it, 14 constant groups claimed by group and never row by row, and all 8 `TCELL_*` names plus all 9 option
+types plus the 11 non-`TCELL_` environment names the same page has to carry to be worth its title. The
+auditor's coverage gate is green and is now a CI step; the env audit that used to say "8 undocumented" says
+"19 reader knob(s) listed, 19 read by the library, 19 documented by these pages"; and the number AGENTS said
+Phase 6 had to move, `page-cited symbol(s) checked`, reads 180 where it read 0. What the two pages cost is
+recorded honestly under T6.1 and T6.2 rather than argued, and four findings are recorded under Found because
+three of them are library doc comments that are wrong and one is a gate that now tracks the library's default
+branch on purpose.
+
+- T6.1 **Done (2026-10-25): the hub plus twelve area tables, and the page is what owns a name.** What the
+  page is: an intro that says the middle column is *why a row exists* and pkg.go.dev is the signature, then
+  `## Lifecycle`, `## Drawing`, `## Reading Content Back`, `## Styles and Color`, `## Cursors`,
+  `## Input and Events`, `## Mouse`, `## Clipboard, Title and Notifications`, `## Terminal Introspection`,
+  `## Advanced Hooks`, `## Names No Program Calls`, `## Constants by Group`, `## Subpackages`, `## See Also`.
+  All eleven of 6.5's areas are sections, in 6.5's order, with "and" where 6.5 wrote "&" so the headings read
+  as one page's own rather than as a plan transcribed, and with 6.5's own heading order kept even where that
+  puts `## Cursors` between two bigger tables because a reader following the page top to bottom meets the
+  screen, then the cursor, then the keyboard. Three sections are added, each forced by something other than
+  6.5's list: `## Names No Program Calls` (the coverage contract counts names a program cannot reach),
+  `## Constants by Group` (Q-6's "by group and never row by row"), and `## See Also` (5.4's nav rule that no
+  page is a dead end). `## Subpackages` is prose, as 6.5 asks, which is why 14 sections carry 12 tables.
+  178 one-line rows (202 lines of table markup), 207 links to 20 distinct library files (`tools/check-demos.py` verifies
+  every `blob/main/` and `tree/main/` target against the checkout, and the live page renders exactly 12
+  `<table>` elements, so the table count is a measured thing and not a claim).
+  - **Coverage, the coverage report this task says goes in a review note and not on a page:** 179 unique
+    non-constant exported names in the root package at `acf267d` (38 types, 25 funcs, 8 vars, 111 methods),
+    **all 179 on the page**, and all 14 constant groups claimed with the `Name*` token the gate looks for.
+    179 names across 178 rows because three families are deliberately one row each - the seven attribute
+    predicates, the five style getters, the seven names a `Tty` is made of once you have one (raw mode on and
+    off, a drain, a resize nudge, and the reader-writer-closer it embeds) - since a table that spends seven
+    rows on near-identical one-word predicates reads worse than one
+    row that says what they share.
+    The gate prints 182 because it counts a name once per bucket and `Size`, `Tty`, `Key` and `WindowSize`
+    are each a type and a method; that arithmetic is written down here so a later session does not "fix" the
+    two numbers into one. `ErrEventQFull` is on the page *because* it is declared at `errors.go:38` and
+    returned by nothing, which is a fact a reader can only use if the row exists.
+  - **The eleven names no program calls got their own section** rather than being left out of the count: the
+    interface holding three of them says outright that they are not part of the Screen API, so a page that
+    reached 100% by burying them in a footnote would be documenting a smaller library than the one a program
+    imports. `## Names No Program Calls` also says how the reachable two of them are reached, which is through
+    `Tty` and the event channel, not through the interface.
+  - **Budget, stated as a measurement and not as a pass.** 5.1 writes "1,000-1,400 words **+ tables**" for
+    this page, so the two halves are reported separately: 1,364 words outside the tables, which is inside,
+    and 2,687 words inside 202 lines of table markup, which is the "+ tables" the budget names. `tools/review-checklist.py`
+    prints 4,051 because its word count does not know that a table cell is a different kind of text; moving
+    that number would have meant dropping names or shrinking a "what it does" cell to two words, and both
+    trades destroy the page the gate demands. Q-3's own row predicted exactly this tension ("the
+    100%-symbol-coverage gate now concentrates the whole API into one page - the pkg.go.dev mirror tension is
+    now live"). *(4-5 h, ~5 h)*
+- T6.2 **Done (2026-10-25): every variable the library reads is on the page, and the precedence is stated per
+  knob because it is not one rule.** What the page is: `## How a Screen Decides` (the three moments - options
+  at construction, environment at open, then one conversation with the terminal that lasts at most a second),
+  `## The Nine Options` (9 rows, names in plain prose because the hub page owns them, Q-6), `## The Eight
+  Variables`, `## Other Variables the Reader Sets` (11 more), `## Which Setting Wins`, `## A Run Worth Copying`
+  (one `console` block, 9 lines, `demos/clipboard`, `demos/colors`, `demos/hello`), `## Common Pitfalls`
+  (6, including the two 6.6 names by name: `TCELL_NEGOTIATE=disable` and the escape delay), `## See Also`.
+  1,068 words outside the tables against 5.1's 700-1,100, and 1,532 counting the three tables 6.6 requires an
+  "environment/option table" to contain; 3 tables and 1 code block, rendering as 3 `<table>` and 1 `<pre>` on
+  the live page.
+  - **How the claims were established, because "read the source" is not a measurement.** A 40-line probe
+    program in a throwaway module (the snippet harness's own `go.mod` with `-replace` pointed at `../tcell`,
+    the same route S8.1 uses) opened a screen on `vt.NewMockTerm` and printed what it answered; a second probe
+    wrapped the mock in a `Tty` that recorded every byte the screen wrote, which is the only way to see the
+    alternate screen and the mouse, because no exported call reports either. Both ran under `env -i` across
+    some forty distinct settings, about sixty runs in all. Everything on the page is either one of those
+    printed lines or a file and line
+    number, and this record keeps the distinction for the three claims that rest on source alone: the
+    millisecond unit of the escape delay, the plan 9 size order, and the fallbacks that only run when a device
+    reports no size.
+  - **The three "never-documented vars" T6.2 tells this session to go read are documented, and two of them
+    are not what the framing implies.** `TCELL_ALTSCREEN` was measured on the wire: the emulator receives no
+    `?[?1049h` when the variable says `disable`, and it still receives it for any other value, including an
+    explicit instruction from the program to use the buffer. `TCELL_LINES` and `TCELL_COLS` are read by exactly
+    one file, the plan 9 console path `tty/tty_plan9.go:197-213`, where they beat `$LINES`/`$COLUMNS` and the
+    default is 24x80; on Linux and macOS they are no-ops, measured, because the device answers its own size.
+    Documenting them as general knobs would have been the second mistake of that pair - the first was
+    pretending they were undocumented rather than platform-local.
+  - **The guardrail Phase 5 designed and reverted is landed, as that record told T6.2 to land it:**
+    `tools/tcell-env-vars.txt`, 19 names with a reason after each, plus three checks in the audit that already
+    reads the library - a listed name is documented by a built page, a listed name is still read by the source,
+    and every name the source reads is listed. "Read by the source" excludes `_demos` and `_test.go`, which is
+    what keeps `$SHELL` (read at `_demos/mouse.go:139`, a program behind a build tag) out of a list whose rule
+    is what the library honors. All three checks were induced to fire and each names the file to fix; a missing
+    list exits 2 rather than skipping quietly. 20 names are read anywhere in the checkout, 19 of them by the
+    library: Phase 5's "18 of them a reader's knob" missed that `TERM_PROGRAM_VERSION` is a knob too
+    (`tscreen.go:1628`, `tscreen.go:1649`), and it is on the page.
+- T6.3 **Done (2026-10-25): the auditor is green, and it is now a gate in two places instead of a report.**
+  `tools/symbol-coverage.py --gate` prints `gate clean - 182 structural name(s) owned exactly once, 14 constant
+  group(s) claimed`, and `--gate` was added to the `symbols` step of `.github/workflows/qa.yml` (step 12, which
+  said "no coverage gate yet, PLAN.md 6.5" until this phase made the sentence false) and to the `symbols` entry
+  of `tools/review-checklist.py`'s GATES, so the one command a session starts with enforces what CI enforces.
+  The coverage report is in this record and on no page. `reader ... missing from pages: 56` is the expected
+  state and was checked rather than eyeballed: all 56 are constants (`Button*`, `CursorStyle*`,
+  `EncodingFallback*`, `Key0`-`Key9` and friends), and Q-6 documents constants by group.
+  - One thing the tool's own `env` audit had to be told: a name counts as documented only when a page puts it
+    in backticks, which is how `TCELL_` names were already counted. Two pages briefly satisfied that for the
+    same variable, and the fix was to un-backtick the *mentioning* page rather than to teach the tool about
+    ownership - `Function-Reference` now writes the RUNEWIDTH_EASTASIAN toggle in prose and `Terminal-Setup`
+    owns it (`27f32a0`).
+- T6.4 **Done (2026-10-25): four fences on the hub page, one of them run; one `console` block on this one.**
+  `Function-Reference.md:39` is a complete program marked `headless=yes`: `tools/make-samples.py` builds it,
+  links it, arms the vt emulator and runs it, requires a non-blank screen and an ESC to leave the event loop,
+  and reports `builds + links + runs headless` (step 11 in CI says the same). The other three are `mode=lib`
+  fragments (the event loop, the mouse flags, and a screen built on `vt.MockTerm` for a test) type-checked by
+  `go vet`, which is what a fragment a reader pastes into their own file needs. `Terminal-Setup` has no Go at
+  all and one measured shell transcript, which is Q-Ex's routing rule rather than an absence: the eight demos
+  are the examples, and 6.6 asks this page for a worked *example*, which is what the console block is. The
+  checklist's "page has no `go` fence yet" ASK therefore stands for `Terminal-Setup` on purpose and is answered
+  here, not silenced. Four commits, one per logical edit, all forward: `f0dc9c7` the hub page, `a39d988` the
+  setup page, `27f32a0` the one-variable markup fix, `f6e895b` the tooling. Published with `tools/publish.sh`,
+  which mirrored `20c2e6c` to the render wiki and pushed `f6e895b` to `origin`, and CI is green on it (run
+  `40237344498`, 11 QA steps, the symbols step now carrying the gate). *(0.5-1 h, ~1 h with the guardrail)*
+- Found, and it belongs to Phase 7 and to the F-1 package it will assemble:
+  1. **The precedence ladder the checklist asks for is not the library's rule, and the missing rung is the
+     middle one.** Measured: the environment wins for the alternate screen, the mouse, the keyboard protocol,
+     whether to negotiate, and the escape delay, because all five are read after the options are applied; the
+     option wins for the terminal name and the color count, because both are consulted only when no option
+     supplied them (`OptColors(256)` beats `NO_COLOR=1`, and `OptTerm("xterm-256color")` beats `TERM=vt100`,
+     both printed). There is no terminfo rung to sit between them, because v3 reads no terminal database.
+     `TCELL_NEGOTIATE=bogus` changes nothing and `auto` hands negotiation back over a program's insistence,
+     which is the reader's escape hatch and is on the page. Phase 5 predicted this answer ("measured per knob,
+     and the ordering is Terminal Setup's to publish") and the ordering is published; T7.1 still owes the ASK a
+     re-wording so it stops asking for a ladder v3 deleted.
+  2. **`Colors()` reports a number its own doc comment never mentions.** It answers 16777216 when the terminal
+     can take 24-bit (`tscreen.go:1358-1364`), 8/16/88/256 for the palettes, and 0 for monochrome, while
+     `screen.go:145-148` documents only the zero. And a terminal that answers the startup questions is assumed
+     to have color: `tscreen.go:539-540` turns a guessed 0 into 8 on a primary-attributes reply, which is why
+     `TERM=vt100` measured 8 on a terminal that replied and 0 for the same `TERM` with
+     `TCELL_NEGOTIATE=disable`. The hub page's row and this page both say the number; only the hub page
+     backticks the call.
+  3. **Two library doc comments describe API the code does not have** (F-1 candidates, prepared and not sent,
+     Q-2). `Screen.GetClipboard`'s comment says the contents come back "using an EventPaste with the Data()
+     field": the input path posts `NewEventClipboard` at `input.go:872`, `EventPaste` has no `Data` method,
+     and `demos/clipboard/clipboard.go:106` switches on `*tcell.EventClipboard`. `HideCursor`'s comment ends
+     mid-word at `screen.go:100` ("It's an alias for ShowCursor(-1, -1).sim"). Third and softer: `Colors`'
+     comment as in item 2. None of this is page content, and all of it is checkable in three greps.
+  4. **The list and the gate now track the library's default branch, on purpose.** A new exported root name
+     upstream, or a new variable the library starts reading, turns step 12 red: that is the failure the list
+     exists to make loud, since the alternative is what happened to `TCELL_ALTSCREEN`. The correct response is
+     to write the row or the list line, not to widen a gate (AGENTS says so about allow-lists already); T7.3's
+     maintenance note has to carry this sentence, because it is now the first thing a stranger's CI does to a
+     stranger after an upstream release.
+- Exit **met (2026-10-25, publish included per Q-15):** the criterion is "R3c met at hub level - provided
+  functionality documented by task and by symbol across the 6 built pages; topic pages explicitly listed as the
+  deferred remainder". By task: the hub page's fourteen sections are 6.5's eleven areas in 6.5's order plus
+  three the coverage contract and 5.4's nav rule force (reading content back is 6.5's own `## Reading content
+  back`; the extras are the names no program calls, the groups, and the nav list). By symbol: 179 of 179
+  structural names, owned once each, with the file that declares each one.
+  Environment: 8 of 8 `TCELL_*` and 19 of 19 reader knobs. Deferred remainder: `Screen-and-Rendering`,
+  `Styles-and-Color`, `Events-and-Input`, `Unicode-and-Encodings`, `Platforms`, `Migration-v2-to-v3` - the six
+  below, still not built and still not linked from anything.
 - Cut from this phase by Q-3 (backlog, do not build): `Screen-and-Rendering`, `Styles-and-Color`,
   `Events-and-Input`, `Unicode-and-Encodings`, `Platforms`, `Migration-v2-to-v3`.
 
@@ -1297,7 +1444,13 @@ three of them say what Phase 6 or Phase 7 must not write.
 - T7.4 Follow-up list for `../tcell` (F-1: README/TUTORIAL pointers to the wiki, fix the legacy
   `wikis/Gallery` URL, document the `TCELL_*` vars the source reads but no doc names - Q-6's audit
   counts 8, note the stale `mouse demo` claim, and list the 2 URL moves Q-11 made so a maintainer can
-  re-check the evidence and re-publish them upstream); **plus the `TUTORIAL.md` thin spots found reading
+  re-check the evidence and re-publish them upstream; **Phase 6 changes the shape of two of those**: the
+  wiki now documents all 19 environment names a reader can set, on `Terminal-Setup`, so the ask to upstream
+  is now "link the page" rather than "write the docs", and the page's own record of what each variable does
+  is measured rather than inferred, so a maintainer can re-run it; Phase 6's Found items 1-2 name the two
+  `Colors()` facts its own comment omits, and its item 3 the two comments that describe API the code
+  does not have: `GetClipboard` pointing at an `EventPaste` with a `Data()` field it does not have, and the
+  stray `.sim` at `screen.go:100`)); **plus the `TUTORIAL.md` thin spots found reading
   it end to end at T4.1** (no module setup or `go get`; the three event-reference sections sit before the
   section that creates the screen and the loop that reads them, so a beginner meets `EventResize` before
   `NewScreen`; its fragments use `log`/`os`/`fmt`/`color` with no import block, so pasting one into an
