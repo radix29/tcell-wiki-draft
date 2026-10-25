@@ -14,16 +14,24 @@ What this checks:
   discovery  the demos that actually exist in the checkout (authoritative list, refreshed each run),
              whether each has a _test.go, and the //go:build ignore status of the _demos/ files the
              Gallery note describes (PLAN.md 6.2);
+  _demos     whether each _demos/<file>.go still compiles when named directly (`go build
+             _demos/mouse.go`, which is what the library's own CI does) - because the Gallery note
+             tells a reader to do exactly that, and an earlier draft of this tool said the file had to
+             be copied out of the directory first, which was a guess. Measured whenever --build or
+             --markdown asks for a claim; a page that names a file that no longer builds is a failure.
   citations  every demos/<name> or .../tree/<branch>/demos/<name> reference a page makes resolves to
              a real demo - a wiki page linking demos/whatever is asserting that a stranger can run it;
   links      the URL form we link (default branch of the library repo) is detected, not guessed, via
              git ls-remote --symref;
   build      optional --build runs `go build ./demos/...` in the checkout, which is the cheapest
-             proof that "run this demo" is still true.
+             proof that "run this demo" is still true, and the per-file _demos check above.
 
 --markdown prints the paste-able Gallery block. Descriptions come from each demo's own doc comment;
 where a demo has none the line is emitted with a TODO marker, because inventing a description for
-someone else's program is exactly the kind of thing this project must not do.
+someone else's program is exactly the kind of thing this project must not do. The `_demos` note the
+block ends with is generated from the build measurement above, so the block never contradicts the
+checkout it was generated from (that is why --markdown measures too, and why a paste is a measurement
+and not a memory).
 
 Exit 0 = every citation resolves, 1 = a page cites a demo that does not exist (or a claim about
 _demos/ is wrong), 2 = environment (no checkout).
@@ -89,6 +97,43 @@ def discover(tcell: pathlib.Path, branch: str):
         tag = re.search(r"^//go:build\s+(\S+)", head, re.M)
         undemos.append({"name": f.name, "tag": tag.group(1) if tag else ""})
     return demos, undemos
+
+
+def _clean(text: str, limit: int = 90) -> str:
+    """One ASCII, markdown-safe clause from a compiler message (it is going on a public page)."""
+    text = re.sub(r"[`()*_]", "", text.strip().splitlines()[0] if text.strip() else "")
+    text = "".join(ch for ch in text if 32 <= ord(ch) < 127)
+    text = re.sub(r"\s+", " ", text).strip(" .,:;")
+    return text[:limit].strip()
+
+
+def build_undemos(tcell: pathlib.Path, undemos):
+    """{name without .go: '' or a verb-first reason} - does naming the file build it, as the note claims?
+
+    The go tool skips a directory beginning with '_' for package patterns, which is the whole point of
+    the name, but an explicit file argument is still a buildable program - the library proves this on
+    itself in .github/workflows/webasm.yml (`go build _demos/mouse.go`). So the claim worth measuring
+    is per file, and "needs no copy-out" is only half of it: a file that imports a module the checkout
+    does not require is a build error a reader meets, and a page should say so rather than be surprised.
+    """
+    out = {}
+    for u in undemos:
+        p = subprocess.run(["go", "build", "-o", "/dev/null", f"_demos/{u['name']}"],
+                           cwd=str(tcell), capture_output=True, text=True)
+        if p.returncode == 0:
+            out[u["name"][:-3]] = ""
+            continue
+        err = (p.stderr or p.stdout or "").strip()
+        m = re.search(r"no required module provides package (\S+)", err)
+        if m:
+            # The compiler writes "... package github.com/x/y; to add it:" - the trailing punctuation
+            # belongs to its sentence, not to the import path we are naming on a public page.
+            pkg = m.group(1).rstrip(';,."\'` ')
+            why = f"imports `{pkg}`, which the module does not require"
+        else:
+            why = f"fails to build: {_clean(err)}" if _clean(err) else "fails to build silently"
+        out[u["name"][:-3]] = why
+    return out
 
 
 def citations(pages):
@@ -163,7 +208,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="S8.2b tcell demo/link checker")
     ap.add_argument("pages", nargs="*", help="pages to scan (default: tools/pages.txt)")
     ap.add_argument("--tcell", default=os.environ.get("TCELL_DIR") or str((W.ROOT.parent / "tcell").resolve()))
-    ap.add_argument("--build", action="store_true", help="run `go build ./demos/...` in the checkout")
+    ap.add_argument("--build", action="store_true",
+                    help="run `go build ./demos/...`, and each _demos/*.go by name, in the checkout")
     ap.add_argument("--markdown", action="store_true", help="print the paste-able Gallery block")
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
@@ -195,6 +241,21 @@ def main() -> int:
             problems.append(f"_demos/{u['name']} has //go:build {u['tag'] or 'nothing'}, not ignore; "
                             "PLAN.md 6.2 wants the Gallery note to say 'ignore'")
 
+    # The _demos build check is the evidence behind the note the Gallery block ends with, so it runs
+    # whenever a run is asked to make that claim (--build asks for build facts, --markdown prints the
+    # sentence). It costs about five seconds warm, which is why the plain citation run does not pay it.
+    underbuild = {}
+    if args.build or args.markdown:
+        underbuild = build_undemos(tcell, undemos)
+        failed = {n: why for n, why in underbuild.items() if why}
+        if failed:
+            detail = "; ".join(f"{n}.go {why}" for n, why in sorted(failed.items()))
+            print(f"_demos     {len(underbuild) - len(failed)} of {len(underbuild)} file(s) build by "
+                  f"naming them; {len(failed)} {'does' if len(failed) == 1 else 'do'} not as shipped "
+                  f"({detail})")
+        else:
+            print(f"_demos     all {len(underbuild)} file(s) build by naming them "
+                  "(go build _demos/<name>.go)")
     pages = W.page_paths(args.pages or None)
     missing = [p for p in pages if not p.exists()]
     if missing:
@@ -221,6 +282,11 @@ def main() -> int:
             if stem not in under:
                 problems.append(f"{c['page']}:{c['line']}: cites _demos/{c['name']} which the checkout "
                                 f"does not have ({', '.join(sorted(under))})")
+                continue
+            if underbuild and c["name"] in underbuild and underbuild[c["name"]]:
+                problems.append(f"{c['page']}:{c['line']}: names _demos/{c['name']}, which does not "
+                                f"build as shipped ({underbuild[c['name']]}) - a page may tell a reader "
+                                "to run a program the checkout cannot compile")
             continue
         if c["name"] not in names:
             problems.append(f"{c['page']}:{c['line']}: cites demos/{c['name']}, but the library ships "
@@ -242,10 +308,15 @@ def main() -> int:
             print("build     go build ./demos/... clean")
 
     if args.markdown:
+        # The provenance note goes *outside* the block, because the block is what a person pastes: an
+        # HTML comment on a wiki page breaks PLAN.md 7 ("no HTML tags") and would name this repo's
+        # tooling to a reader of the wiki, which route C forbids (5.5). A block that cannot be pasted
+        # without editing it is a broken generator, so the warning is printed for the human instead.
+        print("\nnote: the block between the ```markdown markers is paste-able as it stands; the names, "
+              "URLs and run commands are facts from the checkout, every TODO(desc) line needs a human "
+              "sentence written from the program, and the `_demos` paragraph closing the block is the "
+              "build measurement taken above. Do not hand-edit the block - re-run this tool.")
         print("\n```markdown")
-        print("<!-- GENERATED by tools/check-demos.py --markdown from the library checkout: the names, "
-              "URLs and run commands are facts, any TODO(desc) line needs a human sentence. Do not "
-              "hand-edit this block - re-run the tool. -->")
         print("## Demos in the Repository\n")
         print(f"Each program lives in [demos]({REPO}/tree/{branch}/demos) and can be run straight from a "
               "clone of the library:\n")
@@ -265,9 +336,27 @@ def main() -> int:
             desc = re.sub(r"\s+", " ", desc)
             print(f"- [{d['name']}]({d['url']}) - {desc}")
         if undemos:
-            print(f"\nThe `_demos/` directory ({', '.join(sorted(u['name'] for u in undemos))}) holds "
-                  "`//go:build ignore` programs: they are not part of the module and run only after "
-                  "copying the file out, so the wiki does not list them as runnable demos.")
+            listed = ", ".join(sorted(u["name"] for u in undemos))
+            runnable = sorted(n for n, why in underbuild.items() if not why)
+            note = (f"\nThe `_demos/` directory ({listed}) holds `//go:build ignore` programs: they are "
+                    "not part of the module, so nothing above builds or runs them")
+            if not underbuild:
+                # Not measured (the caller asked for no build check), so the note says nothing about
+                # running them - an unmeasured promise about someone else's build is the thing this
+                # tool exists to stop.
+                note += ", and this run did not check whether any of them compiles"
+            elif runnable:
+                note += f"; to run one, name the file: `go run _demos/{runnable[0]}.go`."
+            else:
+                note += (", and none of them compiles on this checkout, so the wiki lists none of them "
+                         "as runnable from here")
+            failed = {n: why for n, why in underbuild.items() if why}
+            if failed:
+                # One shape for one file and for several: each reason is already a clause with the file
+                # name as its subject, so there is no singular/plural sentence to get wrong.
+                note += (" As shipped, " + "; ".join(f"`{n}.go` {why}"
+                                                     for n, why in sorted(failed.items())) + ".")
+            print(note)
         print("```")
 
     for p in problems:
