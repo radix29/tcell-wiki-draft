@@ -27,6 +27,7 @@ gitignore.
 | ` ```go mode=lib ` | a fragment; type-checked, never linked. A fragment without a `package` clause gets `package main` prepended so a page can show a bare function | `go vet ./...` |
 | ` ```go mode=skip ` | not Go at all: terminal transcripts, v2-vs-v3 sketches, pseudo-code | nothing (that is the point) |
 | ` ```go headless=yes ` | `mode=program` only: after it links, **run it** on the vt emulator (S8.6) | `go test` with `vt.NewMockTerm` + `tcell.ShimScreen`, asserting a non-blank screen and an ESC exit |
+| ` ```console ` | not Go and not extracted at all: raw shell with `$` prompts, which PLAN 7 forbids inside a ` ```go ` fence | `check-style.py`'s `fence-marker` rule only; live on `Home.md` since Phase 2 (the `go get` line) and on `Gallery.md` since Phase 3 (the clone-and-run block) |
 
 `tools/check-style.py` rejects unknown markers, so `mode=libe` or `headless=maybe` fails at commit time
 instead of being silently skipped, and `mode=lib headless=yes` is a label error because a fragment has

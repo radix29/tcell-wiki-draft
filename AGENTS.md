@@ -67,10 +67,11 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 
 ```bash
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
-git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 3
-                                                            # lines (2 URL moves Q-11, 1 addition Q-13)
-                                                            # plus the Phase 2 Home rewrite; the 4 stubs
-                                                            # are additions, not diffs
+git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 24
+                                                            # insertions / 3 deletions (2 URL moves Q-11,
+                                                            # 1 addition Q-13, 1 reword Q-7, and the new
+                                                            # `## Demos in the Repository` section), plus
+                                                            # the Phase 2 Home rewrite
 git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
 ```
 
@@ -126,7 +127,14 @@ Categories are `##` sections in this order; add entries to the end of the matchi
 alphabetically, and never create a one-off section for a single project:
 
 `## Demonstrations` · `## Editors` · `## UI Frameworks` · `## Games` ·
-`## Productivity & Utilities` · `## Miscellaneous`
+`## Productivity & Utilities` · `## Miscellaneous` · `## Demos in the Repository`
+
+The seventh is PLAN 6.2's one sanctioned new section and it is **generated, not curated**: do not add a
+project to it, do not reword its lines by hand, and do not add another section like it. A new `##` on
+this page is approved only by a record in `tools/gallery-sections.txt` (heading, evidence), which is what
+lets `tools/check-gallery.py` treat the section's entries as outside the additions budget while still
+shape-checking every line of it; the checker prints the exemption on every run, and a record whose section
+has disappeared from the page is an error. A second new section would be a plan change, not an edit.
 
 Entry format — exactly this shape, one line each:
 
@@ -161,12 +169,30 @@ Entry format — exactly this shape, one line each:
   consolidating an existing entry over adding a near-duplicate.
 - Don't add dates, star counts, version/compatibility notes, or "(new)" markers to entries — no
   entry carries one, and they rot immediately since nothing here is regenerated.
-- The first `## Demonstrations` bullet has no link (`mouse demo - included mouse test ...`). It is
-  legacy, from when Tcell shipped a mouse test (the old screenshot URLs are from 2015); the current
-  `../tcell` checkout keeps that code only as `_demos/mouse.go` under `//go:build ignore`, and
-  `../tcell/demos` has no mouse demo. Per Q-7 it stays, is never given an invented URL, and is reworded
-  only to stop claiming a shipped demo - and it stays the un-numbered 49th bullet so Appendix B's
-  migration contract keeps holding.
+- `## Demos in the Repository` lists the 8 programs in `../tcell/demos` with their `go run ./demos/<name>`
+  commands, six descriptions written from reading the programs and two from the library's own doc comments,
+  plus the `_demos/` note that names a file instead of promising a copy-out (`go run _demos/mouse.go`;
+  `sixel.go` needs a module the checkout does not require). Regenerate the section with
+  `tools/check-demos.py --markdown` and paste what sits between the markers unedited — it measures the
+  demos, the library's default branch, the `_demos` build status and the sixel caveat, so a hand-edited
+  line is a claim the next run silently drops. Six of the eight descriptions are this draft's prose and may
+  be rewritten from the source; run `--verbose` first, because a description the library starts shipping as
+  a doc comment comes from the library from then on.
+- The migration contract compares **(display name, entry URL)** pairs, so a *media* URL inside an entry is
+  not policed by `tools/check-gallery.py` at all — a screenshot link can change with no check noticing.
+  `tools/check-links.py` is the gate that probes those URLs (all 5 media URLs were verified to a content
+  type or a page title on 2026-10-24, and a YouTube 200 is not proof a video plays, so read the title). A
+  dead media URL gets reported (D-6/Q-7), not moved: unlike a dead project host it has no home to move to
+  (Q-11), and the two 2015 blogspot images serve byte-identical `image/png` over `https:` if a maintainer
+  ever wants that.
+- The first `## Demonstrations` bullet has no link (`mouse demo - the mouse test that shipped with _Tcell_
+  in 2015 ...; mouse support is now enabled per program with EnableMouse and MouseFlags`). It is legacy,
+  from when Tcell shipped a mouse test (the old screenshot URLs are from 2015); the current `../tcell`
+  checkout keeps that code only as `_demos/mouse.go` under `//go:build ignore`, and `../tcell/demos` has no
+  mouse demo. Per Q-7 it stays, is never given an invented URL, and was reworded in Phase 3 only to stop
+  claiming a shipped demo - and it stays the un-numbered 49th bullet so Appendix B's migration contract
+  keeps holding. Its two API names are deliberately **not** in backticks: Q-6 gives a symbol to exactly one
+  page, and `EnableMouse`/`MouseFlags` belong to `Function-Reference`'s Mouse table.
 
 # Markdown Conventions
 
@@ -220,9 +246,12 @@ tools/check-style.py        S8.5  house style (PLAN.md 7); --all includes non-pa
 tools/check-links.py        S8.2  internal slugs/anchors, then external URLs via curl; --offline
 tools/check-gallery.py      S8.4  Gallery migration is lossless vs baseline/ (49 bullets, append-only)
 tools/gallery-moves.txt         recorded URL moves (Q-11): old, new, evidence; stale records fail
-tools/check-demos.py        S8.2b the demos/TUTORIAL links a page makes resolve; --markdown, --build
+tools/gallery-sections.txt      the one approved new `##` on Gallery (PLAN 6.2): heading, evidence
+tools/check-demos.py        S8.2b the demos/TUTORIAL links a page makes resolve; --markdown prints the
+                              Gallery block, --build also builds each `_demos` file a page names
 tools/make-samples.py       S8.1  every go fence compiles; headless=yes also runs it (S8.6)
-tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit
+tools/symbol-coverage.py    S8.3  invented API, coverage table, undocumented TCELL_* audit; a backticked
+                              path like `vt/emulate.go` is a path, not an API claim
 tools/apiface/          S8.3  the surface dumper (go/parser, no downloads) - run from its own dir
 tools/wikilib.py              shared stdlib helpers: manifest, fences, links, ASCII, prose words
 tools/gallery-additions.txt     approved entries the baseline lacks (Q-13): name, URL, evidence
