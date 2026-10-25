@@ -108,7 +108,7 @@ Rules that must be designed around (each is marked with how it is settled):
 | C6 | No CI in wiki repos | verification is scripts + manual checklists run locally (S8) |
 | C7 | Rewriting published history is not possible to unwind | one logical change per commit, wiki-style messages (`Created X (markdown)`, `Updated X (markdown)`), no force-push ever |
 | C8 | Existing deep links matter: `/wiki/Home`, `/wiki/Gallery`, and the README pointer | keep `Home` and `Gallery` file names exactly; never rename them |
-| C9 | Mermaid support in the wiki renderer is *assumed* but unproven here | probe task T5.1 in **our own draft wiki** before writing Architecture diagrams; fallback is ASCII art in fenced blocks. Q-0c removed the old "push a scratch page to the live official wiki" step entirely |
+| C9 | **Measured, no longer assumed (T5.1, 2026-10-25): Mermaid renders in GitHub's wiki renderer.** A `mermaid` fence on a published draft-wiki page arrives as a `js-render-needs-enrichment` container with `data-type="mermaid"` that GitHub draws with its own bundle, around a `<pre lang="mermaid">` holding the source | Either diagram format may be used; ASCII in a `text` fence is still always acceptable, and the source GitHub leaves behind is why a diagram must not be the only copy of a fact (a no-JS read, a text-mode browser and the raw `.md` an upstream paste hands a maintainer all show text). Evidence and a one-command re-check are in Phase 5's T5.1 record. Q-0c removed the old "push a scratch page to the live official wiki" step, and the probe stayed on ours |
 | C10 | Hotlinked third-party images (2 blogspot URLs from 2015) can rot | verify status, keep URLs (do not silently drop content), and raise hosting option as D-6 |
 
 ---
@@ -373,7 +373,11 @@ no `Prev/Up/Next` footers, no links to deferred pages).
   `screen.go`, `tscreen.go`, `cell.go`, `style.go`, `event.go`, `key.go`, `mouse.go`, `runes.go`,
   `vt/vt.go`, `vt/emulate.go`, `tty/tty_*.go`, `color/fit.go`).
 - Diagrams (3-4): layer stack, frame/damage lifecycle sequence, input pipeline, backend/platform
-  matrix. Mermaid if T6.1 proves it renders; otherwise ASCII in fenced blocks (always acceptable).
+  matrix. **Settled by T5.1 on 2026-10-25, so this is a choice and not a capability: Mermaid renders on
+  GitHub wikis** (measured on our own draft wiki, `flowchart` and `sequenceDiagram` both), and ASCII in a
+  `text` fence needed no probe because a `text` fence is what it always was - a code block. Read T5.1's
+  record before drawing anything: a `mermaid` fence keeps its source visible to a reader with no JS, and
+  a marked diagram fence (`mermaid mode=skip`) is accepted by `check-style.py` but was never measured.
 - Sources: LOC/package inventory above + reading the named files. **No API opinions** - describe
   what the code does, cite file names so pages stay fixable when code moves.
 
@@ -452,9 +456,11 @@ a page a reader has to be told about, and because a page may not link a file tha
 - Every page: one H1 max (rendered page title already duplicates it - follow `Gallery.md`'s
   precedent of a single H1), blank line around lists/headings, one bullet per line, no wrapping
   (keeps wiki diffs one-line), no HTML tags, no `*emphasis_` mixing.
-- Images: **no files in the page set (Q-0c pre-answers D-5).** Diagrams are Mermaid (if the T5.1 probe
-  renders it in our draft wiki) or ASCII in fenced blocks, because a page must survive being pasted into
-  someone else's wiki on its own (5.5). Third-party screenshots stay hotlinked where they already exist.
+- Images: **no files in the page set (Q-0c pre-answers D-5).** Diagrams are Mermaid (**T5.1 proved it
+  renders, on our own draft wiki, 2026-10-25**) or ASCII in fenced blocks, because a page must survive
+  being pasted into someone else's wiki on its own (5.5) - and a `mermaid` fence pasted as text still
+  reads as the diagram's source, which is the property that makes it safe here. Third-party screenshots
+  stay hotlinked where they already exist.
 - Code: `gofmt`-clean, `go` fence tag, tested (S8.1), no license headers in snippets, imports shown.
 - Never edit a published page by rewriting history; corrections are new commits.
 - `PLAN.md` / `AGENTS.md` / `README.md` are tracked in the **draft** repo but never mirrored into the
@@ -608,6 +614,9 @@ larger, not safer.
   written for `images/foo.png` references, so before T5.4 draws anything the CHECK has to ignore fenced
   blocks and fence lines, and be tested both ways like every other CHECK. Stub text works around it for
   now by not naming the diagram format at all, which is why no stub mentions diagrams in prose.
+  **[Fixed in T5.1 (2026-10-25, commit `c46369f`): the CHECK tests *references* outside fences and never
+  the word `mermaid`; the shapes it was tested against, and the probe page that needed the fix to pass at
+  all, are recorded in Phase 5.]**
 - Exit **partly met (2026-10-24):** zero broken internal links is met - 7 internal links, every one
   pointing at a manifest slug, checked by `check-links.py` and by `check-style.py`'s `link-md` /
   `self-contained` rules. "`Home` nav + prototype sidebar both render sensibly in the draft wiki" and
@@ -1024,8 +1033,77 @@ AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0
   the way it does, which is the question this page deliberately did not answer.
 
 ### Phase 5 - Architecture (8-10 h)
-- T5.1 Renderer probe: confirm mermaid in **our own draft wiki** (push to the mirror, look at it, no
-  official wiki involved) or fall back to ASCII for all diagrams. *(0.5-1 h)*
+
+**Status: T5.1 done and published (2026-10-25); T5.2-T5.6 not started.** The renderer probe asked whether
+GitHub's wiki renderer draws a Mermaid fence or prints its source, and it is answered by measurement, so
+C9 is closed, the risk row is closed, and `Architecture` gets to choose its diagram format on legibility
+instead of on guesswork. Nothing else moved: `Architecture.md` is byte-identical to the Phase 1 stub
+(`git show 69bbe7b:Architecture.md` is what the file holds today) and the probe block that carried the
+measurement is page history now and gone from the page.
+
+- T5.1 **Done (2026-10-25): Mermaid renders in GitHub's wiki renderer, so no fallback was needed.** The
+  question was only answerable by publishing, so that is what happened, on our own wiki, exactly as Q-0c
+  moved it: `Architecture.md` carried a temporary `## Renderer Probe` section - two `mermaid` fences (a
+  `flowchart LR` of the draw -> screen -> damage diff -> backend -> terminal -> parser -> events loop and
+  a `sequenceDiagram` of the same, because those are the two shapes T5.4 names) plus one `text` fence
+  holding the same loop as ASCII - published as page commit `ad8ff70` at render HEAD `5e5fecc`, read, then
+  removed by `18394cb` at render HEAD `186ab48`. The measurement is the HTML an anonymous reader gets, read
+  three times with `curl -sS` over `https:` and no cookie and counting `data-type="mermaid"`: **0** on
+  `Architecture` at render `95fd1d6` before the probe, **2** with it published, **0** again after it was
+  removed - the page went back to the stub a reader sees today, which is also the check that the removal
+  published.
+  - **Both `mermaid` fences became diagrams, 2 of 2**, each rendered as
+    `<section class="js-render-needs-enrichment render-needs-enrichment position-relative"
+    data-host="https://viewscreen.githubusercontent.com"
+    data-src="https://viewscreen.githubusercontent.com/markdown/mermaid?..."
+    data-type="mermaid" aria-label="mermaid rendered output container">`. The fence is recognised by
+    name, `flowchart` and `sequenceDiagram` take the same path, and nothing about either block looks like
+    the markup an unknown language gets.
+  - **The failure mode is text, not a blank box.** Inside that section GitHub leaves
+    `<pre lang="mermaid" aria-label="Raw mermaid code">` holding the diagram source in a
+    `render-plaintext-hidden` div, so a reader with JS off, a text-mode browser, and whoever reads the raw
+    `.md` - which is what a wiki clone and the text of one page pasted into the upstream web editor are -
+    all still read the diagram's own words. That is the sentence T5.4 needs: a picture is available, and
+    the picture is never the only copy of the fact.
+  - **The control came from the same renderer on the same wiki at render `95fd1d6`, with no probe
+    required:** `Getting-Started`'s `console` fences arrive there as
+    `<div class="highlight highlight-text-shell-session">` and the probe's own `text` fence as
+    `<div class="snippet-clipboard-content ...><pre>` - ordinary code blocks, no enrichment container. A
+    fence type gets `js-render-needs-enrichment` only when the platform knows what to draw with it, which
+    is what makes the mermaid markup an answer and not a curiosity.
+  - **The drawing side is public.** An anonymous `GET` of that `data-src` answers `200 text/html` with a
+    document loading `/static/assets/mermaid-*.css` and `/static/assets/mermaidMarkdown-*.js` (1.8 MB,
+    containing the mermaid bundle itself: `initialize`, `startOnLoad`, `securityLevel`, and a `message`
+    listener, which is how the source in `data-json` reaches it). No session, no token, nothing upstream.
+  - **The API path is a different pipeline, which is why "GitHub supports Mermaid" was never an
+    answer.** `POST /markdown` with `mode=gfm` returns the same fence as
+    `<div class="highlight highlight-source-mermaid">` - syntax-highlighted source, no diagram - and the
+    `POST` variant of the wiki's viewscreen URL answers `404 page not found`. C9 was right that only a
+    wiki page measures a wiki.
+  - **CI was green with the probe live on the page** (`qa` run `40189318942`, 21/21 steps on `ad8ff70`),
+    and it could only be green because this task also landed the CHECK fix Phase 1's "Found" row
+    scheduled from here: `tools/review-checklist.py` now tests *references* to a repo-hosted file outside
+    fences - a relative image file, or an `images/`-style repo directory - with `scheme://...` URLs
+    blanked first so Gallery's two blogspot screenshot hotlinks stay clean, instead of the word `mermaid`
+    appearing anywhere in the file. Tested both ways: the probe page (two `mermaid` fences, the word in
+    prose, `images/` absent) passes; a page holding `![architecture diagram](images/architecture.png)`
+    and `docs/diagrams/flows.d2` fails once naming both; and a `console` transcript that runs
+    `ls images/` passes, because fence lines are out of `body` and that is what the fix *is*. The seven
+    pages behave identically across it - `review-checklist.py --offline` was clean before the edit and
+    clean after it - so the fix removes a false failure without loosening anything real.
+  - **What stayed unmeasured, said out loud so T5.4 does not inherit it as a belief:** the mobile view;
+    the official wiki, which is the same platform but not the same measurement and Q-2 keeps untouched;
+    and a `mermaid` fence carrying a snippet marker, which `check-style.py` accepts today (measured: a
+    ` ```mermaid mode=skip ` fence lints clean, because the marker vocabulary is shared across fence tags)
+    while nobody has checked that the renderer still recognises a fence whose info string is not exactly
+    `mermaid`. If T5.4 wants a marker on a diagram, it measures first.
+  - Cost and cost of doing business: ~0.75 h of the 0.5-1 h, and `Architecture.md`'s published history now
+    contains one `Updated Architecture (markdown)` adding 37 lines of scaffolding and one removing them,
+    which is what forward-only history on a rendered page costs (AGENTS: never rewrite a mirrored commit;
+    Appendix D wants page history to read as a changelog, and this is the one place where that reads as
+    noise). Nothing in the page set, the tools or `tools/pages.txt` still mentions the probe, and the
+    re-check is one command whenever a real diagram ships:
+    `curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/<Page> | grep -c 'data-type="mermaid"'`.
 - T5.2 Read the named source files; produce the "where to look" file->responsibility table first
   (it is the spine of the page). *(2-3 h)*
 - T5.3 Draft the sections in S6.4 with file citations. *(3-4 h)*
@@ -1102,7 +1180,7 @@ applies beyond the page budgets in S5.1.
 |---|---|---|
 | Duplication drift: wiki vs repo `README`/`TUTORIAL`/`CHANGES*` | stale, contradictory docs | **Settled by Q-4, not merely mitigated: the wiki may not restate repo prose**, S5.4 names one owner per topic, `check-demos.py`/`check-style.py` keep the links real; F-1 (repo-side pointers to the wiki) is now the only remaining direction of travel |
 | Documenting v2 habits as v3 (PollEvent, StyleNormal, Attribute, SimulationScreen, `Color` consts) | readers write broken code | banned-symbol grep (T4.4); all snippets through the compile harness (S8.1) |
-| Mermaid support in the wiki renderer fails (C9) | rework of all diagrams | T5.1 probe in our own draft wiki before any diagram is written; fallback is ASCII art in fenced blocks |
+| ~~Mermaid support in the wiki renderer fails (C9)~~ **closed by T5.1 on 2026-10-25: it renders** (measured on the published draft wiki, `flowchart` and `sequenceDiagram`, anonymous) | was: rework of all diagrams | nothing to mitigate; the residue is the small part that stayed unmeasured - the mobile view and a `mermaid` fence carrying a snippet marker, both named in T5.1's record |
 | A publish mistake goes live instantly | public misinformation | per-page review gate; baseline copies (T0.3); forward-fix commits only (C7) |
 | Loss of a gallery entry during migration (49 bullets, hand-edited) | visible content loss | S8.4 machine diff of bullets + URL sets before publishing |
 | Dead/legacy hotlinked screenshots (2 blogspot URLs) | broken images on the showcase | verify, report, propose D-6/Q-7; do not silently drop. (Q-11 covers *project* URLs, which have a home to move to; a 2015 screenshot does not) |

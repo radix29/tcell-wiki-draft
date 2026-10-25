@@ -224,11 +224,19 @@ Entry format — exactly this shape, one line each:
   `.textile` also render on GitHub wikis but none is used here). **A page may not reference anything
   outside itself:** no repo-hosted `images/`, no `tools/` links, no relative `docs/`
   paths, because upstream receives only the text of one `.md` file - diagrams are Mermaid or ASCII in
-  fenced blocks (D-5). Heads-up before drawing one: `tools/review-checklist.py` currently FAILs any page
-  whose text contains the word `mermaid` anywhere, fenced blocks included, so a Mermaid diagram cannot
-  pass S8.7 until that CHECK is taught to skip fences (`PLAN.md` Phase 1's "Found" row, fix it in T5.1);
-  `text` fences work today. `_Sidebar.md`/`_Footer.md` apply to *every* page of whichever wiki renders
-  them: in the draft `_Sidebar.md` is the droppable Phase 1 prototype, listed in `tools/pages.txt`, and
+  fenced blocks (D-5) — and **T5.1 measured both formats on our own wiki on 2026-10-25**: a `mermaid`
+  fence becomes an enrichment container GitHub draws with its own bundle (anonymously, on
+  `viewscreen.githubusercontent.com`), leaving the diagram's own source in a `<pre lang="mermaid">` behind
+  it, so a browser gets a picture while a no-JS, text-mode or raw-`.md` read — which is what an upstream
+  paste hands a maintainer — gets the same words as text. A diagram may explain a fact; it must not be the
+  only copy of it. A `text` fence is still exactly a code block. The CHECK that Phase 1 flagged from here
+  is fixed (`c46369f`): `tools/review-checklist.py` no longer fails the *word* `mermaid`, it fails a
+  *reference* to a repo-hosted file outside a fence — `images/arch.png`, `docs/notes.md` — after blanking
+  `scheme://` URLs, which keeps Gallery's 2015 hotlinks clean and lets a `console` transcript name a path
+  it does not own. One shape measured and deliberately not used: `check-style.py` accepts a snippet marker
+  on a diagram fence (`mermaid mode=skip` lints clean) and nobody has checked that the renderer still
+  recognises a fence whose info string is longer than exactly `mermaid`. `_Sidebar.md`/`_Footer.md` apply
+  to *every* page of whichever wiki renders them: in the draft `_Sidebar.md` is the droppable Phase 1 prototype, listed in `tools/pages.txt`, and
   it is never in an upstream proposal (D-1). Non-page directories (`tools/`, `samples/`) are fine - the
   manifest keeps them out of the render.
 - Code fences on a page carry markers, and `tools/check-style.py` rejects invented ones: a bare `go`
@@ -298,6 +306,12 @@ awk '/^## /{s=$0} /^- \[/{last[s]=$0} END{for (k in last) print k" -> "last[k]}'
 
 # The raw page diff you are about to publish.
 git diff -- Home.md Gallery.md
+
+# Does a published page really carry a rendered Mermaid diagram? T5.1 measured this way on a probe block
+# that is since removed; once T5.4 ships a real diagram this is the re-check. 0 means either the page has
+# no diagram or the renderer stopped recognising the fence. Anonymous curl is the point: the enrichment
+# container is in the server HTML a logged-out reader gets, not something a session adds.
+curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Architecture | grep -c 'data-type="mermaid"'
 ```
 
 If the `curl` check inside `check-links.py` fails because of sandbox/network restrictions it says so in
