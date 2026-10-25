@@ -70,3 +70,23 @@ Here's a gallery of applications and libraries that were built using tcell:
 
 - [govisor](https://github.com/gdamore/govisor) - service management UI ([screenshot](http://2.bp.blogspot.com/--OsvnfzSNow/Vf7aqMw3zXI/AAAAAAAAARo/uOMtOvw4Sbg/s1600/Screen%2BShot%2B2015-09-20%2Bat%2B9.08.41%2BAM.png))
 
+## Demos in the Repository
+
+Each program lives in [demos](https://github.com/gdamore/tcell/tree/main/demos) and can be run straight from a clone of the library:
+
+```console
+$ git clone https://github.com/gdamore/tcell
+$ cd tcell
+$ go run ./demos/hello
+```
+
+- [beep](https://github.com/gdamore/tcell/tree/main/demos/beep) - rings the terminal bell every three seconds, and on the B key
+- [boxes](https://github.com/gdamore/tcell/tree/main/demos/boxes) - draws randomly placed colored boxes and reports the average drawing time per box
+- [clipboard](https://github.com/gdamore/tcell/tree/main/demos/clipboard) - demonstrates access to the clipboard
+- [colors](https://github.com/gdamore/tcell/tree/main/demos/colors) - cycles the background of a box through the RGB color cube
+- [cursors](https://github.com/gdamore/tcell/tree/main/demos/cursors) - sets the cursor style and color from the 0 to 6 keys
+- [hello](https://github.com/gdamore/tcell/tree/main/demos/hello) - just prints "Hello, World!"
+- [styles](https://github.com/gdamore/tcell/tree/main/demos/styles) - prints one line per text style, including the underline styles and a hyperlink
+- [unicode](https://github.com/gdamore/tcell/tree/main/demos/unicode) - prints a month name in several scripts, plus combining marks, emoji and double-wide characters
+
+The `_demos/` directory (mouse.go, notify.go, setsize.go, showcolor.go, sixel.go, stress.go) holds `//go:build ignore` programs: they are not part of the module, so nothing above builds or runs them; to run one, name the file: `go run _demos/mouse.go`. As shipped, `sixel.go` imports `github.com/mattn/go-sixel`, which the module does not require.
