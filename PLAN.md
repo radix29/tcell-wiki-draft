@@ -1,12 +1,13 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-4 built,
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-5 built,
 green and **published** - Q-15 removed the ask, so the preview at `radix29/tcell-wiki-draft/wiki` renders
 all 7 manifest pages including Phase 2's `Home.md` rewrite, Phase 3's `Gallery.md` (all 49 baseline
 entries intact, one recorded addition, the sanctioned `## Demos in the Repository` section, and every URL
-on the page answering 200) and Phase 4's `Getting-Started.md` (1,134 prose words, five authored sections,
-two measured `console` blocks, zero lines of Go, and 14 external targets all answering 200); Phases 5-7
-not started
+on the page answering 200), Phase 4's `Getting-Started.md` (1,134 prose words, five authored sections,
+two measured `console` blocks, zero lines of Go, and 14 external targets all answering 200) and Phase 5's
+`Architecture.md` (1,298 prose words, eleven sections, three Mermaid diagrams measured rendering on the
+live page, 28 source files cited, zero backticked symbols); Phases 6-7 not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -1034,12 +1035,15 @@ AGENTS states as a session exit: `git rev-list --count origin/master..HEAD` is 0
 
 ### Phase 5 - Architecture (8-10 h)
 
-**Status: T5.1 done and published (2026-10-25); T5.2-T5.6 not started.** The renderer probe asked whether
-GitHub's wiki renderer draws a Mermaid fence or prints its source, and it is answered by measurement, so
-C9 is closed, the risk row is closed, and `Architecture` gets to choose its diagram format on legibility
-instead of on guesswork. Nothing else moved: `Architecture.md` is byte-identical to the Phase 1 stub
-(`git show 69bbe7b:Architecture.md` is what the file holds today) and the probe block that carried the
-measurement is page history now and gone from the page.
+**Status: done and published (2026-10-25).** `Architecture.md` is written: eleven `##` sections in 6.4's
+order and on 6.4's topics, 1,298 prose words inside 5.1's 900-1,300, three Mermaid diagrams counted
+rendering on the live page, 28 distinct source files cited, no `go` fence at all (its code is three diagrams
+and two tables), and every claim
+read out of `../tcell` at `acf267d` during T5.5. The renderer question is still what T5.1 answered, and
+T5.1 is unchanged below; what changed is that the answer got used, so the page's diagrams are drawn from a
+diagram language and the page itself says so in its own body instead of in a probe section that had to be
+removed later. Three findings this phase made are recorded under Found at the end, and two of them say what
+Phase 6 must not write.
 
 - T5.1 **Done (2026-10-25): Mermaid renders in GitHub's wiki renderer, so no fallback was needed.** The
   question was only answerable by publishing, so that is what happened, on our own wiki, exactly as Q-0c
@@ -1104,14 +1108,162 @@ measurement is page history now and gone from the page.
     noise). Nothing in the page set, the tools or `tools/pages.txt` still mentions the probe, and the
     re-check is one command whenever a real diagram ships:
     `curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/<Page> | grep -c 'data-type="mermaid"'`.
-- T5.2 Read the named source files; produce the "where to look" file->responsibility table first
-  (it is the spine of the page). *(2-3 h)*
-- T5.3 Draft the sections in S6.4 with file citations. *(3-4 h)*
-- T5.4 Diagrams (3-4) in the chosen format. *(1.5 h)*
-- T5.5 Fact-check pass: each claim cites a file or type name; flag anything speculative or drop it. *(1 h)*
-- T5.6 Review + publish: `Created Architecture (markdown)`. *(0.5 h)*
-- Exit: R3b met - Architecture page covers layers, backends, input/output pipelines, keyboard
-  protocols, Unicode/width, concurrency, with pointers into the source tree.
+- T5.2 **Done (2026-10-25): the table was written first and it is the spine, as this task said.** It ships
+  as `## Where to Look in the Source`, 11 rows covering 11 of the 12 files 6.4 names (`vt/vt.go` is a package
+  doc file with no responsibility a row could own): 6.4's own list, plus `tscreen_unix.go` (the row that proves
+  "a platform contributes only the Tty it hands over"), `input.go`, `encoding.go`, `charset_unix.go` and
+  `gpm_linux.go` (the one input path that is not an escape sequence at all). Read end to end or near it:
+  `screen.go`, `tscreen.go`, `cell.go`, `input.go`, `style.go`, `event.go`, `key.go`, `mouse.go`,
+  `resize.go`, `paste.go`, `runes.go`, `eastasian.go`, `encoding.go`, `gpm_linux.go`, `wscreen.go`,
+  `tty/tty.go` and its four implementations, `vt/{backend,emulate,mock,mode,layout,width}.go`,
+  `color/fit.go`, `internal/widthutil`, `CHANGESv3.md`, `TUTORIAL.md`. Cited by the page: **28 distinct
+  `.go` paths, 25 of them links to `github.com/gdamore/tcell/blob/main`, and every URL on the page answers
+  200** (`check-links.py`: 105 external, 25 internal, 0 broken). Two of 6.4's files moved into a shared row
+  instead of getting one: `vt/vt.go` owns no responsibility a row could state, and `tty/tty_*.go` is one row
+  naming `tty/tty.go` and its implementations. *(2.5 h of the 2-3 h)*
+- T5.3 **Done: 6.4's sections, in 6.4's order, with file citations - and with Q-6 deciding the citation
+  style, because 6.4 and 5.4 disagree about names.** 6.4 wants this page to cite the vt package by symbol
+  (`vt.Backend` (backend.go), `vt.ModeStatus` (mode.go), and eleven more); 5.4 and Q-6 keep every symbol
+  name on the one page that owns it, which is `Function-Reference`, and `symbol-coverage.py` is the mechanical
+  half of that rule. The page therefore cites files and writes names in plain prose or in a diagram label,
+  and backticks exactly two kinds of thing: file paths and one directory (`internal/widthutil`). Measured
+  result: `symbol-coverage.py` still prints "0 page-cited symbol(s) checked", the state Phase 1 recorded as
+  correct for stubs, and Phase 6 has to move that number on `Function-Reference` alone. The headings are the
+  draft's capitalization and two of its words rather than 6.4's literal strings, which is worth saying because
+  a checker that compared headings as strings would call this a miss: the page writes `## Two Layers` where 6.4
+  writes `## Two layers`, `## Unicode and Width` where 6.4 writes `## Unicode & width` (rule `heading-amp` is
+  what a literal "&" would trip, so the subject is named in words), and `## Concurrency` for 6.4's
+  `## Concurrency model`; and it adds a `## See Also` list 6.4 never asked for but 6.1's "nav strip on every
+  page" wants covered. Topics and order are 6.4's. Two of 6.4's own
+  phrases turned out to be stale once the source was read, and the page follows the source instead:
+  - `## Input pipeline` calls the decoder "grapheme/width aware". On the screen path it is not: `input.go`
+    names no grapheme cluster anywhere (measured: `grep -n "grapheme|cluster" input.go` returns nothing), it
+    runs the locale decoder and hands runes to the parser, while cluster segmentation lives in the cell buffer
+    and in `vt/emulate.go:119-162` (the cluster string cache). The page says "the locale decoder" and puts
+    graphemes in `## Unicode and Width`, where a reader will meet them before the cell buffer needs them.
+  - `## Keyboard protocols` states the override precedence as "env > option > auto", and that one is right and
+    measured: `applyEnvironmentOverrides` (tscreen.go:370-393) runs in Init, `OptKeyboardProtocol` is applied
+    when the screen is built, the keyboard queries are skipped when a protocol was forced (tscreen.go:1703
+    `if !t.forceKbd`), and the forced value is re-asserted after negotiation (tscreen.go:1721). The page says
+    it in those words, and Found item 2 below is the warning that this ladder is not general.
+  - Word cost, said out loud: the first draft was 2,044 prose words and 746 of them came out, because 5.1
+    gives this page 1,300 and not 2,000. What is gone: the grapheme-table and sixel digression, one of the
+    three `cell.go` measuring fast paths, the `$COLORTERM` asymmetry as a sentence (it is a clause now), and
+    the vt file inventory 6.4 asks for. Two 6.4 clauses are therefore only met in part and this is the record
+    saying so: `color.Reset` ("theme-respecting") is not on the page, and `## Terminal capability handling`
+    cites five vt files rather than the eleven it names. The reason is the budget and the reader, not an
+    oversight: a table cell listing nine file names is unreadable and unverifiable, and the word count is at
+    1,298 of 1,300. *(4 h of the 3-4 h, and the overage is the trimming, not the reading)*
+- T5.4 **Done: three diagrams, Mermaid, chosen on legibility now that T5.1 settled capability.** `flowchart
+  TB` for the layer stack, `sequenceDiagram` for the draw loop (T5.4's named pair, and the exit criterion's
+  draw-loop diagram), `flowchart LR` for the input pipeline. 6.4's fourth named diagram is the
+  backend/platform matrix and it ships as a four-row **table** instead, because that is what a matrix is; the
+  count is 3, inside 6.4's "Diagrams (3-4)" and inside 5.1's "3-4 diagrams". Measured on the live page, the
+  command T5.1 left as the re-check: `curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Architecture
+  | grep -c 'data-type="mermaid"'` answers **3** at render `0bd845c` and again **3** at `f9608dc`, one
+  container per fence, so every fence written for the real page became a diagram. Two rules from T5.1
+  respected: no diagram holds the only copy of a fact (mode 2026, the dirty pair, the size poll, the two
+  goroutines and the event-filter split all sit in the prose too), and no `mermaid` fence carries a snippet
+  marker, because the marker-carrying info string is the one shape T5.1 explicitly left unmeasured. *(1.5 h)*
+- T5.5 **Done: the pass caught five claims, all of them this draft's, and one of them after publishing.**
+  - "a mock terminal that implements the Tty interface ... as all eight do" was first written as six, because
+    the grep asked for a constructor that does not exist (`vt.NewMockTerminal`); the real one is
+    `vt.NewMockTerm` (demos/cursors/cursors_test.go:36 passes it straight to `NewTerminfoScreenFromTty` with
+    `OptColors(8)` and `OptTerm("ansi")`), and all eight `demos/*_test.go` do use it. The claim stayed, the
+    reason for it got rewritten. And the two "measures only when it must" fast paths the page names are the
+    library's own newest work: printable ASCII at cell.go:85-87 and drawn-text reuse at cell.go:88-91, the
+    second one added by `acf267d` (2026-10-19), with `6d51850` and `7ac1a34` behind it being the wide-character
+    and `Dirty` behavior the Screen-model section describes. A reviewer who checks the page against the tip
+    finds the page describing the tip, which is all a page like this can promise.
+  - Currency, stated exactly rather than assumed: the claims were read from the sibling checkout at `acf267d`
+    (2026-10-22), and `origin/main` is three commits newer at `62aecba` (2026-10-24), all three in the resize
+    path, because that clone was made the day the phase ran. So the two claims most exposed to resize churn
+    were re-read against `origin/main` itself, where engageLocked still asks in the same order with
+    `requestPrimaryDA` still last, and Show still calls resize and then draw and nothing else. `git -C ../tcell
+    rev-list --count HEAD..origin/main` is the check a later session runs first.
+  - "measures CIE76 distance cached per screen" is true and now known why: `color/fit.go:41`
+    `DistanceCIE76` (with the comment saying CIE94 would be more accurate and "really really expensive"), and
+    `tscreen.go:717-724` `resolvePalette` caching into `t.colors`, which is per screen. 6.4's
+    `color.Find`/`color.PaletteColor`/`color.Reset` are all real (fit.go:24, color.go:1159, color.go:860); the
+    page cites the file instead of the names, per the T5.3 rule.
+  - "and last the primary device attributes, because that reply is the full stop" is the code's own claim:
+    `requestPrimaryDA // NB: MUST BE LAST` (tscreen.go:1717), and `processInitQ` (tscreen.go:523-577) exits
+    early only on that reply or on its one-second timer.
+  - "Resume turns the modes back on without asking the terminal what it has": the query burst is inside
+    `if !t.initted` while the mode-enable prints are not (tscreen.go:1690-1757), and Resume calls
+    engageLocked (tscreen.go:1579-1586). Keyboard order read straight: win32, else kitty, else xterm, else
+    legacy (tscreen.go:1949-1959). Escape waits 50 ms, 125 ms on Windows, 1 s past an introducer
+    (input.go:68-92), and `TCELL_ESCDELAY` overrides the first (tscreen.go:371, doc comment 124-129). The
+    three known terminals are st, Terminal.app and WezTerm (tscreen.go:1596-1653), consulted before the burst
+    at 1696.
+  - "no display list" and "one comparison per cell per frame" are this draft's words, not the library's; the
+    mechanism behind them is `CellBuffer.Dirty` (cell.go:164) and the per-cell scan in `draw()`
+    (tscreen.go:1087-1140). The page says so in its own voice and the record says the voice is the draft's.
+  - After publishing: the sentence that told the reader Terminal Setup "documents" TCELL_ESCDELAY became
+    "owns" (`f929d67`), because the page is a stub and only T6.2 changes that. Same reason the intro points at
+    the two reference pages as owners and not as finished prose. *(1 h)*
+- T5.6 **Done and published, with the commit message this task names being the one rule it could not keep:**
+  `Updated Architecture (markdown)`, not `Created Architecture (markdown)`, because the page has existed since
+  `f1854a3` put the Phase 1 stub there, and AGENTS reserves `Created` for a page that is new to the wiki. Three
+  page commits, all forward, all mirrored, one per logical edit: `f9cb697` wrote the page (+122/-2, the stub's
+  three sentences replaced), `f929d67` carried the three wording and citation fixes T5.5 left, and the commit
+  this session ends on rewords one clause about `cell.go`'s reuse fast path after that commit was read a third
+  time - the page had said "text it just measured" where the code compares against what it last drew. No page
+  commit was amended, squashed or reverted, and `tools/publish.sh` ran for each one with the live page re-read
+  afterwards, so the published history reads: stub, probe in, probe out, page, two polishes. That is what a
+  changelog a reader can follow costs on a rendered page. `tools/review-checklist.py --offline` exits 0 with
+  six gates PASS and only the two ASK lines this page was always going to raise (answered in Found item 3 and
+  in AGENTS' `go` fence note). *(0.5 h)*
+- Exit **met (2026-10-25, publish included per Q-15):** the criterion is "R3b met - Architecture page covers
+  layers, backends, input/output pipelines, keyboard protocols, Unicode/width, concurrency, with pointers into
+  the source tree", and the page covers all seven as its own sections: `## Two Layers`, `## Backends`,
+  `## The Output Pipeline` and `## The Input Pipeline`, `## Keyboard Protocols`, `## Unicode and Width`,
+  `## Concurrency`, with the pointers in 28 file citations plus `## Where to Look in the Source`. 6.4's other
+  two required sections are there too (`## The Screen Model`, `## Terminal Capability Handling`), so the
+  section count is eleven, the smallest being the 34-word See Also list and the largest 136. Budget: 1,298
+  prose words of 900-1,300, 1,555 counting code and markup, 3 diagrams of 3-4. `Function-Reference` and
+  `Terminal-Setup` are the two pages still stubbed, and T6.2 owns the second one.
+- Found, and it belongs to Phase 6 and Phase 7:
+  1. **T6.2's variable list is eight TCELL_ names and ten more the plan does not count.** Every `TCELL_*`
+     name in 6.6 is read (measured as `Getenv("NAME")`/`envInt("NAME")` in the checkout): alt screen
+     tscreen.go:325, truecolor 475, negotiate 385, mouse 392, keyboard protocol 375, esc delay 371, and the
+     pair TCELL_LINES/TCELL_COLS at `tty/tty_plan9.go:201`, which is the only place they are read and there
+     they win over `$LINES`/`$COLUMNS`. So the "3 never-documented vars" framing in T6.2 is half stale:
+     `TCELL_ALTSCREEN` (tscreen.go:325) and `TCELL_TRUECOLOR=disable` (475, whose own comment says it is for a
+     user whose themes should be honored) both work exactly as their comments claim, and nothing is broken.
+     What is actually missing is a ninth name the library reads and no doc names, `$NO_COLOR` (tscreen.go:469),
+     and six reader knobs outside the `TCELL_` prefix that the same page has to name to be worth its title:
+     `$TERM` (436), `$COLORTERM` (441), `$LINES`/`$COLUMNS` (429-433), `$RUNEWIDTH_EASTASIAN`
+     (internal/widthutil/widthutil.go:27), `$TERM_PROGRAM` (1696) and the locale chain `$LC_ALL`/`$LC_CTYPE`/
+     `$LANG` (charset_unix.go:30-32). Measured count: 20 env names read by the library, 18 of them a reader's
+     knob. 6.6's 700-1,100 word budget holds that comfortably.
+  2. **"env beats option", the precedence rule 6.6 tells T6.2 to state, is true for some knobs and false for
+     two, and the page must say which.** Option wins: `OptColors` short-circuits the whole environment ladder,
+     `$NO_COLOR` included, because that block runs only `if t.ncolor == 0 && !t.noColor` (tscreen.go:439-478),
+     and `OptTerm` wins because `$TERM` is read only `if t.term == ""` (435). Environment wins: `TCELL_ALTSCREEN`,
+     whose own option says so (`OptAltScreen`'s comment, tscreen.go:79-81, "The TCELL_ALTSCREEN=disable
+     environment override is still honored"), plus keyboard protocol, negotiation and escape delay, where the doc
+     comments agree too. v3 deleted terminfo, so the four-rung ladder in 5.1/6.6's phrasing has no terminfo rung
+     to hold; the honest page is a per-knob table, which is what 6.6's "environment/option table" already asks for.
+  3. **A guardrail for those names was built during this phase and taken back out, on purpose.** The design
+     works: one list file (`tools/tcell-env-vars.txt`, 18 names) plus three checks in the tool that already
+     reads the library (`symbol-coverage.py`'s env audit) - list names on the page, source's `TCELL_` names in
+     the list, list names still read by the source. It fired correctly against the stub page and against an
+     induced rename, then was reverted, because it fails red until T6.2 writes the page and a red gate is not a
+     deliverable (AGENTS: a red `review-checklist.py` is a reason to stop, not a thing to ship). T6.2: write the
+     page, then land the list and the audit in the same commit so the gate goes green with the page and not
+     before it. Related: `review-checklist.py`'s ASK on this page still asks for "flag > env > terminfo >
+     built-in default", a ladder v3 removed; the ASK is worth keeping and re-wording in T7.1, and the answer it
+     wants for this page is "measured per knob, and the ordering is Terminal Setup's to publish".
+  4. **Phase 7 hygiene, found while citing commits.** The `v3.6.1-0.20261024233502-b1c3e111e032`
+     pseudo-version recorded in T4.3 does not resolve in `gdamore/tcell`: `git -C ../tcell cat-file -t
+     b1c3e111e032` fails and `git ls-remote origin | grep b1c3e11` is empty even after a fresh fetch. The
+     measurement it stands for (the tutorial's demo application compiling against the default branch rather
+     than only the tag) deserves re-running before anybody cites it again; a local Go module cache is the
+     likely reason the number looked readable when it was written. Everything else resolves: 37 hex tokens
+     across PLAN.md and AGENTS.md were checked against both repositories, and the remaining misses are three
+     GitHub Actions run IDs, one timestamp, one placeholder word, and the three library commits this phase
+     cites (`acf267d`, `6d51850`, `7ac1a34`), which live in `../tcell` and not here.
 
 ### Phase 6 - Functionality documentation - **2 pages (6-8 h) after Q-3**
 - T6.1 `Function-Reference.md`: hub + area tables (S6.5), absorbing the material the 6 deferred topic

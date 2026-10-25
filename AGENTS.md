@@ -17,9 +17,13 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
 - Page bodies sit at the repo root as plain `.md` - the 6 pages of Q-3: `Home.md` (the nav hub since
   Phase 2, and the last page in Appendix D's commit order), `Gallery.md`, `Getting-Started.md` (the
   Phase 4 page: five authored sections, two `console` blocks, no `go` fence and no Go on it at all), and
-  the three that are still honest stubs from Phase 1 - `Architecture.md`, `Function-Reference.md`,
-  `Terminal-Setup.md` - each one a purpose sentence, the planned scope, a pointer to what to read today,
-  and no API claimed in backticks, which Q-6 reserves for the page that owns the symbol. `_Sidebar.md` sits
+  `Architecture.md` (the Phase 5 page: eleven sections, 1,298 prose words, three `mermaid` fences and nothing
+  else fenced, 28 library files cited by path and no symbol name backticked, which is why
+  `symbol-coverage.py` still prints "0 page-cited symbol(s) checked" and why Phase 6 has to move that number
+  on `Function-Reference` alone), and the two that are still honest stubs from Phase 1 -
+  `Function-Reference.md`, `Terminal-Setup.md` - each one a purpose sentence, the planned scope, a pointer to
+  what to read today, and no API claimed in backticks, which Q-6 reserves for the page that owns the symbol.
+  `_Sidebar.md` sits
   beside them as D-1's droppable prototype: it is in the manifest, it is not a content page, and no page
   links it. `tools/` (QA scripts), `samples/` (snippet compile harness) and `.github/workflows/qa.yml`
   (CI) exist; see Tooling below.
@@ -68,11 +72,14 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 
 ```bash
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
-git diff --stat upstream/master HEAD -- Home.md Gallery.md   # the deliverable; today: Gallery 24
-                                                            # insertions / 3 deletions (2 URL moves Q-11,
-                                                            # 1 addition Q-13, 1 reword Q-7, and the new
-                                                            # `## Demos in the Repository` section), plus
-                                                            # the Phase 2 Home rewrite
+git diff --stat upstream/master HEAD -- Home.md Gallery.md Architecture.md   # the deliverable; today:
+                                                            # Gallery 24 insertions / 3 deletions (2 URL
+                                                            # moves Q-11, 1 addition Q-13, 1 reword Q-7, and
+                                                            # the new `## Demos in the Repository` section),
+                                                            # the Phase 2 Home rewrite (72/3), and
+                                                            # Architecture's 127 insertions against upstream,
+                                                            # where it is a new page (its Phase 1 stub is our
+                                                            # own commit); the two reference pages are stubs
 git ls-remote --symref render HEAD     # render wiki HEAD; a non-ff mirror push means web-UI edits
 ```
 
@@ -257,7 +264,9 @@ Entry format — exactly this shape, one line each:
   module-path demo run, all measured (the last one from a directory with no source file in it). So the
   `review-checklist.py` ASK "page has no `go` fence yet" is the *expected* state for a page whose code is
   shell and whose examples are the library's (Q-Ex): answer it in the review note, do not paste Go to
-  silence it.
+  silence it. `Architecture.md` raises it on purpose too: its code is three `mermaid` fences, its tables hold
+  file paths, and Q-Ex still routes its examples to `demos/`, so nothing on that page is Go and nothing there
+  should be.
 - **The library's own programs are the examples.** Pages link `demos/` and `TUTORIAL.md` in
   `gdamore/tcell`; they do not re-author sample code, because a wiki fence rots on the next API change
   while `demos/` ships with a rendering test per program. `tools/check-demos.py` verifies the names,
@@ -308,9 +317,11 @@ awk '/^## /{s=$0} /^- \[/{last[s]=$0} END{for (k in last) print k" -> "last[k]}'
 git diff -- Home.md Gallery.md
 
 # Does a published page really carry a rendered Mermaid diagram? T5.1 measured this way on a probe block
-# that is since removed; once T5.4 ships a real diagram this is the re-check. 0 means either the page has
-# no diagram or the renderer stopped recognising the fence. Anonymous curl is the point: the enrichment
-# container is in the server HTML a logged-out reader gets, not something a session adds.
+# that is since removed, and T5.4 shipped the first real diagrams, so the count means something now:
+# Architecture answers 3, one container for each of its three `mermaid` fences (measured at `f9608dc`), and a
+# page answering 0 has either no diagram or a renderer that stopped recognising the fence. Anonymous curl is
+# the point: the enrichment container is in the server HTML a logged-out reader gets, not something a session
+# adds.
 curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Architecture | grep -c 'data-type="mermaid"'
 ```
 
