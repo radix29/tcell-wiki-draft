@@ -4,7 +4,7 @@ Here's a gallery of applications and libraries that were built using tcell:
 
 ## Demonstrations
 
-- mouse demo - included mouse test ([screenshot](http://2.bp.blogspot.com/-fWvW5opT0es/VhIdItdKqJI/AAAAAAAAATE/7Ojc0L1SpB0/s1600/Screen%2BShot%2B2015-10-04%2Bat%2B11.47.13%2BPM.png))
+- mouse demo - the mouse test that shipped with _Tcell_ in 2015 ([screenshot](http://2.bp.blogspot.com/-fWvW5opT0es/VhIdItdKqJI/AAAAAAAAATE/7Ojc0L1SpB0/s1600/Screen%2BShot%2B2015-10-04%2Bat%2B11.47.13%2BPM.png)); mouse support is now enabled per program with EnableMouse and MouseFlags
 - [gomatrix](https://github.com/gdamore/gomatrix) - converted from Termbox
 - [gomandelbrot](https://github.com/rgm3/gomandelbrot) - Mandelbrot!
 - [ascii-fluid](https://github.com/esimov/ascii-fluid) - fluid simulation controlled by webcam
