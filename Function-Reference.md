@@ -406,7 +406,7 @@ Four packages sit under the root one, and none of them is what an application re
 
 `vt` is a terminal emulator: coordinates, colors, modes, cells, a parser and a backend interface, plus `vt.MockTerm`, the mock the eight demo tests are drawn on. An application uses it to test what it draws, and nothing else in the package set is worth reaching into as rarely.
 
-A surface dumper counts five, because `internal/widthutil` is also a directory of Go files. It holds the display-width helper the root package measures text with, and the `RUNEWIDTH_EASTASIAN` toggle [Terminal Setup](Terminal-Setup) documents is read there; nothing can import an internal package from outside the module, which is why this page lists four.
+A surface dumper counts five, because `internal/widthutil` is also a directory of Go files. It holds the display-width helper the root package measures text with, and the RUNEWIDTH_EASTASIAN toggle [Terminal Setup](Terminal-Setup) documents is read there; nothing can import an internal package from outside the module, which is why this page lists four.
 
 ## See Also
 
