@@ -66,9 +66,9 @@ jobs:
         working-directory: wiki
         run: tools/make-samples.py
 
-      - name: symbols - API surface and TCELL_* env audit (S8.3; no coverage gate yet, PLAN.md 6.5)
+      - name: symbols - API surface, TCELL_* env audit and the 6.5 coverage gate (S8.3)
         working-directory: wiki
-        run: tools/symbol-coverage.py --report /tmp/symbols.txt
+        run: tools/symbol-coverage.py --gate --report /tmp/symbols.txt
 
       - name: apiface - the surface dumper still builds
         working-directory: wiki/tools/apiface

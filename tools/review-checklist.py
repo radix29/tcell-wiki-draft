@@ -78,7 +78,7 @@ GATES = (
     ("gallery", "check-gallery.py", ()),
     ("demos", "check-demos.py", ()),
     ("snippets", "make-samples.py", ()),
-    ("symbols", "symbol-coverage.py", ()),
+    ("symbols", "symbol-coverage.py", ("--gate",)),
 )
 
 
@@ -166,6 +166,10 @@ def main() -> int:
         rc, last, lines = run_gate(name, script, extra, args.offline)
         if name == "symbols":
             env_line = next((l for l in lines if "undocumented by any page" in l), "")
+            if not env_line:
+                # Every TCELL_* name is documented from Phase 6 on, so the line this tool printed when a
+                # variable went undocumented has nothing left to say; print the audit's own count instead.
+                env_line = next((l for l in lines if l.startswith("envlist ")), "")
         mark = "PASS" if rc == 0 else "FAIL"
         bad += rc != 0
         if rc != 0 or args.verbose:

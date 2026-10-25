@@ -36,6 +36,7 @@ import wikilib as W
 
 APIFACE = W.ROOT / "tools" / "apiface"
 ALLOW = W.ROOT / "tools" / "api-allow.txt"
+ENV_LIST = W.ROOT / "tools" / "tcell-env-vars.txt"
 # Things a page legitimately backticks that are not root-package API: Go builtins, prose shorthands,
 # env vars, file names. Format: one pattern per line (fnmatch), '#' comments, with a reason after '#'.
 BUILTIN = {"true", "false", "nil", "iota", "int", "rune", "byte", "string", "error", "any", "bool",
@@ -145,6 +146,42 @@ def env_vars_in_source(tcell: pathlib.Path) -> set:
             continue
         out.update(re.findall(r"TCELL_[A-Z0-9_]+", text))
     return out
+
+
+def env_names_in_source(tcell: pathlib.Path) -> set:
+    """Every environment name the buildable library reads, whatever its prefix (T6.2's list audit).
+
+    Measured the way PLAN.md Appendix C measures: a call of Getenv/LookupEnv/envInt naming it. `_demos`
+    and `_test.go` are excluded because neither is built, which is what keeps $SHELL (read by a tagged
+    demo program) out of a list whose rule is "what the library honors".
+    """
+    pat = re.compile(r"\b(?:Getenv|LookupEnv|envInt)\(\s*\"([A-Z][A-Z0-9_]+)\"")
+    out = set()
+    for path in sorted(tcell.rglob("*.go")):
+        rel = path.relative_to(tcell).as_posix()
+        if "/testdata/" in f"/{rel}" or path.name.endswith("_test.go") or rel.startswith("_"):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        out.update(pat.findall(text))
+    return out
+
+
+def read_env_list():
+    """The reader knobs tools/tcell-env-vars.txt claims, in order, with their reasons."""
+    if not ENV_LIST.is_file():
+        return None, {}
+    names, reasons = [], {}
+    for line in ENV_LIST.read_text(encoding="utf-8").splitlines():
+        name, _, why = line.partition("#")
+        name = name.strip()
+        if not name:
+            continue
+        names.append(name)
+        reasons[name] = why.strip()
+    return names, reasons
 
 
 def reader_meets(tcell: pathlib.Path, symbols: set):
@@ -311,6 +348,35 @@ def main() -> int:
     invented = sorted(cited_env - implemented)
     print(f"env      {len(implemented)} TCELL_* var(s) implemented in the source, "
           f"{len(cited_env & implemented)} documented by these pages")
+
+    # --- the reader-knob list (T6.2's guardrail, designed during Phase 5 and landed with its page) ---
+    # Three checks, one per direction of the rot PLAN.md 2 records: the source gains a knob nobody names,
+    # a knob stops being read and stays documented, a documented knob never made it onto the list.
+    listed, env_why = read_env_list()
+    if listed is None:
+        print(f"envlist  {ENV_LIST.relative_to(W.ROOT)} is missing, so the reader-knob list is unchecked",
+              file=sys.stderr)
+        return 2
+    read = env_names_in_source(tcell_dir)
+    documented = {n for n in listed if n in all_tokens}
+    print(f"envlist  {len(listed)} reader knob(s) listed, {len(read)} read by the library, "
+          f"{len(documented)} documented by these pages")
+    if len(listed) != len(set(listed)):
+        dups = sorted({n for n in listed if listed.count(n) > 1})
+        errors.append(("envlist", [(ENV_LIST.name, 0)],
+                       f"{', '.join(dups)} appear twice in the reader-knob list"))
+    for name in sorted(set(listed) - read):
+        errors.append(("envlist", [(ENV_LIST.name, 0)],
+                       f"{name} is listed as a reader knob but the library reads no such variable - "
+                       "either the source stopped reading it or the list has a typo"))
+    for name in sorted(read - set(listed)):
+        errors.append(("envlist", [(ENV_LIST.name, 0)],
+                       f"the library reads {name} and tools/tcell-env-vars.txt does not list it, so no "
+                       "page is required to document it and it will go the way of TCELL_ALTSCREEN"))
+    for name in sorted(set(listed) - documented):
+        errors.append(("envlist", [(ENV_LIST.name, 0)],
+                       f"{name} is listed ({env_why.get(name, 'no reason given')}) but no built page "
+                       "names it in backticks, which is how this tool counts a documented variable"))
     if undoc:
         print(f"  undocumented by any page (PLAN.md 13 wants all of them): {', '.join(undoc)}")
     if invented:
@@ -342,10 +408,20 @@ def main() -> int:
     for token, where, msg in warnings:
         where_txt = ", ".join(f"{p}:{n}" for p, n in where[:3])
         print(f"WARN  {token}: {msg} - cited at {where_txt}")
-    for token, where, msg in errors:
+    sym_errs = [e for e in errors if e[0] not in ("env", "envlist")]
+    env_errs = [e for e in errors if e[0] in ("env", "envlist")]
+    for token, where, msg in sym_errs:
         print(f"BAD SYMBOL  {token}: {msg}")
+    for _token, _where, msg in env_errs:
+        print(f"BAD ENVVAR  {msg}")
     if errors:
-        print(f"\n{len(errors)} symbol reference(s) a page claims that the library does not have.")
+        parts = []
+        if sym_errs:
+            parts.append(f"{len(sym_errs)} symbol reference(s) a page claims that the library does not have")
+        if env_errs:
+            parts.append(f"{len(env_errs)} environment finding(s) against tools/tcell-env-vars.txt and "
+                         "the built pages")
+        print("\n" + "; ".join(parts) + ".")
         return 1
 
     meets = reader_meets(tcell_dir, symbols)

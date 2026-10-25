@@ -1,0 +1,33 @@
+# The environment variables a reader can set and _Tcell_ honors (PLAN.md 6.6, T6.2).
+#
+# One name per line, a reason after '#'. tools/symbol-coverage.py reads this file and checks three
+# things on every run: every name here is documented by a built page, every name here is still read
+# by the library (measured as Getenv/LookupEnv/envInt("NAME") outside _demos and _test.go), and every
+# name the library reads is here. A name that stops being read fails the list instead of ageing quietly,
+# which is the failure mode PLAN.md 2 records for TCELL_ALTSCREEN, TCELL_LINES and TCELL_COLS: implemented,
+# named nowhere, and only findable by reading source. Never add a name to quiet a gate: a name enters this
+# list because the source reads it and Terminal Setup says what it does (AGENTS: no allow-listing to pass CI).
+#
+# Measured at gdamore/tcell acf267d: 19 names read by buildable library code, 19 documented, on
+# Terminal-Setup.md. The 20th name any Go file in the checkout reads is $SHELL, at _demos/mouse.go:139,
+# which is a program behind a build tag and not the library, so it is not a reader knob of the API.
+
+TCELL_ALTSCREEN  # useAltScreen(), tscreen.go:325 - the alternate screen buffer, off only for "disable"
+TCELL_TRUECOLOR  # tscreen.go:475 - 24-bit off for "disable", palette count untouched
+TCELL_NEGOTIATE  # tscreen.go:385 - the startup conversation, "disable" or "auto"
+TCELL_MOUSE  # tscreen.go:392 - mouse reporting refused for "disable"
+TCELL_KEYBOARD_PROTOCOL  # tscreen.go:375 with parseKeyboardProtocol at tscreen.go:337 - legacy/kitty/win32/xterm/auto
+TCELL_ESCDELAY  # tscreen.go:371 - a positive count of milliseconds for the parser's Escape wait
+TCELL_LINES  # tty/tty_plan9.go:201 - plan 9 only, where there is no ioctl to ask
+TCELL_COLS  # tty/tty_plan9.go:201 - plan 9 only, and it wins over $COLUMNS there
+TERM  # tscreen.go:436 - only when no option named a terminal; sorts families, never a database
+COLORTERM  # tscreen.go:441 - truecolor/direct/24bit buy 24-bit, a 256 anywhere buys 256 colors
+NO_COLOR  # tscreen.go:469 - any non-empty value answers zero colors
+TERM_PROGRAM  # tscreen.go:1696 - Apple_Terminal and WezTerm are known before they are asked
+TERM_PROGRAM_VERSION  # tscreen.go:1628 and tscreen.go:1649 - the version reported beside that name
+LINES  # tscreen.go:429 and tty/tty_unix.go:154 - the size when the device reports none, then a default
+COLUMNS  # tscreen.go:432 and tty/tty_unix.go:148 - the same, 80 columns and 25 or 24 rows
+LC_ALL  # charset_unix.go:30 - the first locale variable set names the codeset, and it beats the two below
+LC_CTYPE  # charset_unix.go:31 - consulted only when LC_ALL is unset
+LANG  # charset_unix.go:32 - consulted last; C and POSIX mean US-ASCII, a locale with no codeset means UTF-8
+RUNEWIDTH_EASTASIAN  # internal/widthutil/widthutil.go:27 - 1/true/yes declares an East Asian setup
