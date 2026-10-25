@@ -220,7 +220,13 @@ def main() -> int:
     sections = load_sections(pathlib.Path(args.sections))
     # A --allow-new-section flag is the same approval for one run, tagged so the note cannot be read
     # as a record that outlives the command line it came from.
-    approved = {name: (why, str(pathlib.Path(args.sections).name)) for name, why in sections.items()}
+    approved = {}
+    for name, rec in sections.items():
+        # A section record is '<heading>\t<evidence>'. load_records hands back (value, evidence)
+        # because the other two decision files have a URL in the middle slot, so the one field a
+        # section carries is folded into the evidence the note prints rather than printed twice.
+        evidence = rec[0] if rec[1] in ("", "(no evidence recorded)") else f"{rec[0]} ({rec[1]})"
+        approved[name] = (evidence, pathlib.Path(args.sections).name)
     for name in args.allow_new_section:
         approved.setdefault(name, ("approved on the command line for this run only", "--allow-new-section"))
     page_urls = {e.url for e in entries}
@@ -272,8 +278,8 @@ def main() -> int:
             notes.append(f"approved new category: '{extra}' [{approved[extra][1]}] ({approved[extra][0]})")
     for name in [n for n in sections if n not in cats]:
         errors.append(f"tools/{SECTIONS.name} approves the section '{name}', which the page no longer "
-                      "has - a sanctioned section that disappears is a content loss (R2), and a record "
-                      "nobody needs is a stale lie; fix the page or delete the record")
+                      "has - a sanctioned section that disappears is a content loss (R2), and a "
+                      "record nobody needs is a stale lie; fix the page or delete the record")
 
     # --- lossless + order ------------------------------------------------------
     by_cat_now = collections.defaultdict(list)
