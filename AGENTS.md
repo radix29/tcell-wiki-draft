@@ -201,8 +201,10 @@ Entry format — exactly this shape, one line each:
   `./Gallery`. Internal anchors follow the renderer's model, which is the *page body*: a page's duplicate
   `#` H1 contributes no anchor (PLAN 7 says GitHub drops it), a heading inside a blockquote does (so
   `Gallery#demos-in-the-repository` resolves - `curl` of the published page shows GitHub really renders
-  that anchor), and `check-links.py` therefore feeds `anchors_in()` the body with the H1 line removed
-  rather than the whole file - feeding it whole files made both mistakes silent (Phase 4's T4.4).
+  that anchor), and `check-links.py` therefore feeds `anchors_in()` the body with the H1 line removed.
+  Handing it whole files got both halves wrong in opposite directions: a blockquoted heading was invisible,
+  so a link that works was reported BROKEN, while an in-file H1 anchor was invented, so a link that would
+  404 for a reader passed clean. (Phase 4's T4.4.)
   Multi-word pages are hyphenated (`Getting-Started.md` -> `[Getting-Started]`), never
   `Some_Page.md` or with spaces. **Never rename `Home.md` or `Gallery.md`**: it breaks `Home.md`'s link
   and the `wikis/Gallery` URL hardcoded in `../tcell/README.md`.
