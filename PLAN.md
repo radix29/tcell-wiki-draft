@@ -1,8 +1,10 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-2 built,
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-3 built,
 green and **published** - Q-15 removed the ask, so the preview at `radix29/tcell-wiki-draft/wiki` renders
-all 7 manifest pages including Phase 2's `Home.md` rewrite; Phases 3-7 not started
+all 7 manifest pages including Phase 2's `Home.md` rewrite and Phase 3's `Gallery.md` (all 49 baseline
+entries intact, one recorded addition, the sanctioned `## Demos in the Repository` section, and every URL
+on the page answering 200); Phases 4-7 not started
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -272,6 +274,11 @@ no `Prev/Up/Next` footers, no links to deferred pages).
     `- mouse demo - the mouse test that shipped with Tcell in 2015 ([screenshot](u1), [screenshot](u2));
     mouse support is now enabled per program with EnableMouse and MouseFlags` - display name, both URLs
     and the bullet count (49) unchanged, `EnableMouse`/`MouseFlags` verified against the surface;
+    **as written onto the page in Phase 3 it differs in three places, every one a rule beating the
+    template**: `_Tcell_` (Q-9's `name` rule rejects bare `Tcell` in prose), no backticks on the two API
+    names (Q-6 gives them to `Function-Reference`, and no other Gallery entry carries a backtick), and
+    **one** screenshot URL rather than `u1`+`u2` - the shape assumed both 2015 blogspot images sat on this
+    bullet, and the second has always been the `govisor` entry's, which the 49-bullet count depends on;
   - add `## Demos in the Repository` with the 8 `demos/` programs and a one-line description of
     each, plus a note that `_demos/` files are `//go:build ignore` and how to run them.
 - New subsection under each category only if a future entry genuinely needs it (no one-off sections).
@@ -445,8 +452,8 @@ both locally and as Actions CI there - the one thing a real wiki repo can never 
 |---|---|---|
 | S8.1 | `samples/` Go module with `replace github.com/gdamore/tcell/v3 => ../tcell`; one `main.go` per wiki snippet, extracted from the `.md` files | every doc snippet builds against current v3 (`go vet ./...`, `go build`) |
 | S8.2 | link checker: extract all `](url)` from `*.md`, `curl -sS -o /dev/null -w '%{http_code}' -I`, plus internal-slug existence check against `ls *.md` | no dead external links, no broken internal links |
-| S8.3 | symbol coverage auditor: exported surface parsed from the checkout (`tools/apiface`) vs symbols named in the pages, plus the `TCELL_*` env audit and a hallucinated-API gate | the Q-6 coverage contract in 6.5 (`--gate`), and Appendix A's ownership table |
-| S8.4 | gallery diff/counter: per-category bullet counts + set-of-URLs diff between old and new `Gallery.md` | migration is provably lossless (S2) |
+| S8.3 | symbol coverage auditor: exported surface parsed from the checkout (`tools/apiface`) vs symbols named in the pages, plus the `TCELL_*` env audit and a hallucinated-API gate. Since Phase 3 a backticked **path** (`_demos/mouse.go`, `vt/emulate.go`) is a path and not an API claim - pages are supposed to cite files (6.4) and S8.2b is the tool that can check a path against the checkout | the Q-6 coverage contract in 6.5 (`--gate`), and Appendix A's ownership table |
+| S8.4 | gallery diff/counter: per-category bullet counts + set-of-URLs diff between old and new `Gallery.md`, bent only by the three decision files it reads and prints: `tools/gallery-moves.txt` (Q-11 URL moves), `tools/gallery-additions.txt` (Q-13 entries) and, since Phase 3, `tools/gallery-sections.txt` (6.2's one new section, whose generated entries are exempt from the additions budget and still shape-checked) | migration is provably lossless (S2) |
 | S8.5 | style linter (small script): non-ASCII in prose, trailing whitespace, `*emph*`, `*.md)` internal links, missing fence tags, wrapped bullets | house style (S7) enforced mechanically |
 | S8.6 | **PASSED and built (2026-10-24).** The spike ran `Screen.Init` against `vt.MockTerm` + `tcell.NewTerminfoScreenFromTty` + `tcell.ShimScreen` (the recipe from `demos/hello/hello_test.go`) and a program drew and quit headlessly in 0.3 s, so snippets can be *run*, not just compiled | snippets do more than compile | implemented as opt-in `headless=yes` inside S8.1 (a fence that asks for it is executed on the emulator and must exit on ESC); `mode=lib` + `headless` is a label error |
 **Status (2026-10-24): S8.1-S8.5, S8.7 and a demo checker (S8.2b, `tools/check-demos.py`) are
@@ -700,17 +707,144 @@ fast, and the publish itself was one command and about a minute of waiting for t
   and Phase 3 is where the lossless-migration contract (Appendix B) has to be met rather than described.
 
 ### Phase 3 - Gallery (4-5 h)
-- T3.1 Run S8.4 to snapshot the 49 bullets + URL set as the migration contract. *(0.5 h)*
-- T3.2 Reformat/migrate into the frozen entry shape; apply D-6 wording fix; keep category order. *(1.5 h)*
-- T3.3 Add `## Demos in the Repository` (8 demos + `_demos` note) - read each demo's purpose from
-  source so descriptions are truthful. *(1 h)*
-- T3.4 Verify all 53 URLs (48 project links + 5 media: 2 blogspot screenshots, 2 YouTube, 1
-  GitHub-hosted video) with S8.2; write the 404 report for the maintainer instead of deleting
-  entries. **Partly done early: the 2 rocketnine URLs were moved to Codeberg under Q-11** (recorded in
-  `tools/gallery-moves.txt`, both new URLs verified 200, both descriptions byte-identical), so the
-  remaining job is the media URLs and the status table. *(0.5 h, was 1 h)*
-- T3.5 Lossless check + review + publish: `Updated Gallery (markdown)`. *(0.5 h)*
-- Exit: R2 met - all prior information present, count report shows zero unexplained losses.
+
+**Status: built, green, committed, published (Q-15).** `Gallery.md` is the page 6.2 describes: all 49
+baseline bullets are present, in their own categories, in baseline order (`tools/check-gallery.py` proves
+that on every run), `goSSMS` is still the one recorded addition, the legacy bullet is reworded per Q-7,
+and the one new section PLAN 6.2 sanctions is on the page carrying the library's own 8 demo programs.
+Nothing was deleted and nothing is dead, so the "404 report" T3.4 asks for is a status table with an
+empty broken column: 63 URLs on the page, every one answering 200, and the 5 media URLs checked past the
+status code to a content type or a page title. Spend landed inside 4-5 h; writing the sentences was the
+small part, and the two tool defects the new section exposed were the work - both fixed forward in the
+tools, nowhere around in the page.
+
+- T3.1 **Done.** Appendix B is recomputed below and carries both the inherited contract and the state the
+  phase produced. One property of the contract is worth writing down here because it changed what T3.4
+  was for: `check-gallery.py` compares **(display name, entry URL) pairs**, so an entry's *media* URL is
+  outside the lossless contract entirely - the 5 screenshot/video URLs can change without any migration
+  check noticing, and only `check-links.py` (which probes every URL on the page, media included) is
+  guarding them. That is not a defect to fix here - a screenshot has no home to "move" to the way a dead
+  project host does (Q-11 vs D-6/Q-7) - but it is why the table below is a review record and not a flag.
+  The 2015 blogspot scheme question in T3.4 is deliberately a note and not a diff for exactly this reason.
+  *(0.5 h)*
+- T3.2 **Done, and it was one line.** Every inherited entry already matched the frozen entry shape - the
+  checker was green on the upstream text before this phase touched it - so the only reformatting T3.2
+  could legitimately do was the D-6/Q-7 wording fix: `- mouse demo - the mouse test that shipped with
+  _Tcell_ in 2015 ([screenshot](...)); mouse support is now enabled per program with EnableMouse and
+  MouseFlags`. Display name unchanged, one screenshot URL unchanged, still the un-numbered 49th bullet,
+  still the only entry on the page without a link. Three deviations from the shape 6.2 printed, each one
+  a rule beating a template: **`_Tcell_` instead of `Tcell`** (Q-9's `name` rule rejects the plan's own
+  literal shape text - the shape was written before that rule was enforced, and a page may not carry a
+  style finding), and **no backticks** on `EnableMouse`/`MouseFlags` (Q-6 gives a symbol to exactly one
+  page, and those two belong to `Function-Reference`'s Mouse table in Phase 6; Gallery is not an API page
+  and no other entry on it carries a backtick), and **one screenshot, not the two the shape shows** - the
+  shape's `([screenshot](u1), [screenshot](u2))` assumed both blogspot images sat on this bullet, and the
+  second has always belonged to the `govisor` entry, which 6.2's own bullet count of 49 depends on.
+  Left alone deliberately: four inherited descriptions that open with a capital ("A simple and flexible
+  interface...", "A TUI designed...", "A classical bulletin board app...", "Text file viewer like
+  less...") against AGENTS' "short lowercase description" rule, and the trailing slashes upstream wrote on
+  `micro`/`tview`. They are the published page's own words, the checker accepts them, and lowercasing
+  somebody's text is the cosmetic churn D-9 exists to stop. *(1.5 h)*
+- T3.3 **Done.** `## Demos in the Repository` is appended after `## Miscellaneous` (append-only, so the
+  baseline category order the checker polices is untouched) and is the `tools/check-demos.py --markdown`
+  block pasted as generated (its commands sit in one `console` fence - the marker PLAN 7 requires for raw
+  shell, which `Home.md` has used since Phase 2 and this page had never needed, and which the snippet
+  harness skips as non-Go, so the page promises no compilable snippet it cannot build), with the two
+  doc-sentence descriptions the library carries (`clipboard`,
+  `hello`) and six this phase wrote from reading each program: `beep` beeps on a three second countdown
+  and on B, `boxes` draws randomly placed colored boxes and prints the average drawing time per box, and
+  then `colors` (RGB cube fade), `cursors` (the 0-6 cursor styles, each with a color), `styles` (one line
+  per text style, the four underline variants and a hyperlink) and `unicode` (one month name in six
+  languages, plus combining marks, ZWJ emoji and double-wide CJK). No description is inferred from a file
+  name, which is the whole reason the tool prints `TODO(desc)` instead of a sentence. Two things the
+  generated block said that the checkout does not support, both fixed in the generator so the next paste
+  cannot re-put them on a page: **the `_demos` note claimed those files "run only after copying the file
+  out", which is false** - naming the file works, and the library's own CI does exactly that
+  (`.github/workflows/webasm.yml` runs `go build _demos/mouse.go`), so the note now says `go run
+  _demos/mouse.go` and the tool *measures* it (`build_undemos`, run by `--build` and `--markdown`): 5 of
+  the 6 files build that way and `sixel.go` does not, because it imports `github.com/mattn/go-sixel` which
+  the module does not require, and the note says so because a reader will try. A page that names a
+  `_demos` file that no longer builds now fails S8.2b. And **the block began with an HTML comment**
+  ("GENERATED by tools/check-demos.py..."), which PLAN 7 forbids on a page and route C forbids twice over
+  since it names this repo's tooling to a reader - so the provenance warning now prints *outside* the
+  block and what sits between the markers pastes with no edits at all.
+  The section also needed an approval the checker could see: 8 new bullets that are not in the baseline
+  are, to a lossless-migration checker, 8 unapproved additions. Raising `--max-additions` would have
+  approved *any* 8 new projects, which is the opposite of what `tools/gallery-additions.txt` was built for,
+  so the approval is now per section in **`tools/gallery-sections.txt`** (`<heading>\t<evidence>`, same
+  shape and same stale-record rule as the other two decision files): an approved section's entries are
+  exempt from the additions budget and still under every shape, ASCII and duplicate-URL rule, the report
+  prints which entries it exempted and why, and a record whose section has disappeared from the page is an
+  error rather than a shrug. Tested both ways: section without a record fails (and reports the additions
+  too), record without a section fails, a trailing period on a demo line inside an approved section still
+  fails, and a malformed record line is reported instead of skipped. The record lands in the same commit as
+  the section it approves, because added earlier it would have reddened every check until the page caught
+  up. Why a file and not the existing `--allow-new-section` flag: `review-checklist.py` and CI both call
+  the checker bare, so a flag is two more call sites to keep in step, and a policy that CI cannot see is a
+  policy that fails the day it is needed. *(1 h, over by the tool work)*
+- T3.4 **Done: 63 URLs, 0 broken, nothing to report to the maintainer except that nothing is broken.**
+  The page grew from 54 URLs to 63: github.com went from 45 project links to 54 (the 8 demo programs plus
+  the `demos` directory itself), and the rest is unchanged - 2 codeberg.org from Q-11, 2 blogspot, and one
+  each on youtu.be, www.youtube.com, user-images.githubusercontent.com, termshark.io, git.sr.ht. The 5 media
+  URLs, measured here rather than assumed:
+  - `mouse demo` screenshot (2.bp.blogspot.com, `Screen+Shot+2015-10-04...png`) - 200, `image/png`, 54,791 bytes
+  - `govisor` screenshot (2.bp.blogspot.com, `Screen+Shot+2015-09-20...png`) - 200, `image/png`, 142,509 bytes
+  - `proxima5` video (`youtu.be/jNxKTCmY_bQ`) - 200, and the page it resolves to titles itself "Proxima5 v0.1"
+  - `browsh` video (`www.youtube.com/watch?v=HZq86XfBoRo`) - 200, titles "browsh - Modern Text-Based Browser - Linux TUI"
+  - `hero.go` video (`user-images.githubusercontent.com/.../277157369-...mp4`) - 200, `video/mp4`, 1,183,593 bytes
+
+  A 200 from YouTube is what an unavailable video also returns, so the titles above are the part of this a
+  link checker cannot do; that is a T7.3 maintenance-note line ("re-run the media URLs by hand, look at
+  what comes back"), not a new gate. One finding for the proposal package: **both blogspot URLs are
+  `http:`**, and Blogger serves byte-identical `image/png` over `https:` (measured: same sizes, same types),
+  so a maintainer who cares that a wiki served over HTTPS points at plaintext image requests has a
+  two-character-each change available at any time. We do not make it: Q-7 says these hotlinks stay until
+  they 404, Q-11's "move the URL" policy is about a dead *project* host with a real new home, and a media
+  URL is the thing a maintainer is likeliest to replace with a hosted screenshot (D-6) - which would make
+  our edit a piece of churn in a page-diff history nobody can rewrite. `tools/link-status-allow.txt` gains
+  nothing, because there is no status to accept: allow-listing is for URLs we keep *despite* a status, and
+  every URL on this page has the good one. *(0.5 h)*
+- T3.5 **Review gate met, and published (Q-15).** The page was re-read raw (entry shapes, section order,
+  the one added section's fence and blank lines) and as the 49 bullets plus 1 addition plus 8 generated
+  lines the count report says they are, then through every gate: style clean (still the one legacy
+  suppression), links 73 URLs across all pages / 63 on this page / 0 broken, gallery lossless with the
+  exemption note printed, demos 8 of 8 cited and `go build ./demos/...` clean, snippets clean, symbols
+  clean, `review-checklist.py` exits 0 with only ASK lines left. Commits, in order: `Reword the legacy
+  mouse demo entry`, `Let the symbol gate read file paths as paths`, `Updated Gallery (markdown)`, plus
+  the tooling that made those green (`Record an approved gallery section, not a bigger budget`,
+  `Measure the _demos claim instead of asserting it`, `Print an approved section record as its evidence`).
+  The one ASK the page still carries - "no link to another built page" - is answered here rather than
+  fixed: Gallery is a leaf (Home links it, `_Sidebar.md` links it, `../tcell/README.md` links it), PLAN 6's
+  per-page "See also" has no section to live in on this page because 6.2 sanctions exactly one new section
+  and the machine-generated block owns it - an authored See-also sentence inside that block is deleted by
+  the next re-generation. So the See-also graph stays a T7.2 item, where it belongs with the other four
+  stubs that also link nothing yet. `git diff --stat upstream/master HEAD -- Home.md Gallery.md` is now
+  **Gallery 24 insertions / 3 deletions** (2 Q-11 URL moves, 1 Q-13 addition, 1 Q-7 reword, 20 lines of
+  new section) and Home 72/3, which is still the whole review surface for a future upstream paste.
+  *(0.5 h)*
+- Found, and fixed in the right place: `tools/symbol-coverage.py` read a backticked **file path** as an
+  API claim. The new section's `go run _demos/mouse.go` produced `BAD SYMBOL: '_demos/mouse.go' ... 'go'
+  does not exist anywhere in the root package` (the dotted-token branch took `go` from `mouse.go` as the
+  leaf), and `sixel.go` produced a package-reference warning. The two tempting wrong answers were plain
+  text for a file name - which is how a page stops being able to name `tscreen.go` in code font - and an
+  `api-allow.txt` entry per file, which AGENTS forbids and 6.4 makes worthless: the Architecture page is
+  specced to cite `vt/emulate.go`, `color/fit.go` and a dozen more, so Phase 5 would have hit this on
+  scale. The tokenizer now treats a token with a `/` or a source-file suffix as a path, and the path that
+  *can* be checked (does this demo / `_demos` file exist and build) is checked by S8.2b, which already
+  failed a page naming `_demos/nosuch`. Tested both ways: paths quiet, `TerminfoScreen` and
+  `Style.SetUnderline` still `BAD SYMBOL`.
+- Found, and it is a design note rather than a bug: `review-checklist.py` runs every gate with no
+  arguments, so had the new section's approval been a command-line flag, both the checklist and CI would
+  have gone red the day the section landed and green again only by teaching every caller about it. That is
+  the argument for decision files over flags, and it was invisible until a change needed it.
+- Exit **met (2026-10-24, publish included per Q-15):** R2 is met - all prior information is present and
+  provably so, `check-gallery.py` reports zero unexplained losses and prints every deviation it knows
+  about (2 recorded URL moves, 1 recorded addition, 1 approved section exempting 8 generated entries), and
+  every URL status on the page is recorded above: the 54 URLs the page carried into this phase plus the 9
+  it added, 63 in all, answering 200. PLAN 13's Gallery line is satisfied on all three clauses (all entries, every URL status
+  recorded, demos section present) and its box stays unticked until T7.1 re-verifies it, which is how the
+  Phase 2 record left Home's line too. Phase 4 is unblocked: `Getting-Started` can now point a reader at
+  the demos section instead of promising it, because the section exists and every command in it runs.
 
 ### Phase 4 - Tutorial (`Getting-Started`) (4-6 h) - *re-estimated by Q-4, was 9-12 h*
 - T4.1 Read `TUTORIAL.md` end to end; build the link map (its headings -> the order a reader meets
@@ -872,7 +1006,9 @@ Note: there is no exported `TerminfoScreen` type in v3 (only `NewTerminfoScreen`
 Demonstrations 4 / Editors 3 / UI Frameworks 7 / Games 13 / Productivity & Utilities 21 /
 Miscellaneous 1 = 49 bullets, 48 with links, 44 on github.com. Hosts and counts in S2.
 Post-migration rule: same 49 or `49 + N` with `N` approved additions; every delta listed in the
-review note with its commit message.
+review note with its commit message. After Phase 3 the rule has a second clause with the same shape: one
+approved **section** (`tools/gallery-sections.txt`, PLAN 6.2's "## Demos in the Repository") whose
+generated entries are exempt from the additions budget and visible in the checker's own report.
 
 **Current draft state (N = 1, Q-13):** Demonstrations 4 / Editors 3 / UI Frameworks 7 / Games 13 /
 Productivity & Utilities **22** / Miscellaneous 1 = **50 bullets, 49 with links**, the extra one being
@@ -880,6 +1016,17 @@ Productivity & Utilities **22** / Miscellaneous 1 = **50 bullets, 49 with links*
 category). URL hosts on the page now: github.com 45, codeberg.org 2 (Q-11), 2.bp.blogspot.com 2,
 youtu.be 1, www.youtube.com 1, user-images.githubusercontent.com 1, git.sr.ht 1, termshark.io 1 = 54.
 `tools/check-gallery.py` proves the 49 baseline entries are still all present and in order.
+
+**After Phase 3 (N = 1, plus one approved section):** the 6 inherited categories exactly as above, plus
+`## Demos in the Repository` with 8 entries (the library's own `demos/` programs, generated) = **58
+bullets, 57 with links** (the 57th unlinked one is still the legacy `mouse demo` bullet, Q-7). URL hosts
+on the page now: github.com 54 (45 project links, the `demos` directory, 8 demo programs), codeberg.org 2
+(Q-11), 2.bp.blogspot.com 2, youtu.be 1, www.youtube.com 1, user-images.githubusercontent.com 1,
+termshark.io 1, git.sr.ht 1 = 63, all answering 200 on 2026-10-24 and the 5 media URLs verified to a
+content type or a page title (PLAN Phase 3's T3.4 record). Deletions upstream would have to review: 3
+lines, the 2 Q-11 URL moves and the 1 Q-7 reword; the other 24 insertions are the addition and the new
+section. `tools/check-gallery.py` still proves all 49 baseline entries are present, in their categories,
+in baseline order - which is the property R2 is actually about.
 
 ## Appendix C - Commands to re-derive every fact in this plan
 
