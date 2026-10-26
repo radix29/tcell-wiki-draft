@@ -71,6 +71,8 @@ A reader who needs the last word has `TCELL_NEGOTIATE=disable` and `TCELL_ALTSCR
 
 ## A Run Worth Copying
 
+All of these lines run from a clone of the library, where `./demos` lives.
+
 ```console
 $ go run ./demos/clipboard
    Your terminal (WezTerm 20240203) claims to allow clipboard access.
