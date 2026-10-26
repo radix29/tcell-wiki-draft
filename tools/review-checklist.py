@@ -128,9 +128,11 @@ def check_page(page: str, text: str, built: set, links_out: dict, headings: dict
         # published order (5.4); any other page that names one of these five knobs owes a link to it.
         asks.append("documents TCELL_* names: precedence is per knob, not one ladder - the environment "
                     "wins for the alternate screen, the mouse, the keyboard protocol, negotiation and "
-                    "the escape delay, an option wins for the terminal name and the color count, and a "
-                    "terminal that replies wins over both (PLAN.md Phase 6, T6.2). Say which side wins "
-                    "for every knob this page names, and link `Terminal-Setup` if this is not that page")
+                    "the escape delay, an option wins for the terminal name and for a color count together "
+                    "with the 24-bit answer such a count carries (so `TCELL_TRUECOLOR` loses to an "
+                    "option), and a terminal that replies wins over both (PLAN.md Phase 6, T6.2). Say "
+                    "which side wins for every knob this page names, and link `Terminal-Setup` if this "
+                    "is not that page")
     refs = repo_file_refs(body)
     if refs:
         fails.append("page references " + ", ".join(refs[:3]) + " outside a fenced block - route C says "
