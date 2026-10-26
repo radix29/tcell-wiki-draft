@@ -67,8 +67,8 @@ Done: the **build is complete** (Phase 7 closed on 2026-10-26 with all ten Defin
 `PLAN.md` 13 ticked), so sessions from here are maintenance, not construction - read `MAINTAINING.md` first.
 Draft repo + wikis enabled (render branch is `master`; render HEAD moves with every publish, so
 read it with `git ls-remote --symref render HEAD` rather than trusting any SHA written here - the last few
-were `fa34e5a` (Phase 2), `20c2e6c` (Phase 6) and `9d2ac28` (Phase 7), each one a `Preview draft pages`
-commit), `origin/master` was pushed once with CI green on it
+were `20c2e6c` (Phase 6), `9d2ac28` (Phase 7) and `c33b5ff` (the color, cursor and constants-count
+corrections), each one a `Preview draft pages` commit), `origin/master` was pushed once with CI green on it
 (`.github/workflows/qa.yml`, run `40112709147`, 15/15 steps), remotes rewired,
 `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
@@ -92,14 +92,14 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
 git diff --stat upstream/master HEAD -- Home.md Gallery.md Architecture.md Function-Reference.md \
                                                           Terminal-Setup.md   # the deliverable; today:
-                                                            # Gallery 26 insertions / 3 deletions (2 URL
-                                                            # moves Q-11, 1 addition Q-13, 1 reword Q-7, the
+                                                            # Gallery 27 insertions / 4 deletions (2 URL
+                                                            # moves Q-11, 1 addition Q-13, 2 rewords Q-7, Q-9, the
                                                             # new `## Demos in the Repository` section, and the
                                                             # Phase 7 nav line that made Gallery stop being the
                                                             # one page with no outbound internal link),
                                                             # the Phase 2 Home rewrite (72/3), Architecture's
                                                             # 127 insertions and the two Phase 6 reference
-                                                            # pages' 416 and 103, all three new pages as far
+                                                            # pages' 416 and 105, all three new pages as far
                                                             # as upstream is concerned (their Phase 1 stubs
                                                             # are our own commits, which is why the diff of a
                                                             # written page still reads as all additions)
@@ -245,8 +245,11 @@ Entry format — exactly this shape, one line each:
 - `_emphasis_` is the established idiom; don't introduce `*emphasis_` mixes or HTML tags. Blank
   line before and after every list and heading.
 - The library is **`_Tcell_` in prose** (Q-9) - bare `Tcell` only in headings, file names and paths,
-  and `tcell` inside code/backticks because that is the package name. `check-style.py` rules `name`
-  and `heading-period` enforce both, so `Gallery.md`'s `# Gallery of Tcell Examples` H1 stays legal.
+  and `tcell` inside code/backticks because that is the package name. `check-style.py` rules `name`,
+  `pkg-name` and `heading-period` enforce the three directions, so `Gallery.md`'s `# Gallery of Tcell
+  Examples` H1 stays legal while a page writing "built using tcell" now fails the gate - `pkg-name` is
+  page-only on purpose, because PLAN.md quotes the lowercase name in a decision record and a record is not
+  a page.
 - Don't mass-reformat. `Gallery.md` contains one legacy trailing space (`## UI Frameworks `);
   leave whitespace alone unless the whitespace *is* the fix, since cosmetic churn pollutes the
   published page-diff history.
