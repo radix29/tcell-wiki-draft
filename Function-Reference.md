@@ -381,7 +381,7 @@ A program that wants the first two can reach the same door through `Tty` and the
 | `Key*` | 214 virtual key codes: printable aliases, function keys, editing keys, physical key names, the legacy CTRL letters | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#Key) |
 | `Rune*` | 32 box-drawing and graphical glyphs, named after the terminfo strings they stand in for | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#pkg-constants) |
 | `Mod*` | 16 modifier bits, every one of them either plain or left and right variants | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#ModMask) |
-| `Button*` | eight mouse buttons including the thumb buttons, as the mask a mouse report carries | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#ButtonMask) |
+| `Button*` | twelve names for the mask a mouse report carries: the eight buttons (the thumb buttons among them), a none, and three aliases for buttons one to three | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#ButtonMask) |
 | `Wheel*` | the four wheel directions, declared in the same block as the buttons and reported the same way | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#ButtonMask) |
 | `Attr*` | the eight attribute bits behind the deprecated mask calls, where underline is deliberately not one of them | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#AttrMask) |
 | `CursorStyle*` | the seven cursor shapes, six of them one shape in two blink states | [pkg.go.dev](https://pkg.go.dev/github.com/gdamore/tcell/v3@main#pkg-constants) |
