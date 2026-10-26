@@ -232,8 +232,9 @@ def main() -> int:
                     help="enforce PLAN.md 6.5 as answered by Q-6: every structural name (types, funcs, "
                          "vars, methods) named by exactly one page, every constant group owned by group")
     ap.add_argument("--gate-kinds", default="type,func,var,method",
-                    help="which buckets --gate measures (default type,func,var,method = the 179 structural "
-                         "names; constants are covered by group, never one row per name)")
+                    help="which buckets --gate measures (default type,func,var,method = the structural "
+                         "names, as many as the checkout exports today and no fixed number to keep; "
+                         "constants are covered by group, never one row per name)")
     ap.add_argument("--strict-dots", action="store_true",
                     help="treat pkg.Symbol references to unknown packages as errors, not warnings")
     args = ap.parse_args()

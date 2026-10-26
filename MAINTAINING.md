@@ -85,7 +85,8 @@ $ tools/check-links.py                    # the same, with the external URLs act
 Six GATEs: `check-style.py` (house style), `check-links.py` (slugs, anchors, URLs), `check-gallery.py`
 (the 49 inherited entries are all still there, in order), `check-demos.py` (the demos and `TUTORIAL.md`
 headings the pages link really exist), `make-samples.py` (every `go` fence compiles; the `headless=yes`
-one runs), `symbol-coverage.py --gate` (no invented API; all 179 structural names owned by exactly one
+one runs), `symbol-coverage.py --gate` (no invented API; every structural name the checkout exports owned
+by exactly one
 page; 14 constant groups; the environment audit). Then ASK lines: review questions a script cannot
 settle, answered in the plan record for the phase rather than on a page.
 
