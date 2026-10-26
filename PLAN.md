@@ -1627,6 +1627,14 @@ docs, one tool, and corrections to claims this plan had been carrying.
     `Terminal-Setup` answers **3 `<table>` and 1 `<pre>`**. The viewport probe then re-ran against those
     published URLs (the 375 numbers quoted under T7.2 are the published ones, taken after the publish, and
     the exit code is 0 for all six pages: nothing escapes the column). *(1 h)*
+  - **The record commit and its own push.** The plan/runbook record landed as `31beaa9` ("Record Phase 7
+    completion in the plan and runbook", `PLAN.md` + `AGENTS.md` + `README.md`, 371 insertions) and
+    `tools/publish.sh` pushed `f048cce` -> `31beaa9` with the mirror reporting "the render tree already
+    matches the manifest" - the honest no-op form of a publish, since none of those three files is a page -
+    and CI went green on it (run `40382026867`, 46s). `git rev-list --count origin/master..HEAD` is 0 and
+    `git ls-remote --symref render HEAD` answers `9d2ac28`, so the phase ends in the state `AGENTS.md`
+    requires rather than one page short. Because that push touched no page, every page-level number in this
+    record still describes what a reader gets.
 - **Found in Phase 7**, none of it page content and all of it re-checkable: (1) GitHub's wiki stylesheet
   gives markdown tables `display: block; overflow-x: auto`, so "wide tables are the usual casualty" is the
   wrong failure model for this renderer - tables cannot widen the page, they swipe inside their own box, and
@@ -1639,6 +1647,17 @@ docs, one tool, and corrections to claims this plan had been carrying.
   loses table column boundaries and loses nothing else; recorded once, with the reason it is accepted.
   (5) The probe found no defect, which for a phase whose whole job was "look at the published pages from the
   reader's side" is the result the previous six phases were banking on.
+
+**Exit criterion: 7.2 is the phase's own, and it is met** - "nav/sidebar complete, no orphan page, tables and
+diagrams readable at 360px, maintenance note committed". Nav is Home-as-hub plus the droppable prototype
+sidebar, and the one orphan the graph had (a page with no outbound link) is gone; every page is readable at
+375 *and* at 320, which is narrower than the 360 the criterion named, with the mechanism understood rather than
+assumed; the maintenance note is committed and not rendered. The other half of the DoD - "the DoD list in 13
+ticks" - now also holds, with its two readings written beside the ticks instead of under the rug. **Cut from
+Phase 7** by the shape of the build rather than by a decision: the upstream proposal and the site-wide sidebar
+(Q-2, D-1), and the six deferred topic pages (Q-3), all of which are still ahead of the wiki and none of which
+this phase was allowed to write. Nothing is left unpublished: the draft owner's standing "don't leave a green
+phase in a local branch" is met with `git rev-list --count origin/master..HEAD` at 0.
 
 Dependency graph: P0 -> P1 -> P2 -> P3 -> P4 -> P5 -> P6 -> P7. P3 is independent of P4/P5 content
 but shares the style/nav work; T6.3 (symbol audit) depends on P4+P5 existing so cross-links and owner
