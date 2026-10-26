@@ -1,6 +1,6 @@
 # Gallery of Tcell Examples
 
-Here's a gallery of applications and libraries that were built using tcell:
+Here's a gallery of applications and libraries that were built using _Tcell_:
 
 To write a program like these, [Getting Started](Getting-Started) starts from an empty directory, and [Home](Home) maps the rest of this wiki.
 
