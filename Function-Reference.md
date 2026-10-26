@@ -16,7 +16,7 @@ A program that draws anything starts by getting a screen and opening it. What th
 | `NewTerminfoScreen` | the same screen, for code that wants its dependence on `$TERM` said out loud | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `NewTerminfoScreenFromTty` | builds that screen on a Tty of your own, which is how a mock or a named device becomes the screen | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `TerminfoScreenOption` | the type both constructors take the options as, one method deep and closed to anything outside the package | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
-| `OptColors` | says how many colors there are instead of letting the environment say, where 0 means none | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
+| `OptColors` | says how many colors there are instead of letting the environment or the reader say, where 0 means none and any count above 256 is how a program asks for 24-bit color | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `OptTerm` | says what terminal this is instead of reading `$TERM`, which is what a test or an exotic box needs | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `OptAltScreen` | turns the alternate screen buffer off, on by default, and the reader can still overrule it | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `OptSanitizeContent` | strips control characters out of text before drawing it, which is slower and harder to attack | [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
@@ -296,7 +296,7 @@ Five questions about the terminal the program is standing in. The answers are se
 
 | Symbol | What it does | Where it lives |
 |---|---|---|
-| `Colors` | how many colors this terminal has, zero meaning monochrome | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
+| `Colors` | how many colors this terminal has, where zero means monochrome and 16777216 means 24-bit color is what this screen sends, which no other call tells a program | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `Terminal` | the terminal's name and version, either one empty when it never said | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `Tty` | the device underneath, when this screen is a terminal at all | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tty.go](https://github.com/gdamore/tcell/blob/main/tty.go) |
 | `CharacterSet` | the locale's codeset, for diagnostics: text is translated to UTF-8 either way | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
