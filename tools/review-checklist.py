@@ -121,8 +121,16 @@ def check_page(page: str, text: str, built: set, links_out: dict, headings: dict
             asks.append(f"repeats a `##` topic also in {other} - one of the two pages should link "
                         "instead of restating it (PLAN.md 5.4)")
     if "TCELL_" in text:
-        asks.append("documents TCELL_* vars: did you check the precedence order (flag > env > "
-                    "terminfo > built-in default) and say it out loud? PLAN.md 13 wants all of them")
+        # Phase 6 T6.2 measured the ladder knob by knob and there is no single order to name, and no
+        # terminfo rung either because v3 reads no terminal database - so the old wording of this ASK
+        # ("flag > env > terminfo > built-in default", PLAN.md 13's phrasing) was asking a page to
+        # publish a rule the library deleted. Phase 7 T7.1 replaced it. `Terminal-Setup` owns the
+        # published order (5.4); any other page that names one of these five knobs owes a link to it.
+        asks.append("documents TCELL_* names: precedence is per knob, not one ladder - the environment "
+                    "wins for the alternate screen, the mouse, the keyboard protocol, negotiation and "
+                    "the escape delay, an option wins for the terminal name and the color count, and a "
+                    "terminal that replies wins over both (PLAN.md Phase 6, T6.2). Say which side wins "
+                    "for every knob this page names, and link `Terminal-Setup` if this is not that page")
     refs = repo_file_refs(body)
     if refs:
         fails.append("page references " + ", ".join(refs[:3]) + " outside a fenced block - route C says "
