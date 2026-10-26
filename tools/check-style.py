@@ -29,6 +29,16 @@ EMU_RE = re.compile(r"(?<![\w*`])\*(?!\s)[^*\n]*?\*(?![\w*`])")
 # package name stays lowercase in code. A leading _ is the italic marker, so requiring a non-word lookbehind
 # is what keeps "_Tcell_" and "_Tcell_'s" clean while "Tcell's" is not.
 NAME_RE = re.compile(r"(?<![\w`/\\.\-])Tcell(?![\w`])")
+# Q-9's other half. The rule above catches the capitalised name standing where _Tcell_ belongs; this one
+# catches the lowercase package name standing there instead, which the rule above cannot see. PLAN.md 7
+# lets `tcell` live only inside code, and a page that writes "built using tcell" is prose calling the
+# library by its import path. The lookarounds keep what the pages legitimately contain out of the finding:
+# a module path (github.com/gdamore/tcell/v3), this repo's own slugs (tcell.wiki, tcell-wiki-draft) and
+# anything hyphenated. Markdown link targets are blanked before the test because a URL is not prose -
+# every URL on these pages ends in /gdamore/tcell/something - and the rule is page-only because PLAN.md
+# quotes this very name in a decision record, and a record is not a page.
+PKG_LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
+PKG_RE = re.compile(r"(?<![\w`/\\.\-])tcell(?![\w`/\\.\-])")
 IMAGE_EXT = re.compile(r"\.(png|jpe?g|gif|webp|bmp|svg)$", re.I)
 LOCAL_PAGE_LINK = re.compile(r"\.md$")
 
@@ -173,6 +183,12 @@ def lint(path: pathlib.Path, page: bool, out: Findings) -> None:
         if NAME_RE.search(prose) and not H_RE.match(line):
             out.add(path, n, "name", "bare 'Tcell' in prose; write _Tcell_ (PLAN.md 7, Q-9) - bare Tcell is "
                     "for headings, file names and paths, and `tcell` is the package name inside code",
+                    line=line, page=page)
+        if page and PKG_RE.search(PKG_LINK_TARGET_RE.sub(lambda m: " " * len(m.group(0)), prose)) \
+                and not H_RE.match(line):
+            out.add(path, n, "pkg-name", "bare 'tcell' in prose; _Tcell_ is the library and the lowercase "
+                    "name belongs inside code (PLAN.md 7, Q-9) - the module path, this repo's slug and any "
+                    "hyphenated name are already excluded, so this is the loose usage, not a false touch",
                     line=line, page=page)
         if H_RE.match(line) and line.strip().endswith("."):
             out.add(path, n, "heading-period", "heading ends with a period; PLAN.md 7 wants Title Case with "
