@@ -14,7 +14,7 @@ A program passes these to NewScreen and to its two siblings. None of them is a p
 
 | Option | What it decides | If you say nothing |
 |---|---|---|
-| OptColors | how many colors exist, where 0 means none at all | the environment and the terminal decide together |
+| OptColors | how many colors exist, where 0 means none at all and any count above 256 is how a program asks for 24-bit color | the environment and the terminal decide together |
 | OptTerm | which terminal this is, instead of trusting `$TERM` | `$TERM` is believed, and an unknown name is guessed |
 | OptAltScreen | whether the alternate screen buffer is used | it is used |
 | OptSanitizeContent | whether control characters are stripped out of text before it is drawn | text is drawn as it was handed over |
@@ -33,7 +33,7 @@ Everything here is read when the screen opens, which is after the options above 
 | Variable | The value it listens for | What it overrules |
 |---|---|---|
 | `TCELL_ALTSCREEN` | disable, and only that word | a program's choice, including the default of using the buffer |
-| `TCELL_TRUECOLOR` | disable | the 24-bit answer; the palette count stays where it was |
+| `TCELL_TRUECOLOR` | disable | the 24-bit answer, but only when the program named no color count; the palette count stays where it was |
 | `TCELL_NEGOTIATE` | disable, or auto to force the conversation on | the option, in whichever direction it went |
 | `TCELL_MOUSE` | disable | a program's request for mouse events, silently |
 | `TCELL_KEYBOARD_PROTOCOL` | legacy, kitty, win32, xterm, or auto to hand it back | the protocol a program asked for; a value nobody recognizes changes nothing |
@@ -64,7 +64,7 @@ Windows and plan 9 report UTF-8 and read none of the locale variables, so a misc
 The promise that the environment beats a program is true for most knobs and false for two of them, and the split is not arbitrary: what a reader sets from the shell describes the terminal, and what a program passes describes its own needs.
 
 - The environment wins for the alternate screen, the mouse, the keyboard protocol, whether to negotiate at all, and the escape delay, because all five are read after the options were applied. Setting `auto` for the keyboard protocol hands the decision back to negotiation, which is the escape hatch for a reader who wants to undo a program's insistence.
-- The program wins for the terminal name and the color count, because both are only consulted when no option supplied them: an option beating `NO_COLOR`, `COLORTERM` and `$TERM` at once, and no way for a reader to argue past it.
+- The program wins for the terminal name and for the color count and its 24-bit answer, because all three are only consulted when no option supplied them: an option beating `NO_COLOR`, `COLORTERM`, `TCELL_TRUECOLOR` and `$TERM` at once, and no way for a reader to argue past it.
 - Nothing wins over a terminal that answers, except a refusal to ask: the replies arrive last, and one of them is the number of colors a program will be told.
 
 A reader who needs the last word has `TCELL_NEGOTIATE=disable` and `TCELL_ALTSCREEN=disable`, and the cost of both is that the program is being told less, not more.
