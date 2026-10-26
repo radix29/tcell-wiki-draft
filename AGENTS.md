@@ -25,13 +25,18 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   else fenced, 28 library files cited by path and no symbol name backticked, which is why its file-path
   backticks are all the auditor sees on that page and why the two reference pages are the ones that claim
   symbols), `Function-Reference.md` (the Phase 6 page and the owner of every API name: twelve tables and 178
-  one-line rows carrying all 179 structural names with the file that declares each of them, 14 constant groups
+  one-line rows carrying all 182 structural names with the file that declares each of them (182 in the checkout
+  the tools audit, where 6.5 counted 179, arithmetic PLAN.md's Phase 6 record owns and deliberately does not
+  renumber), 14 constant groups
   claimed by group and never row by row, the 11 names no program can call kept and explained instead of
-  dropped, one `headless=yes` program the harness really runs, and 1,364 words outside its tables against 5.1's
+  dropped, the 12 `Button*` names counted so the 14 group rows add up to the header's 712, the 16777216 that
+  `Colors` answers when the screen chose 24-bit and the count above 256 that asks for it, one `headless=yes`
+  program the harness really runs, and 1,365 words outside its tables against 5.1's
   "1,000-1,400 words + tables"), and `Terminal-Setup.md` (the other Phase 6 page: three tables and one
-  `console` block, 1,068 words outside the tables against 5.1's 700-1,100, all 8 `TCELL_*` names plus the 11
+  `console` block, 1,088 words outside the tables against 5.1's 700-1,100, all 8 `TCELL_*` names plus the 11
   other environment names the library reads, and the precedence stated per knob because a single rule would be
-  wrong for two of the knobs - see Tooling for the list that keeps the variables honest). Q-6 reserves every
+  wrong for two of the knobs - the 24-bit answer travels with a color count a program names, so
+  `TCELL_TRUECOLOR=disable` is a no-op there - see Tooling for the list that keeps the variables honest). Q-6 reserves every
   backticked name for the page that owns it, and both Phase 6 pages are now subject to that gate rather than
   waiting for it.
   `_Sidebar.md` sits
@@ -269,7 +274,8 @@ Entry format — exactly this shape, one line each:
   fragment, `mode=skip` is not Go (transcripts, v2 comparisons), and `headless=yes` also *runs* the
   program on the vt emulator, which requires an ESC arm. See `samples/README.md`.
 - **A page backticks an API name only if it owns it (Q-6).** The single owner is `Function-Reference`,
-  which 6.5 requires to name all 179 structural names in its tables and does, so the other pages write names
+  which 6.5 requires to name every structural name in its tables and does (182 today against 6.5's 179), so the
+  other pages write names
   like EventResize and EnableMouse in plain prose, or show them inside a code fence where they are code and
   not a claim. Phase 6 closed the loop the earlier phases only predicted: `symbol-coverage.py --gate` now
   reports every structural name owned by exactly one page (and 180-odd page-cited names checked, where it
