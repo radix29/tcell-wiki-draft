@@ -159,7 +159,7 @@ Four calls and one type, and shapes are the part of a terminal most likely to ig
 |---|---|---|
 | `ShowCursor` | puts the cursor at a cell, and hides it if the position is off screen or is -1, -1 | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `HideCursor` | hides it, which the doc comment calls an alias for showing it at -1, -1 | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
-| `GetCursor` | where it was last told to be, or -1, -1 when it is hidden | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
+| `GetCursor` | where it was last told to be; a negative pair reads back as -1, -1, which is all HideCursor does, while an off-screen position comes back exactly as it was given and is hidden only on output | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go), [tscreen.go](https://github.com/gdamore/tcell/blob/main/tscreen.go) |
 | `SetCursorStyle` | asks for a shape, a blink state and a color, and does nothing on a terminal that cannot | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go) |
 | `CursorStyle` | the shapes: block, bar or underline, each one steady or blinking | [screen.go](https://github.com/gdamore/tcell/blob/main/screen.go) |
 
