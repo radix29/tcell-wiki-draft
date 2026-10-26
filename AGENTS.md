@@ -11,9 +11,13 @@ the live wiki *plus* the draft's own commits on top. `PLAN.md` is the plan; this
   wiki, written **only** by `tools/mirror-wiki.sh`, which copies exactly
   the files listed in `tools/pages.txt`.
 - That topology is the whole safety model: **a file is safe to commit the moment it is absent from
-  `tools/pages.txt`.** `PLAN.md`, `AGENTS.md`, `README.md`, `tools/`, `samples/` are tracked on purpose
+  `tools/pages.txt`.** `PLAN.md`, `AGENTS.md`, `README.md`, `MAINTAINING.md`, `UPSTREAM-FOLLOWUPS.md`,
+  `tools/`, `samples/` are tracked on purpose
   and never render as pages; the upstream artefact is the text of one page `.md`, pasted one page at a
-  time into someone else's wiki.
+  time into someone else's wiki. `MAINTAINING.md` (T7.3, Phase 7) is the process note for a stranger with
+  commit rights and no context; `UPSTREAM-FOLLOWUPS.md` (T7.4) is the F-1 package Q-2 parks - both
+  committed, neither sent, both linted by `check-style.py --all` so they cannot drift into page-style
+  violations, and both absent from the manifest, which is the only thing that makes a page.
 - Page bodies sit at the repo root as plain `.md` - the 6 pages of Q-3: `Home.md` (the nav hub since
   Phase 2, and the last page in Appendix D's commit order), `Gallery.md`, `Getting-Started.md` (the
   Phase 4 page: five authored sections, two `console` blocks, no `go` fence and no Go on it at all), and
@@ -54,10 +58,12 @@ origin    https://github.com/radix29/tcell-wiki-draft.git      this repo; draft 
 render    https://github.com/radix29/tcell-wiki-draft.wiki.git pages only, via tools/mirror-wiki.sh
 ```
 
-Done: draft repo + wikis enabled (render branch is `master`; render HEAD moves with every publish, so
-read it with `git ls-remote --symref render HEAD` rather than trusting this sentence, whose history runs
-`2ebcbf8` GitHub's `Initial Home page` placeholder -> `32022f9` first real page preview -> `39e5378` second
-preview, all three on 2026-10-24), `origin/master` was pushed once with CI green on it
+Done: the **build is complete** (Phase 7 closed on 2026-10-26 with all ten Definition-of-Done boxes in
+`PLAN.md` 13 ticked), so sessions from here are maintenance, not construction - read `MAINTAINING.md` first.
+Draft repo + wikis enabled (render branch is `master`; render HEAD moves with every publish, so
+read it with `git ls-remote --symref render HEAD` rather than trusting any SHA written here - the last few
+were `fa34e5a` (Phase 2), `20c2e6c` (Phase 6) and `9d2ac28` (Phase 7), each one a `Preview draft pages`
+commit), `origin/master` was pushed once with CI green on it
 (`.github/workflows/qa.yml`, run `40112709147`, 15/15 steps), remotes rewired,
 `tools/pages.txt` + `.gitignore` + tooling + `README.md` +
 `.github/workflows/qa.yml` committed, `baseline/` captured (`upstream/master` = `8e83ce1`, 49 Gallery
@@ -81,9 +87,11 @@ Verify a session against this repo (all seven must pass; CI runs the same set):
 tools/review-checklist.py --offline    # all gates at once, plus per-page review questions
 git diff --stat upstream/master HEAD -- Home.md Gallery.md Architecture.md Function-Reference.md \
                                                           Terminal-Setup.md   # the deliverable; today:
-                                                            # Gallery 24 insertions / 3 deletions (2 URL
-                                                            # moves Q-11, 1 addition Q-13, 1 reword Q-7, and
-                                                            # the new `## Demos in the Repository` section),
+                                                            # Gallery 26 insertions / 3 deletions (2 URL
+                                                            # moves Q-11, 1 addition Q-13, 1 reword Q-7, the
+                                                            # new `## Demos in the Repository` section, and the
+                                                            # Phase 7 nav line that made Gallery stop being the
+                                                            # one page with no outbound internal link),
                                                             # the Phase 2 Home rewrite (72/3), Architecture's
                                                             # 127 insertions and the two Phase 6 reference
                                                             # pages' 416 and 103, all three new pages as far
@@ -323,6 +331,17 @@ tools/wikilib.py              shared stdlib helpers: manifest, fences, links, AS
 tools/gallery-additions.txt     approved entries the baseline lacks (Q-13): name, URL, evidence
 tools/publish.sh                THE publish path: mirror the preview, then push, then verify (Q-14)
 tools/mirror-wiki.sh            render-wiki mirror only; --dry-run to inspect, --check as a gate
+node tools/viewport-probe.cjs   S8.6/T7.2 the reader-side probe of the *published* wiki, and the one tool
+                                  that is not a gate and not in CI (it needs a real browser; CI has none).
+                                  Starts its own headless Chrome, speaks the DevTools protocol over Node's
+                                  built-in WebSocket - no npm install, no puppeteer - pins device metrics
+                                  with `Emulation.setDeviceMetricsOverride` (`mobile=true` below 1024) and
+                                  reports the content column, whether the *document* scrolls sideways, and
+                                  per table whether its scroll box is smaller than its content and whether
+                                  its right edge escapes the viewport; `--control` injects a one-cell table
+                                  carrying an 80-character unbreakable word, so a clean report means
+                                  "checked and clean" and not "the probe is blind". Exit 0/1 like the rest,
+                                  and it takes URLs, so it can probe a fork or a saved page cache too
 ```
 
 Allow-lists carry only legacy exceptions with a written reason: `tools/style-allow.txt` (1 upstream
@@ -367,6 +386,40 @@ curl -sS https://github.com/radix29/tcell-wiki-draft/wiki/Function-Reference | g
 The two numbers Phase 6 published its env story with are one line of the auditor, and the invariant they
 assert is worth re-checking after any upstream move, because it is the check that catches a variable the
 library started or stopped reading: `tools/symbol-coverage.py | grep envlist`.
+
+The two **reader-side** checks Phase 7 added, both run against the published wiki rather than the file. The
+viewport probe's numbers, measured on the published pages on 2026-10-26: the content column is 311px (256 at
+320, 896 at 1300), no page's document scrolls sideways at any of the three widths, and 14 of the 17 tables on
+the set are wider than the column and therefore drag inside their own box (`Function-Reference` 363-468px,
+`Terminal-Setup` 345-458, `Architecture`'s platform table 387; that page's file table is exactly 311 and fits
+until 320). The widest unbreakable thing inside a table is 24 characters. Nothing is clipped anywhere,
+because a wiki markdown table is `display: block; overflow-x: auto` - a wide table becomes a swipe inside its
+own box instead of a broken page, which is what makes adding a column safe and makes the *drag width* the
+number to re-check when a page gains one:
+
+```bash
+node tools/viewport-probe.cjs https://github.com/radix29/tcell-wiki-draft/wiki/<slug> --width=375 --control
+```
+
+And the 80-column read, in a browser that runs no JavaScript: all six content pages arrive in full
+(292/320/335/431/843/406 lines for Home/Gallery/Getting-Started/Architecture/Function-Reference/
+Terminal-Setup), and `Architecture`'s three diagrams arrive as their own source text (`flowchart TB`,
+`sequenceDiagram`, `flowchart LR`) - T5.1's server-side measurement confirmed from the reader's side. A text
+browser renders a three-column table as one run-on line per row, because column boundaries are drawn by a
+browser and not by markdown; every cell still arrives, in row order, so this is an accepted property of 6.5's
+table shape and not something to fix on a page.
+
+```bash
+lynx -dump -nolist -width=80 https://github.com/radix29/tcell-wiki-draft/wiki/Architecture | head -40
+```
+
+One more fact worth knowing before adding a nav link anywhere: **GitHub renders `Home.md` as the wiki's
+landing page, so `/wiki/Home` is a redirect to `/wiki`** (measured with `curl -L`: 200 on `/wiki`, title
+`Home · radix29/tcell-wiki-draft Wiki`). Home needs no inbound link to be reachable and no page owes it one;
+`check-links.py` still resolves `Home` as a live slug, and Phase 7's graph rule (every content page links at
+least 3 others and is linked by at least 2, 28 page-to-page links) is about the other five. The one built
+page nothing links to is still `_Sidebar.md`, which is chrome by design and droppable, and that is what the
+checklist's one remaining CHECK line says out loud.
 
 If the `curl` check inside `check-links.py` fails because of sandbox/network restrictions it says so in
 its report instead of guessing, and never invent a URL from a project name.

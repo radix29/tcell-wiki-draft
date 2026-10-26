@@ -1,6 +1,6 @@
 # Tcell Wiki Rebuild - Implementation Plan
 
-Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-6 built,
+Status: Phase 0 complete (draft repo, remotes, manifest, baseline, S8 tooling, CI); Phases 1-7 built,
 green and **published** - Q-15 removed the ask, so the preview at `radix29/tcell-wiki-draft/wiki` renders
 all 7 manifest pages including Phase 2's `Home.md` rewrite, Phase 3's `Gallery.md` (all 49 baseline
 entries intact, one recorded addition, the sanctioned `## Demos in the Repository` section, and every URL
@@ -10,7 +10,18 @@ two measured `console` blocks, zero lines of Go, and 14 external targets all ans
 live page, 28 source files cited, zero backticked symbols), Phase 6's `Function-Reference.md` (179 of 179
 structural names owned once, 14 constant groups, twelve tables measured in the live HTML, one snippet that
 runs headless on the vt emulator) and Phase 6's `Terminal-Setup.md` (8 of 8 `TCELL_*` names and 19 of 19
-reader knobs, precedence measured per knob on the vt mock); Phase 7 not started
+reader knobs, precedence measured per knob on the vt mock); **Phase 7 complete (2026-10-26): the build is
+done** - full-set QA green with network, the See-Also graph closed in both directions (the one page edit the
+phase made is the sentence `Gallery.md` was missing, published at `9d2ac28`), mobile and text-terminal reads
+measured with a new probe (`tools/viewport-probe.cjs`: 17 tables, 14 of them drag inside their own box at
+375px, **zero pages scroll sideways at 375/320/1300**), the maintainer's note (`MAINTAINING.md`) and the
+upstream package (`UPSTREAM-FOLLOWUPS.md`, Q-2 parked, sent to nobody) committed as non-pages, and all ten
+Definition-of-Done boxes in 13 ticked with their readings written down. Phase 7's records also correct four
+claims this plan was carrying: the `Fini` panic is at `tscreen.go:675`, `TUTORIAL.md`'s `Fini` is in the
+`## Usage` fragment and not only in the demo, the checklist's env precedence ASK recited this file's ladder
+and now states the measured per-knob rule, and T5.1's mobile half is answered - a diagram's box tracks the
+column and its picture is drawn in a cross-origin iframe, so 6.4's "not the only copy of a fact" stays
+load-bearing
 Scope: rewrite `github.com/gdamore/tcell.wiki` from scratch (Home + Gallery + Getting-Started +
 Architecture + Function-Reference + Terminal-Setup - the 6-page build decided by Q-3 and named by Q-5)
 Out of scope (this pass): any change to the `../tcell` library repo, its `README.md`, `TUTORIAL.md`, or code
@@ -1450,33 +1461,184 @@ branch on purpose.
   `Events-and-Input`, `Unicode-and-Encodings`, `Platforms`, `Migration-v2-to-v3`.
 
 ### Phase 7 - Integration, polish, handoff (4-5 h)
-- T7.1 Full-set passes: S8.2 links, S8.5 style, S8.3 coverage, S8.7 per-page checklist. *(1.5 h)*
-- T7.2 Nav/sidebar completeness; "See also" graph has no orphans; mobile/terminal rendering spot
-  check of tables (wide tables are the usual casualty). *(1 h)*
-- T7.3 Maintenance note for the maintainer: a committed file in the draft (not a page, so it is not in
-  `tools/pages.txt`), proposed as upstream content only if asked: how to add a gallery entry, how to add
-  a page, which scripts to run, what "publish-on-push" implies. *(0.5 h)*
-- T7.4 Follow-up list for `../tcell` (F-1: README/TUTORIAL pointers to the wiki, fix the legacy
-  `wikis/Gallery` URL, document the `TCELL_*` vars the source reads but no doc names - Q-6's audit
-  counts 8, note the stale `mouse demo` claim, and list the 2 URL moves Q-11 made so a maintainer can
-  re-check the evidence and re-publish them upstream; **Phase 6 changes the shape of two of those**: the
-  wiki now documents all 19 environment names a reader can set, on `Terminal-Setup`, so the ask to upstream
-  is now "link the page" rather than "write the docs", and the page's own record of what each variable does
-  is measured rather than inferred, so a maintainer can re-run it; Phase 6's Found items 1-2 name the two
-  `Colors()` facts its own comment omits, and its item 3 the two comments that describe API the code
-  does not have: `GetClipboard` pointing at an `EventPaste` with a `Data()` field it does not have, and the
-  stray `.sim` at `screen.go:100`)); **plus the `TUTORIAL.md` thin spots found reading
-  it end to end at T4.1** (no module setup or `go get`; the three event-reference sections sit before the
-  section that creates the screen and the loop that reads them, so a beginner meets `EventResize` before
-  `NewScreen`; its fragments use `log`/`os`/`fmt`/`color` with no import block, so pasting one into an
-  empty module is three compile errors; `Fini` appears only in the demo application, three pages after
-  the screen is opened; nothing on the clipboard, the title, notifications or suspend) **and one library
-  defect measured during T4.5** (calling `Fini` on a screen whose `Init` failed panics with `close of nil
-  channel` in `tScreen.finish`, `tscreen.go:676`, so a program that exits on a failed `Init` is fine and
-  one that cleans up first is not); none of it is page content and none of it is sent (Q-2);  file as
-  issues/PRs **only if asked**. **Q-2: parked - prepare this package, do not send it.** *(0.5 h)*
-- T7.5 Publish final touches; confirm public result page by page; record published commit SHAs - by
-  Q-14 that is `tools/publish.sh` plus reading the rendered page, not a manual `git push`. *(1 h)*
+
+**Status: done (2026-10-26), and the build is complete.** Every gate ran over the whole page set with network,
+the nav graph has no orphan in either direction, the wide-table question was answered with a real browser at
+three viewports and a text browser at 80 columns, the maintainer's note and the upstream follow-up package
+are committed (and neither is a page or has been sent), and the preview was re-published and re-read page by
+page. What this phase *changed* on a page is one line, in `Gallery.md`; everything else it produced is
+docs, one tool, and corrections to claims this plan had been carrying.
+
+- T7.1 **Done (2026-10-26): the full set passes, and the ASK Phase 6 owed this task is fixed.** All four
+  named passes ran against all seven manifest files, with the external probes live rather than skipped:
+  S8.2 `check-links.py` reports 122 external URLs and 41 internal links with 0 broken; S8.5
+  `check-style.py` is clean on the pages (and on `--all`, which now also lints `MAINTAINING.md` and
+  `UPSTREAM-FOLLOWUPS.md`) with exactly 1 suppression, the inherited `## UI Frameworks ` trailing space;
+  S8.3 `symbol-coverage.py --gate` is clean - 182 structural names owned by exactly one page, 14 constant
+  groups claimed, 8 of 8 `TCELL_*` names and 19 of 19 reader knobs documented, 180 page-cited symbols
+  checked, and `reader ... missing from pages: 56` still the expected state because all 56 are constants
+  and Q-6 documents constants by group; S8.7 `tools/review-checklist.py` exits 0 both offline and online,
+  six GATEs PASS, the only lines left standing being ASKs and the by-design `_Sidebar` one.
+  - **The re-wording Phase 6 said this task owes (`54d3532`).** `review-checklist.py` asked every page
+    naming a `TCELL_` name to "check the precedence order (flag > env > terminfo > built-in default)",
+    which is 13's phrasing and not the library's rule: Phase 6 measured the ladder per knob and found no
+    terminfo rung to sit in it, because v3 reads no terminal database. The ASK now states the measured
+    rule (the environment wins for the alternate screen, the mouse, the keyboard protocol, negotiation and
+    the escape delay; an option wins for the terminal name and the color count; a terminal that replies
+    wins over both) and asks for a link to `Terminal-Setup` from any page that is not that page. An ASK
+    that recites the answer it wants is a better ASK than one that recites a deleted rule.
+  - **13's own hedge is cashed here, as it asked.** Its fence box says "every code fence in the wiki is
+    `go`-tagged, `gofmt`-clean and builds" and adds that if the wording still reads that way at T7.1 it
+    should be ticked against the honest reading with the reading said out loud. It still read that way, so:
+    every `go` fence - 5 of them, 2 complete programs (one of which is also *run*, headless, on the vt
+    emulator) and 3 `mode=lib` fragments type-checked by `go vet` - is gofmt-clean and builds in the S8.1
+    harness; shell is published in `console` fences, which PLAN 7 and `check-style.py` accept and the
+    harness skips by design; and `Architecture` publishes its code as three Mermaid diagrams and nothing
+    else. That is the ticked reading, and the box in 13 says so beside the tick.
+  - **What a full-set pass looks like in one command:** `tools/review-checklist.py` (drop `--offline` for
+    the URL probes) runs all six gates including the two Phase 6 added to it, prints the word counts 5.1's
+    budgets are graded against, and prints the env audit line. It is the command `MAINTAINING.md` tells a
+    stranger to run first. *(1.5 h)*
+- T7.2 **Done (2026-10-26): no orphan either way, and the wide-table worry is a measured non-problem with a
+  number attached.** `aca1155` added the one line `Gallery.md` was missing - `To write a program like
+  these, [Getting Started](Getting-Started) starts from an empty directory, and [Home](Home) maps the rest
+  of this wiki.` - which is the whole page edit this phase made. The graph, counted not eyeballed: 28
+  page-to-page links among the 6 content pages, every page now linking at least 3 others **and** being
+  linked by at least 2; `Gallery` used to be the one page with zero outbound internal links (an orphan in
+  the direction that matters for a reader who lands there from a search engine), and it now has 2. `Home`
+  is linked by `Gallery` and `_Sidebar` and needs no more, because GitHub renders it *as* the wiki's
+  landing page: `curl -L https://github.com/radix29/tcell-wiki-draft/wiki/Home` lands on `/wiki` with the
+  title `Home · radix29/tcell-wiki-draft Wiki`. `_Sidebar.md` lists all 6 content pages plus Home in three
+  groups and stays droppable - nothing links it, which is its design and what the checklist's one remaining
+  CHECK line says out loud. No built page links a deferred topic page: `check-links.py` resolves all 41
+  internal links against the 7 files that exist, so a deferred slug would be reported as a broken link, and
+  the graph dump printed exactly zero internal targets pointing at a missing file.
+  - **Mobile, measured rather than reasoned about.** `tools/viewport-probe.cjs` (new, this phase: it starts
+    its own headless Chrome, speaks DevTools to it over Node's built-in WebSocket, pins real device metrics
+    and reads the live page back - no dependencies, not a gate, and not in CI because CI has no Chrome) ran
+    all six published pages at 375x812, 320x812 and 1300x812. **No page scrolls sideways at any of the
+    three**: `documentScrollWidth` equals the viewport on every page at every width (375/320/1300), the
+    content column is 311/256/896, and no table's right edge passes the viewport. The reason is GitHub's own
+    stylesheet: a wiki markdown table is `display: block; overflow-x: auto`, so a table too wide for the
+    column becomes a box the reader drags *inside* instead of widening the page or clipping a cell. The
+    number worth keeping an eye on is therefore the drag width, not a breakage: at the 311px column the
+    hub page's 12 tables want 363-468px, `Terminal-Setup`'s 3 want 345-458, `Architecture`'s 2 want
+    311-387 - so 14 of the 17 tables need a horizontal drag inside their own box on a 375 phone, one
+    (`Architecture`'s file table, exactly 311) fits, and at 320 all 17 drag. At the desktop column (896) no
+    table drags at all: every one of them lays out at exactly 896. The widest unbreakable thing a reader
+    can meet inside a table is 24 characters (`NewTerminfoScreenFromTty`, `Function-Reference`), then 23
+    (`TCELL_KEYBOARD_PROTOCOL`), 21 (`OptControlStringLimit`) and 16 on `Architecture`; those are cell
+    contents, and the drag numbers above are why they are harmless.
+  - **The control is why those numbers mean something.** `--control` appends a synthetic table whose first
+    cell is a single 80-character word before measuring: it grows its own scroll box to 813px while the page
+    stays at 375 (`pageOverflow` -32). So the probe reports a too-wide table when one exists, the mechanism
+    is "the table scrolls" and not "the word breaks" (inside a scroll box a table is laid out at its
+    preferred width, which is also why nothing on these pages ever splits a token mid-word), and a page
+    reporting nothing escaping the column is a clean bill of health rather than a blind probe. No code fence
+    is clipped at any width either (`clippedFences` 0 on all six pages, because `pre` gets its own scroll
+    box).
+  - **Diagrams on a phone, which is the half T5.1 left open.** `Architecture`'s three diagrams render at
+    375, 320 and 1300 without ever exceeding the column: each enrichment container is exactly the content
+    column wide (311 / 256 / 896) and its right edge stays inside the viewport. What draws them is GitHub's
+    own bundle in a **cross-origin iframe** on `viewscreen.githubusercontent.com` - which is why T5.1 could
+    only see the container in the server HTML. Two honest limits, both stated instead of smoothed over: the
+    container *height* is not a measurement (the enrichment draws after `load`, and one run read
+    667/180/101 while another read 101/180/101 for the same three diagrams), and the **legibility of the
+    picture inside the frame is not measurable from the parent document at all**, so the rule 6.4 was built
+    on - a diagram may explain a fact but may not be the only copy of it - stays load-bearing and is met:
+    the prose above each diagram carries the same facts. What does survive to a no-JS reader is the diagram's
+    own source, and that is measurable: the container keeps 451/417/324 characters of text.
+  - **The text-terminal half is `lynx` 2.9.2 at 80 columns, on the published pages:** 292/320/335/431/843/406
+    lines for Home/Gallery/Getting-Started/Architecture/Function-Reference/Terminal-Setup, i.e. every page
+    arrives in full, and `Architecture`'s diagrams arrive as their source text exactly where they sit
+    (`flowchart TB` at dump line 154, `sequenceDiagram` at 182, `flowchart LR` at 234). That is T5.1's
+    server-side measurement confirmed from the reader's side, on a browser that runs no JavaScript. One
+    honest cost, recorded once so nobody rediscovers it as a surprise: a text browser renders a three-column
+    table as one run-on line per row (`OptAltScreen whether the alternate screen buffer is used it is used`),
+    because column boundaries are drawn by a browser and not by markdown. Every cell's text still arrives, in
+    row order, and 6.5 asked for these tables by name; the alternative shapes would trade a fact-rich table
+    for a prose wall, so this stays and is now a known property rather than an assumption. *(1 h)*
+- T7.3 **Done (2026-10-26): `MAINTAINING.md` is committed, is not a page, and says what T7.3 asked for.**
+  `16a8261`, at the repo root, deliberately absent from `tools/pages.txt` - the manifest, not a
+  `.gitignore`, is what keeps it out of the render - and offered upstream only on request, per Q-2. It is
+  written for a stranger with commit rights and no context, in five moves: **add a gallery entry** (the
+  exact line shape, the evidence to gather first, `tools/gallery-additions.txt` as the thing that keeps
+  `--max-additions` at 0, move-don't-delete for a dead host with `tools/gallery-moves.txt`, media URLs
+  reported rather than moved, and `## Demos in the Repository` as the section nobody curates because
+  `tools/check-demos.py --markdown` writes it); **add a page** (slug permanence, the untouchable `Home` /
+  `Gallery`, then a seven-step checklist from the single H1 through self-containment, `## See Also`, Q-6
+  symbol ownership, the fence-marker vocabulary and `console` for shell, GitHub's own commit message,
+  Home last); **run the checks** (one command, what the six gates are, the exit-code contract, `TCELL_DIR`,
+  and the four spot checks no script automates - the two `curl` counts, the `lynx` read, the viewport
+  probe); **what publish-on-push implies** (`tools/publish.sh` and why it mirrors before it pushes,
+  `--dry-run`, the mirror's refusal to publish an uncommitted page, forward-only history, and the fact that
+  pushing this repo changes nothing a reader sees because pages travel only through the manifest); and
+  **when a gate goes red after an upstream release** - the sentence Phase 6's Found item 4 told this task
+  to carry: the symbols step tracks the library's default branch on purpose, and the response is to write
+  the table row or the list line, never to widen a gate, because the alternative is `TCELL_ALTSCREEN`:
+  implemented, named nowhere, findable only by reading source. The three allow-lists are named as claims,
+  `tools/tcell-env-vars.txt` is named as *not* an allow-list, and CI's occasional GitHub 5xx gets its own
+  paragraph with the answer being a re-run. *(0.5 h)*
+- T7.4 **Done (2026-10-26): the package is prepared and nothing was sent (Q-2 is parked).** `f048cce`
+  adds `UPSTREAM-FOLLOWUPS.md`, also not a page, nine sections, each ending with the command that
+  re-derives it, every line number against `acf267d`, and each item written so a maintainer can check it in
+  a minute: the legacy `wikis/Gallery/` URL at `README.md:32`; the two repo-to-wiki pointers that close
+  the only direction Q-4 left open (`README.md` beside the Gallery line, `TUTORIAL.md` beside the "still
+  somewhat rough" sentence at `README.md:28`); the environment-variable ask, whose shape Phase 6 changed
+  and which is now "link the page" because `Terminal-Setup` documents all 19 names on measured ground -
+  `README.md` names 5 of the 8 `TCELL_*` and no markdown doc names `TCELL_ALTSCREEN`, `TCELL_LINES` or
+  `TCELL_COLS`, though source comments do (`tscreen.go:80`, `tty/tty_plan9.go:45` and `:197`), which is
+  why the ask is a link rather than a rewrite; the three doc comments that do not match the code
+  (`GetClipboard`'s `EventPaste`/`Data()` claim against `paste.go:26-48`, `paste.go:58-69`,
+  `input.go:872` and `demos/clipboard/clipboard.go:106-107`; the stray `.sim` at `screen.go:99-100`;
+  `Colors()`' comment at `screen.go:145-148` against `1 << 24` at `tscreen.go:1358-1364` and the 0-to-8
+  correction at `tscreen.go:539-540`); the `Fini`-after-failed-`Init` defect with a full reproduction
+  program; the five `TUTORIAL.md` thin spots with their line numbers; the six demos that carry no doc
+  sentence (`hello.go:44` and `clipboard.go:65-67` do, which is exactly the voice to copy); the two Q-11
+  URL moves with evidence re-collected today; and a closing "not proposed" list so nobody has to decline
+  the sidebar, the support links and a license change.
+  - **Two claims this task had been handed were wrong, and both are corrected rather than repeated.** The
+    panic is at **`tscreen.go:675`**, where `finish` closes `t.quit`; this task's own text said `:676`, and
+    the traceback and the source agree on 675. The defect itself was re-measured instead of trusted: a fresh
+    one-file module against the checkout, run where a process has no controlling terminal, panics with
+    `close of nil channel` in `tScreen.finish` (`tscreen.go:675`, called from `Fini` at `:668`) while the
+    same program that exits on the failed `Init` leaves cleanly - `Init` returns at `:410-412` long before
+    `:488` creates `t.quit`, which is the whole mechanism. And `TUTORIAL.md`'s `Fini` does **not** "appear
+    only in the demo application": it is at `:153` inside the `## Usage` event-loop fragment and at `:273`
+    in the demo. The thin spot is real but different, and is now written correctly - `Fini` appears twice,
+    both times inside a fragment, and in **no sentence**: nothing says the terminal is only restored if it
+    runs. `grep -ic` for clipboard / title / notif / suspend returning 0 four times, the single import block
+    at `:182`, and the fragment-time uses of `fmt`/`logMessage`/`log`/`color`/`os` at `:25`/`:42`/`:71`/`:96`
+    /`:99`/`:103`/`:154` all still check out, so item 6 stands on four of its five legs.
+  - Filed nowhere, and `MAINTAINING.md` and this section both say filing it is a human decision. *(0.5 h)*
+- T7.5 **Done (2026-10-26): published through `tools/publish.sh`, and the public result was read page by
+  page.** `tools/publish.sh` mirrored first and then pushed, exactly as Q-14 orders: the render wiki went
+  `20c2e6c` -> **`9d2ac28`** (`Preview draft pages`, `Gallery.md`, 2 insertions) and `origin/master` went
+  `62924e7` -> **`f048cce`** (5 commits: `aca1155` the page edit, `54d3532` the checklist, `e575cc0` the
+  probe, `16a8261` the maintenance note, `f048cce` the follow-up package), after which the script's own
+  re-read reported "preview is current ... 7 page(s)", `git rev-list --count origin/master..HEAD` is 0 and
+  CI is green on the pushed commit (run `40375571287`, workflow `qa`, 38s). Nothing was force-pushed,
+  amended or rebased, and `upstream` remains unpushable by construction.
+  - **Page by page, anonymously, after the publish:** `Home` renders the hub at `/wiki` (the landing page,
+    `Home` in the page title) with 2 `console`/`go` fences and no table; `Gallery` carries the new sentence
+    with both links live (`<a href="Getting-Started">`, `<a href="Home">`); `Getting-Started` renders 2
+    fences and 0 tables; `Architecture` answers **2 `<table>` and 3 `data-type="mermaid"`**, which is the
+    file's own count from the other side of the network; `Function-Reference` answers **12 `<table>`**;
+    `Terminal-Setup` answers **3 `<table>` and 1 `<pre>`**. The viewport probe then re-ran against those
+    published URLs (the 375 numbers quoted under T7.2 are the published ones, taken after the publish, and
+    the exit code is 0 for all six pages: nothing escapes the column). *(1 h)*
+- **Found in Phase 7**, none of it page content and all of it re-checkable: (1) GitHub's wiki stylesheet
+  gives markdown tables `display: block; overflow-x: auto`, so "wide tables are the usual casualty" is the
+  wrong failure model for this renderer - tables cannot widen the page, they swipe inside their own box, and
+  the number to watch when adding a column is the drag width (468px today, on the hub page's widest table).
+  (2) `/wiki/Home` is a *redirect* to `/wiki`: Home is not a page a reader navigates to, it is the wiki's
+  front door, which is the strongest reason 5.5 gives for Home-as-hub and for Home needing no inbound links.
+  (3) Mermaid containers on a phone are drawn in a cross-origin iframe on `viewscreen.githubusercontent.com`,
+  so their internals are unmeasurable from the page and their container height is a race; container width
+  and the preserved source text are measurable and are what T5.1's conclusion rests on. (4) A text browser
+  loses table column boundaries and loses nothing else; recorded once, with the reason it is accepted.
+  (5) The probe found no defect, which for a phase whose whole job was "look at the published pages from the
+  reader's side" is the result the previous six phases were banking on.
 
 Dependency graph: P0 -> P1 -> P2 -> P3 -> P4 -> P5 -> P6 -> P7. P3 is independent of P4/P5 content
 but shares the style/nav work; T6.3 (symbol audit) depends on P4+P5 existing so cross-links and owner
@@ -1508,7 +1670,7 @@ applies beyond the page budgets in S5.1.
 |---|---|---|
 | Duplication drift: wiki vs repo `README`/`TUTORIAL`/`CHANGES*` | stale, contradictory docs | **Settled by Q-4, not merely mitigated: the wiki may not restate repo prose**, S5.4 names one owner per topic, `check-demos.py`/`check-style.py` keep the links real; F-1 (repo-side pointers to the wiki) is now the only remaining direction of travel |
 | Documenting v2 habits as v3 (PollEvent, StyleNormal, Attribute, SimulationScreen, `Color` consts) | readers write broken code | banned-symbol grep (T4.4); all snippets through the compile harness (S8.1) |
-| ~~Mermaid support in the wiki renderer fails (C9)~~ **closed by T5.1 on 2026-10-25: it renders** (measured on the published draft wiki, `flowchart` and `sequenceDiagram`, anonymous) | was: rework of all diagrams | nothing to mitigate; the residue is the small part that stayed unmeasured - the mobile view and a `mermaid` fence carrying a snippet marker, both named in T5.1's record |
+| ~~Mermaid support in the wiki renderer fails (C9)~~ **closed by T5.1 on 2026-10-25: it renders** (measured on the published draft wiki, `flowchart` and `sequenceDiagram`, anonymous) | was: rework of all diagrams | nothing to mitigate; of the two residues T5.1 named, **T7.2 closed the mobile half on 2026-10-26** (all three `Architecture` diagrams render at 375/320/1300 with each box exactly the content column wide and no sideways scroll on the page; container height is a race and legibility inside the cross-origin iframe is unmeasurable from the page, which is why 6.4's rule stands), and the other residue - a `mermaid` fence carrying a snippet marker - is still measured and still deliberately unused |
 | A publish mistake goes live instantly | public misinformation | per-page review gate; baseline copies (T0.3); forward-fix commits only (C7) |
 | Loss of a gallery entry during migration (49 bullets, hand-edited) | visible content loss | S8.4 machine diff of bullets + URL sets before publishing |
 | Dead/legacy hotlinked screenshots (2 blogspot URLs) | broken images on the showcase | verify, report, propose D-6/Q-7; do not silently drop. (Q-11 covers *project* URLs, which have a home to move to; a 2015 screenshot does not) |
@@ -1527,7 +1689,15 @@ applies beyond the page budgets in S5.1.
   and any `_Footer.md`. They are the natural second milestone once the 6-page build renders well in the
   draft wiki; keep their names reserved by not using the names for anything else.
 - No changes to the library repo in this pass (F-1 bundles: README pointer + legacy URL fix,
-  `TUTORIAL.md` pointer, env var docs, stale demo claim, sidebar naming if a `_Footer.md` is wanted).
+  `TUTORIAL.md` pointer, env var docs, stale demo claim, sidebar naming if a `_Footer.md` is wanted) -
+  **assembled at T7.4 into `UPSTREAM-FOLLOWUPS.md` (2026-10-26), which is the package Q-2 parks: committed,
+  not sent, and not a page.** It carries the F-1 list plus the three doc-comment defects, the re-measured
+  `Fini`-after-failed-`Init` panic, the five `TUTORIAL.md` thin spots with line numbers, the six demos with
+  no doc sentence and the two Q-11 URL moves with evidence re-collected that day.
+- **Committed, deliberately not rendered, and offered upstream only if a human asks:** `MAINTAINING.md`
+  (T7.3 - the process note for someone with commit rights and no context) and `UPSTREAM-FOLLOWUPS.md`
+  (T7.4). Both are absent from `tools/pages.txt`, which is the only list the mirror reads, and both are
+  linted by `check-style.py --all` so they cannot drift into page-style violations.
 - No v1 content, no v1 migration page (v1 is unmaintained).
 - No auto-generated godoc mirror - the wiki explains, `pkg.go.dev` references.
 - No translations, no PDF/Pub output, no static-site generator migration (out of scope unless the
@@ -1540,27 +1710,72 @@ applies beyond the page budgets in S5.1.
 
 ## 13. Definition of Done (final acceptance checklist)
 
-- [ ] `Home.md` has a short project description and at least the Gallery + How-to-use sub-sections, <= 400 words.
-- [ ] `Gallery.md` contains all 48 linked entries + the 1 legacy bullet (or a recorded, approved
-      deviation), every URL status recorded, new demos section present.
-- [ ] The 6 built pages (`Home`, `Gallery`, `Getting-Started`, `Architecture`, `Function-Reference`,
-      `Terminal-Setup`) exist and are linked from `Home`; no page links to a deferred page. (Q-3)
-- [ ] Every code fence in the wiki is `go`-tagged, `gofmt`-clean and builds in the S8.1 harness.
+- [x] `Home.md` has a short project description and at least the Gallery + How-to-use sub-sections, <= 400
+      words. - 1.5.0's rewrite stands: 5 sections (What Tcell Is, Where This Wiki Fits, Install, Start
+      Here, Get Help) against 1.5.1's "short description + Gallery + How-to-use", 165 words measured, and
+      Home is also the nav hub since Phase 2 and the wiki's landing page since T7.2 measured that
+      `/wiki/Home` redirects to `/wiki`.
+- [x] `Gallery.md` contains all 48 linked entries + the 1 legacy bullet (or a recorded, approved
+      deviation), every URL status recorded, new demos section present. - 49 baseline entries all present
+      in order plus the generated `## Demos in the Repository` section (`tools/check-gallery.py` is the
+      gate); statuses live in the three record files, not on the page: 2 moves
+      (`tools/gallery-moves.txt`), 1 addition (`tools/gallery-additions.txt`, `goSSMS` flagged as
+      author-submitted), 1 reword kept as the same pair (Q-7), 0 dead links kept, and the 2 2015 blogspot
+      media URLs verified to a content type at T3.4 rather than allow-listed.
+- [x] The 6 built pages (`Home`, `Gallery`, `Getting-Started`, `Architecture`, `Function-Reference`,
+      `Terminal-Setup`) exist and are linked from `Home`; no page links to a deferred page. (Q-3) - Home
+      links the other five by name; `check-links.py` resolves 41 internal links against the 7 manifest
+      files with 0 broken, which is what makes a link to a deferred topic page impossible rather than
+      merely unwanted; T7.2's graph dump is the second half of that sentence (28 page-to-page links, no
+      orphan in either direction except the droppable `_Sidebar`).
+- [x] Every code fence in the wiki is `go`-tagged, `gofmt`-clean and builds in the S8.1 harness.
       (Phase 2 onward: shell commands live in `console` fences, which PLAN 7 and `check-style.py` accept
       and the harness skips by design, so the honest reading of this box is "every `go` fence ..."; if it
-      is still worded this way at T7.1, tick it against that reading and say so in the note.)
-- [ ] `tools/symbol-coverage.py --gate` is clean: all 179 structural names owned by exactly one of the 6
-      built pages, all 14 constant groups claimed by group, no structural symbol with two owners (Q-6).
-- [ ] All 8 `TCELL_*` env vars and all 9 `Opt*` options documented, with precedence stated.
-- [ ] S8.2/S8.3/S8.4/S8.5 all green immediately before each publish commit.
-- [ ] The mirrored render tree contains exactly the 6 pages + the droppable `_Sidebar.md` prototype;
-      `PLAN.md`, `AGENTS.md`, `README.md`, `tools/` are never mirrored (`tools/pages.txt` is the gate).
-- [ ] Every page reviewed in raw markdown **and** as rendered in our draft wiki at
+      is still worded this way at T7.1, tick it against that reading and say so in the note.) - T7.1
+      cashed the hedge: 5 `go` fences, 2 complete programs (one also run headless on the vt emulator) and
+      3 `mode=lib` fragments type-checked with `go vet`, all gofmt-clean in the harness; `console` fences
+      carry shell and are run for real when they can be (Home's `go get`, Gallery's clone block,
+      Getting-Started's module setup and module-path demo, Terminal-Setup's env transcript); `Architecture`
+      publishes its code as three Mermaid diagrams and no Go, and Q-Ex routes its examples to `demos/`.
+      No page carries an untagged fence, which is the shape the harness refuses. *(T7.1, 2026-10-26)*
+- [x] `tools/symbol-coverage.py --gate` is clean: all 179 structural names owned by exactly one of the 6
+      built pages, all 14 constant groups claimed by group, no structural symbol with two owners (Q-6). -
+      green at T7.1: 182 names each owned by exactly one page, 14 of 14 groups claimed, 0 double owners, 0
+      invented names among 180 page-cited symbols. The 179/178/182 arithmetic is Phase 6's record's
+      business and stays there; what this box needs is "exactly one owner", and that is what the gate
+      prints.
+- [x] All 8 `TCELL_*` env vars and all 9 `Opt*` options documented, with precedence stated. - all 8
+      `TCELL_*` names are documented and owned by `Terminal-Setup` alone (Q-6), and the auditor's other
+      direction is green too: 19 of 19 reader knobs in `tools/tcell-env-vars.txt` are documented and still
+      read by the library. The box's "9 `Opt*`" is 12 in the gate's denominator and all 12 are named -
+      same family of stale arithmetic as the 179, recorded rather than quietly re-numbered. Precedence is
+      stated per knob, which is the part that would be wrong if it were stated once: the environment wins
+      for the alternate screen, the mouse, the keyboard protocol, negotiation and the escape delay; an
+      option wins for the terminal name and the color count; a terminal that replies beats both.
+- [x] S8.2/S8.3/S8.4/S8.5 all green immediately before each publish commit. - and so are the two gates
+      this plan added later, S8.2b demos and S8.4's gallery half plus S8.6/S8.7's harness: six GATEs pass
+      in `tools/review-checklist.py` (style, links, gallery, demos, snippets, symbols), which is also
+      exactly what CI runs on every push. Last green run before the Phase 7 publish: the same set, offline
+      and online, on the committed tree.
+- [x] The mirrored render tree contains exactly the 6 pages + the droppable `_Sidebar.md` prototype;
+      `PLAN.md`, `AGENTS.md`, `README.md`, `tools/` are never mirrored (`tools/pages.txt` is the gate). -
+      `tools/mirror-wiki.sh --check` is clean and the script prints "renders exactly the 7 page(s) in
+      tools/pages.txt" on every publish; `MAINTAINING.md` and `UPSTREAM-FOLLOWUPS.md` joined the
+      never-mirrored set at T7.3/T7.4, and adding a file to the manifest is the only way anything becomes a
+      page, which `MAINTAINING.md` tells a stranger before it tells them anything else.
+- [x] Every page reviewed in raw markdown **and** as rendered in our draft wiki at
       `https://github.com/radix29/tcell-wiki-draft/wiki/<slug>` (Q-0b: the official wiki is read-only,
-      so "reviewed where it is published" means the mirror until upstream accepts something).
-- [ ] Every publish went through `tools/publish.sh` with the gates green and the raw markdown re-read (Q-15
+      so "reviewed where it is published" means the mirror until upstream accepts something). - Phase 7
+      made it four readings: raw, the published HTML fetched anonymously (table and diagram counts per
+      page: `Architecture` 2 tables + 3 diagrams, `Function-Reference` 12, `Terminal-Setup` 3), a real
+      Chromium at 375/320/1300, and `lynx` at 80 columns. *(T7.2, T7.5)*
+- [x] Every publish went through `tools/publish.sh` with the gates green and the raw markdown re-read (Q-15
       pre-delegated the "maintainer explicitly approved" this line used to require; a proposal to upstream
-      still needs a human, per Q-2); nothing force-pushed; history is forward-only.
+      still needs a human, per Q-2); nothing force-pushed; history is forward-only. - the Phase 7 publish
+      mirrored `20c2e6c` -> `9d2ac28` then pushed `62924e7` -> `f048cce` and re-read the preview to confirm;
+      no force-push, no amend, no rebase anywhere in the phase, and `upstream`'s push URL is still a dead
+      string. The two prepared documents (maintenance note, follow-up package) were committed and sent to
+      nobody.
 
 ---
 
