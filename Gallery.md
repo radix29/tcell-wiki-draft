@@ -2,6 +2,8 @@
 
 Here's a gallery of applications and libraries that were built using tcell:
 
+To write a program like these, [Getting Started](Getting-Started) starts from an empty directory, and [Home](Home) maps the rest of this wiki.
+
 ## Demonstrations
 
 - mouse demo - the mouse test that shipped with _Tcell_ in 2015 ([screenshot](http://2.bp.blogspot.com/-fWvW5opT0es/VhIdItdKqJI/AAAAAAAAATE/7Ojc0L1SpB0/s1600/Screen%2BShot%2B2015-10-04%2Bat%2B11.47.13%2BPM.png)); mouse support is now enabled per program with EnableMouse and MouseFlags
